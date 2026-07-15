@@ -1,0 +1,8 @@
+name: sakura
+description: "1girl, pink hair, school uniform, visual novel style"
+poses:
+  - idle
+  - happy
+  - sad
+  - surprised
+output_dir: ./output
