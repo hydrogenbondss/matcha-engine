@@ -6,7 +6,9 @@ AI-powered game asset pipeline. Describe a character → generate sprites → fo
 ## Status
 - [x] Repo created
 - [x] AGENT_CONTEXT.md written
-- [ ] CLI skeleton
+- [x] CLI skeleton (init, character commands)
+- [x] Config schema (Pydantic models)
+- [x] Example config
 - [ ] ComfyUI generator module
 - [ ] Ren'Py formatter
 - [ ] First working pipeline
@@ -24,7 +26,7 @@ AI-powered game asset pipeline. Describe a character → generate sprites → fo
 - Ren'Py project path and image folder structure
 
 ## Next Action
-Write CLI skeleton and config schema. User to provide ComfyUI workflow details.
+Write ComfyUI generator module. User to provide workflow details.
 
 ## Decisions
 - Focus on Ren'Py first, Godot later
