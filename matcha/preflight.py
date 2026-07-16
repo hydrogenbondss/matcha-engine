@@ -1,0 +1,81 @@
+"""Preflight validation: fail loudly before queueing anything.
+
+Checks the ComfyUI server is reachable and that the configured checkpoint
+and LoRA actually exist server-side (via /object_info). A wrong model name
+otherwise surfaces as an opaque HTTP 400 on every pose; a corrupt/partial
+model file surfaces even later, as an execution_error mid-run.
+"""
+
+import json
+import urllib.error
+import urllib.request
+
+from matcha.errors import PreflightError
+
+# A real SD checkpoint is gigabytes; anything under this is a failed
+# download (LFS pointer, HTML error page) that will fail to deserialize.
+MIN_CHECKPOINT_BYTES = 100 * 1024 * 1024
+
+
+def _object_info(server_address: str, node: str) -> dict:
+    url = f"http://{server_address}/object_info/{node}"
+    try:
+        with urllib.request.urlopen(url, timeout=10) as resp:
+            return json.loads(resp.read())
+    except (urllib.error.URLError, OSError) as e:
+        raise PreflightError(
+            f"Cannot reach ComfyUI at {server_address}: {e}. "
+            "Is the server running?"
+        ) from e
+
+
+def _available(info: dict, node: str, field: str) -> list[str]:
+    try:
+        values = info[node]["input"]["required"][field][0]
+    except (KeyError, IndexError, TypeError):
+        return []
+    return values if isinstance(values, list) else []
+
+
+def validate_models(
+    server_address: str,
+    checkpoint: str,
+    lora: str | None = None,
+) -> None:
+    """Raise PreflightError unless the server knows both model names."""
+    ckpt_info = _object_info(server_address, "CheckpointLoaderSimple")
+    checkpoints = _available(ckpt_info, "CheckpointLoaderSimple", "ckpt_name")
+    if checkpoint not in checkpoints:
+        raise PreflightError(
+            f"Checkpoint '{checkpoint}' not found on the ComfyUI server.\n"
+            f"Available checkpoints: {', '.join(checkpoints) or '(none)'}\n"
+            "Set 'checkpoint:' in your character YAML to one of these, or "
+            "install the model into ComfyUI/models/checkpoints/."
+        )
+
+    if lora:
+        lora_info = _object_info(server_address, "LoraLoader")
+        loras = _available(lora_info, "LoraLoader", "lora_name")
+        if lora not in loras:
+            raise PreflightError(
+                f"LoRA '{lora}' not found on the ComfyUI server.\n"
+                f"Available LoRAs: {', '.join(loras) or '(none)'}\n"
+                "Set 'lora:' in your character YAML to one of these, set it "
+                "to null to skip the LoRA, or install the file into "
+                "ComfyUI/models/loras/."
+            )
+
+
+def validate_model_file(path_bytes: int, name: str) -> None:
+    """Raise PreflightError for a model file too small to be real.
+
+    Callers pass the on-disk size when they have filesystem access to the
+    ComfyUI models directory (local setups). Catches the classic failure:
+    a 26-byte Git-LFS pointer or HTML error page saved as a .safetensors.
+    """
+    if path_bytes < MIN_CHECKPOINT_BYTES:
+        raise PreflightError(
+            f"Model file '{name}' is only {path_bytes} bytes — that is a "
+            "failed/partial download (e.g. a Git-LFS pointer or an error "
+            "page), not a model. Re-download it before generating."
+        )

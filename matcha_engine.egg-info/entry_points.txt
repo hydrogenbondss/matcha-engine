@@ -1,0 +1,2 @@
+[console_scripts]
+matcha = matcha.cli:app
