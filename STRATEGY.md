@@ -140,8 +140,11 @@ only subscription-scale upside found.
 
 ## 8. Open verification items
 
-- Competitor prices mostly aggregator-sourced — re-verify on vendor pages
-  before quoting anywhere public.
+- Competitor prices: **vendor-verified** (2026-07-17) for Scenario
+  ($15/$45/$75/mo), Layer.ai ($10/300CU +$60/1000CU), and Retro Diffusion
+  ($20 Lite/$65 full). **Do NOT quote** PixelLab (~$8 tier suspect) or
+  Rosebud ($12/$36/$120 unconfirmed) — both are behind JS/login checkouts
+  and need a real-browser read before public use.
 - Lemma Soft commission figures are search-snippet-level (forum 403'd).
 - "No one does Ren'Py deploy" — searched, not exhaustively provable.
 - VNCCS traction (conflicting star counts).
