@@ -51,7 +51,7 @@ def character(
         try:
             images = generator.generate(
                 prompt=prompt,
-                checkpoint="anythingV5PrtRE.safetensors",
+                checkpoint="sd_xl_base.safetensors",
                 lora="small_hours_style_v1.safetensors",
                 lora_strength=1.0,
                 width=char_config.width,
