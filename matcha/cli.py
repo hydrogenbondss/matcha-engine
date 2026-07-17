@@ -118,7 +118,13 @@ def character(
         formatter = RenPyFormatter(project)
         deployer = FilesystemDeployer(project)
 
-        formatted = formatter.format_batch(image_paths, char_config.name, poses_done)
+        formatted = formatter.format_batch(
+            image_paths,
+            char_config.name,
+            poses_done,
+            max_width=char_config.resize_max_width,
+            max_height=char_config.resize_max_height,
+        )
         deployed = deployer.deploy_images(formatted, subfolder="characters")
         # Only the poses that actually generated get definitions.
         script_path = deployer.update_script(

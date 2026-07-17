@@ -19,9 +19,16 @@ class CharacterConfig(BaseModel):
     checkpoint: str = "anythingV5PrtRE.safetensors"
     lora: Optional[str] = "small_hours_style_v1.safetensors"
     lora_strength: float = 1.0
-    negative_prompt: str = "low quality, worst quality, bad anatomy, bad hands"
+    negative_prompt: str = (
+        "low quality, blurry, worst quality, deformed, bad anatomy, "
+        "extra limbs, bad hands"
+    )
     width: int = 512
     height: int = 768
+    # Optional post-generation resize (fit within, aspect preserved).
+    # Ren'Py 720p projects typically want sprites no taller than the screen.
+    resize_max_width: Optional[int] = None
+    resize_max_height: Optional[int] = None
     steps: int = 20
     cfg: float = 8.0
     seed: Optional[int] = None

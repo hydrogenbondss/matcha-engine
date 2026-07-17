@@ -166,6 +166,33 @@ class TestDeploy:
         assert text.count("define sakura = Character") == 1
         assert "image sakura happy" in text
 
+    def test_resize_shrinks_to_fit(self, tmp_path):
+        from PIL import Image
+
+        img_path = tmp_path / "sakura_idle.png"
+        Image.new("RGBA", (512, 1024)).save(img_path)
+
+        project = tmp_path / "vn"
+        (project / "game").mkdir(parents=True)
+        formatter = RenPyFormatter(project)
+        formatter.format_batch(
+            [img_path], "sakura", ["idle"], max_width=1280, max_height=720
+        )
+        w, h = Image.open(img_path).size
+        assert h == 720 and w == 360  # aspect preserved, fits bounds
+
+    def test_resize_never_upscales(self, tmp_path):
+        from PIL import Image
+
+        img_path = tmp_path / "sakura_idle.png"
+        Image.new("RGBA", (300, 400)).save(img_path)
+        RenPyFormatter(tmp_path).resize_for_renpy(img_path, 1280, 720)
+        assert Image.open(img_path).size == (300, 400)
+
+    def test_show_statement(self, tmp_path):
+        f = RenPyFormatter(tmp_path)
+        assert f.generate_show_statement("sakura", "happy") == "show sakura happy at center"
+
     def test_two_characters_coexist(self, tmp_path):
         project = tmp_path / "vn"
         (project / "game").mkdir(parents=True)

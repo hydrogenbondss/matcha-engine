@@ -14,4 +14,10 @@ lora_strength: 1.0
 
 width: 512
 height: 768
+
+# Optional: shrink sprites to fit within these bounds after generation
+# (aspect preserved, never upscales). Useful for 720p Ren'Py projects.
+# resize_max_width: 1280
+# resize_max_height: 720
+
 output_dir: ./output
