@@ -42,6 +42,37 @@ dedicated file that re-runs update idempotently, never touching your
 hand-written script files. Only poses that actually generated get
 definitions; the CLI exits non-zero if any pose fails.
 
+### Ren'Py scaffolding options
+
+By default each pose becomes a flat `image <char> <pose>` definition. For a
+richer, more idiomatic Ren'Py setup you can opt into:
+
+- `--layered` / `layered: true` — emit a `layeredimage` that groups the poses
+  as attributes, so `show sakura happy` composes from one declared sprite set
+  (the first pose becomes the `default`).
+- `--side-image` / `side_image: true` — emit `image side <char> <pose>`
+  definitions and wire `Character(image="<char>")` so a portrait auto-shows
+  beside that character's dialogue. (These reuse the full sprite; regenerate as
+  cropped portraits for best results.)
+- `display_name:` and `color:` in the YAML — set the `Character` display name
+  and dialogue name color.
+
+```bash
+matcha character configs/example_character.yaml \
+  --deploy --project ~/my-vn --layered --side-image
+```
+
+Produces, for example:
+
+```renpy
+define sakura = Character("Sakura Kinomoto", color="#ff77aa", image="sakura")
+layeredimage sakura:
+    group pose:
+        attribute idle default "images/characters/sakura_idle.png"
+        attribute happy "images/characters/sakura_happy.png"
+image side sakura idle = "images/characters/sakura_idle.png"
+```
+
 ## Development
 
 ```bash

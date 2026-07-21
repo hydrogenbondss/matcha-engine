@@ -16,6 +16,11 @@ class CharacterConfig(BaseModel):
     name: str
     description: str
     poses: list[str]
+    # Ren'Py scaffolding options (the deploy "last mile").
+    display_name: Optional[str] = None  # Character() display name; defaults to name.title()
+    color: Optional[str] = None  # dialogue name color, e.g. "#ffcc00"
+    layered: bool = False  # emit a layeredimage grouping poses as attributes
+    side_image: bool = False  # emit side-image defs + wire Character(image=...)
     checkpoint: str = "anythingV5PrtRE.safetensors"
     lora: Optional[str] = "small_hours_style_v1.safetensors"
     lora_strength: float = 1.0

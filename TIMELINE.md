@@ -8,7 +8,7 @@ that ties those together to the phased plan (STRATEGY.md §6).
 
 Status legend: `[x]` done · `[~]` in progress · `[ ]` not started · `[!]` blocked
 
-_Last updated: 2026-07-21_
+_Last updated: 2026-07-21 (deploy last-mile scaffolding landed)_
 
 ---
 
@@ -48,8 +48,13 @@ a real Ren'Py project, with the four product bugs closed.
 
 Exit criteria: a stranger can install the CLI, generate, and deploy without us.
 
-- [ ] Deploy polish: `layeredimage` / side-image / `Character` scaffolding
+- [~] Deploy polish: `layeredimage` / side-image / `Character` scaffolding
       (STRATEGY.md §4.3 — the differentiator, over-invest here)
+      - [x] Opt-in `layeredimage` grouping poses as attributes (`--layered`)
+      - [x] Side-image defs + `Character(image=...)` wiring (`--side-image`)
+      - [x] Richer `Character` (display name + color) via config
+      - [ ] Generate *cropped portrait* side images (currently reuse full sprite)
+      - [ ] Verify generated `.rpy` in an actual Ren'Py build (needs Ren'Py SDK)
 - [ ] Per-model license surfacing (STRATEGY.md §4.6)
 - [ ] Disclosure helper: Steam AI survey text + itch.io tag reminder (§4.7)
 - [ ] Install/README polish for non-us users; example project

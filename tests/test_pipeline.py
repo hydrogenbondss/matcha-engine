@@ -203,3 +203,51 @@ class TestDeploy:
         deployer.update_script("kenji", formatter.script_block("kenji", ["idle"]))
         text = deployer.script_path.read_text()
         assert "define sakura" in text and "define kenji" in text
+
+
+class TestRenPyScaffolding:
+    def test_layeredimage_groups_poses_with_default(self, tmp_path):
+        f = RenPyFormatter(tmp_path)
+        block = f.script_block("sakura", ["idle", "happy"], layered=True)
+        assert "layeredimage sakura:" in block
+        assert "group pose:" in block
+        assert 'attribute idle default "images/characters/sakura_idle.png"' in block
+        assert 'attribute happy "images/characters/sakura_happy.png"' in block
+        # Layered mode replaces the flat `image <char> <pose>` definitions.
+        assert "image sakura idle =" not in block
+
+    def test_side_image_defs_and_character_wiring(self, tmp_path):
+        f = RenPyFormatter(tmp_path)
+        block = f.script_block("sakura", ["idle", "happy"], side_image=True)
+        assert 'define sakura = Character("Sakura", image="sakura")' in block
+        assert 'image side sakura idle = "images/characters/sakura_idle.png"' in block
+        assert 'image side sakura happy = "images/characters/sakura_happy.png"' in block
+
+    def test_display_name_and_color(self, tmp_path):
+        f = RenPyFormatter(tmp_path)
+        block = f.script_block(
+            "sakura", ["idle"], display_name="Sakura Kinomoto", color="#ffcc00"
+        )
+        assert 'define sakura = Character("Sakura Kinomoto", color="#ffcc00")' in block
+
+    def test_layered_and_side_image_combine(self, tmp_path):
+        f = RenPyFormatter(tmp_path)
+        block = f.script_block("sakura", ["idle", "happy"], layered=True, side_image=True)
+        assert "layeredimage sakura:" in block
+        assert 'image side sakura happy = "images/characters/sakura_happy.png"' in block
+        assert 'define sakura = Character("Sakura", image="sakura")' in block
+
+    def test_default_output_is_unchanged(self, tmp_path):
+        f = RenPyFormatter(tmp_path)
+        block = f.script_block("sakura", ["idle", "happy"])
+        assert 'define sakura = Character("Sakura")' in block
+        assert 'image sakura idle = "images/characters/sakura_idle.png"' in block
+        assert "layeredimage" not in block
+        assert "image side" not in block
+
+    def test_config_defaults_for_scaffolding(self):
+        cfg = CharacterConfig(name="s", description="d", poses=["idle"])
+        assert cfg.layered is False
+        assert cfg.side_image is False
+        assert cfg.display_name is None
+        assert cfg.color is None

@@ -30,6 +30,14 @@ def character(
     lora: Optional[str] = typer.Option(
         None, "--lora", help="Override the LoRA from the YAML config ('none' to disable)"
     ),
+    layered: Optional[bool] = typer.Option(
+        None, "--layered/--no-layered",
+        help="Emit a Ren'Py layeredimage grouping poses as attributes",
+    ),
+    side_image: Optional[bool] = typer.Option(
+        None, "--side-image/--no-side-image",
+        help="Emit side-image definitions and wire Character(image=...)",
+    ),
 ):
     """Generate character assets and optionally deploy to Ren'Py."""
     if not config.exists():
@@ -44,6 +52,10 @@ def character(
         char_config.checkpoint = checkpoint
     if lora:
         char_config.lora = None if lora.lower() == "none" else lora
+    if layered is not None:
+        char_config.layered = layered
+    if side_image is not None:
+        char_config.side_image = side_image
 
     typer.echo(f"Character: {char_config.name}")
     typer.echo(f"Poses: {', '.join(char_config.poses)}")
@@ -129,7 +141,14 @@ def character(
         # Only the poses that actually generated get definitions.
         script_path = deployer.update_script(
             char_config.name,
-            formatter.script_block(char_config.name, poses_done),
+            formatter.script_block(
+                char_config.name,
+                poses_done,
+                display_name=char_config.display_name,
+                color=char_config.color,
+                layered=char_config.layered,
+                side_image=char_config.side_image,
+            ),
         )
         typer.echo(f"Deployed {len(deployed)} images")
         typer.echo(f"Definitions written to {script_path}")

@@ -57,17 +57,66 @@ class RenPyFormatter:
         """Ren'Py show statement for pasting into a scene."""
         return f"show {character_name} {pose} at {position}"
 
-    def script_block(self, character_name: str, poses: list[str]) -> str:
-        """Ren'Py definitions for the character and its pose images."""
+    def script_block(
+        self,
+        character_name: str,
+        poses: list[str],
+        *,
+        display_name: Optional[str] = None,
+        color: Optional[str] = None,
+        layered: bool = False,
+        side_image: bool = False,
+    ) -> str:
+        """Ren'Py definitions for the character and its pose images.
+
+        Defaults reproduce the flat `image <char> <pose>` layout. Options add
+        the deploy "last mile" that raw generation tools don't:
+          - ``layered``: emit a ``layeredimage`` grouping poses as attributes so
+            ``show <char> <pose>`` composes from one declared sprite set.
+          - ``side_image``: emit ``image side <char> <pose>`` definitions and
+            wire ``Character(image=...)`` so portraits auto-show beside dialogue.
+          - ``display_name`` / ``color``: a richer ``Character`` definition.
+        """
+        display = display_name or character_name.title()
+        char_args = [f'"{display}"']
+        if color:
+            char_args.append(f'color="{color}"')
+        if side_image:
+            char_args.append(f'image="{character_name}"')
+
         lines = [
             f"# --- matcha: {character_name} (generated) ---",
-            f"define {character_name} = Character(\"{character_name.title()}\")",
+            f"define {character_name} = Character({', '.join(char_args)})",
         ]
-        for pose in poses:
+
+        if layered:
+            lines.append(f"layeredimage {character_name}:")
+            lines.append("    group pose:")
+            for i, pose in enumerate(poses):
+                default = " default" if i == 0 else ""
+                lines.append(
+                    f"        attribute {pose}{default} "
+                    f"\"images/characters/{character_name}_{pose}.png\""
+                )
+        else:
+            for pose in poses:
+                lines.append(
+                    f"image {character_name} {pose} = "
+                    f"\"images/characters/{character_name}_{pose}.png\""
+                )
+
+        if side_image:
+            lines.append("#")
             lines.append(
-                f"image {character_name} {pose} = "
-                f"\"images/characters/{character_name}_{pose}.png\""
+                "# Side images (shown beside dialogue). These reuse the full "
+                "sprite; regenerate as cropped portraits for best results."
             )
+            for pose in poses:
+                lines.append(
+                    f"image side {character_name} {pose} = "
+                    f"\"images/characters/{character_name}_{pose}.png\""
+                )
+
         lines.append("#")
         lines.append(f"# Usage: {self.generate_show_statement(character_name, poses[0])}")
         lines.append(f"# --- end matcha: {character_name} ---")
