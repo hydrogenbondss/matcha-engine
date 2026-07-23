@@ -1,19 +1,28 @@
 name: sakura
-description: "1girl, pink hair, school uniform, visual novel style"
+display_name: Sakura
+color: "#ff69b4"
+# Lock identity here: outfit, hair, eyes. Pose prompts only vary expression.
+description: >-
+  sh_style, 1girl, long pink hair, purple eyes, white collared shirt,
+  pink bow tie, black school jumper with gold buttons, visual novel style
 poses:
   - idle
   - happy
   - sad
   - surprised
 
-# Model selection — the checkpoint and LoRA must share a base model family
-# (an SD1.5 LoRA on an SDXL checkpoint fails or degrades silently).
+# Model selection — checkpoint and LoRA must share a base model family.
+# small_hours_style_v1 is SD1.5 but currently NaNs/blacks on Mac MPS;
+# last.safetensors is the working interim on that stack.
 checkpoint: anythingV5PrtRE.safetensors
-lora: small_hours_style_v1.safetensors
-lora_strength: 1.0
+lora: last.safetensors
+lora_strength: 0.7
 
+# 512×512 is safer on Mac MPS; use 512×768 when VRAM allows.
 width: 512
-height: 768
+height: 512
+steps: 20
+seed: 42
 
 # Optional: shrink sprites to fit within these bounds after generation
 # (aspect preserved, never upscales). Useful for 720p Ren'Py projects.

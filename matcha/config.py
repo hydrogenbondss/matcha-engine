@@ -22,14 +22,16 @@ class CharacterConfig(BaseModel):
     layered: bool = False  # emit a layeredimage grouping poses as attributes
     side_image: bool = False  # emit side-image defs + wire Character(image=...)
     checkpoint: str = "anythingV5PrtRE.safetensors"
-    lora: Optional[str] = "small_hours_style_v1.safetensors"
-    lora_strength: float = 1.0
+    # Prefer small_hours_style_v1 when it works; on Mac MPS it currently
+    # NaNs — example configs use last.safetensors as the interim.
+    lora: Optional[str] = "last.safetensors"
+    lora_strength: float = 0.7
     negative_prompt: str = (
         "low quality, blurry, worst quality, deformed, bad anatomy, "
         "extra limbs, bad hands"
     )
     width: int = 512
-    height: int = 768
+    height: int = 512
     # Optional post-generation resize (fit within, aspect preserved).
     # Ren'Py 720p projects typically want sprites no taller than the screen.
     resize_max_width: Optional[int] = None

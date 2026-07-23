@@ -69,13 +69,15 @@ class TestConfig:
         )
         assert cfg.checkpoint == "a.safetensors"
         assert cfg.lora is None
-        assert cfg.height == 768
+        assert cfg.height == 512
 
     def test_defaults(self):
         cfg = CharacterConfig(name="s", description="d", poses=["idle"])
         assert cfg.checkpoint.endswith(".safetensors")
-        assert cfg.lora_strength == 1.0
-
+        assert cfg.lora_strength == 0.7
+        assert cfg.lora == "last.safetensors"
+        assert cfg.height == 512
+        assert cfg.width == 512
 
 class TestGeneratorErrorSurfacing:
     def test_execution_error_raises_with_server_message(self):
@@ -251,3 +253,56 @@ class TestRenPyScaffolding:
         assert cfg.side_image is False
         assert cfg.display_name is None
         assert cfg.color is None
+
+
+class TestPrompts:
+    def test_pose_prompt_locks_framing_and_varies_expression(self):
+        from matcha.prompts import build_pose_prompt
+
+        idle = build_pose_prompt("1girl, pink hair, black jumper", "idle")
+        happy = build_pose_prompt("1girl, pink hair, black jumper", "happy")
+        assert "pink hair" in idle and "pink hair" in happy
+        assert "single character" in idle
+        assert "neutral" in idle or "calm" in idle
+        assert "smile" in happy or "happy" in happy
+        assert idle != happy
+
+    def test_negative_prompt_appends_consistency_terms(self):
+        from matcha.prompts import build_negative_prompt
+
+        neg = build_negative_prompt("low quality")
+        assert neg.startswith("low quality")
+        assert "reference sheet" in neg
+        assert "multiple views" in neg
+
+
+class TestImageSanity:
+    def test_black_image_rejected(self):
+        from io import BytesIO
+
+        from PIL import Image
+
+        from matcha.images import assert_usable_image
+
+        buf = BytesIO()
+        Image.new("RGB", (512, 512), (0, 0, 0)).save(buf, format="PNG")
+        with pytest.raises(GenerationError, match="solid black"):
+            assert_usable_image(buf.getvalue(), label="idle")
+
+    def test_tiny_image_rejected(self):
+        from matcha.images import assert_usable_image
+
+        with pytest.raises(GenerationError, match="cannot decode"):
+            assert_usable_image(b"not-a-real-png", label="idle")
+
+    def test_normal_image_accepted(self):
+        from io import BytesIO
+
+        from PIL import Image
+
+        from matcha.images import assert_usable_image
+
+        buf = BytesIO()
+        # Non-trivial colors so it isn't flagged as black.
+        Image.new("RGB", (512, 512), (180, 120, 160)).save(buf, format="PNG")
+        assert_usable_image(buf.getvalue(), label="idle")

@@ -1,3 +1,5 @@
+import random
+import shutil
 import tempfile
 from pathlib import Path
 from typing import Optional
@@ -10,9 +12,46 @@ from matcha.errors import GenerationError, PreflightError
 from matcha.formatters.renpy import RenPyFormatter
 from matcha.deployers.filesystem import FilesystemDeployer
 from matcha.generators.comfyui import ComfyUIGenerator
+from matcha.images import assert_usable_image
+from matcha.prompts import build_negative_prompt, build_pose_prompt
 from matcha import preflight
 
 app = typer.Typer(help="Matcha Engine — AI game asset pipeline")
+
+_EXAMPLE_YAML = """\
+name: sakura
+display_name: Sakura
+color: "#ff69b4"
+# Lock identity here: outfit, hair, eyes. Pose prompts only vary expression.
+description: >-
+  sh_style, 1girl, long pink hair, purple eyes, white collared shirt,
+  pink bow tie, black school jumper with gold buttons, visual novel style
+poses:
+  - idle
+  - happy
+  - sad
+  - surprised
+
+# Model selection — checkpoint and LoRA must share a base model family.
+# small_hours_style_v1 is SD1.5 but currently NaNs/blacks on Mac MPS;
+# last.safetensors is the working interim on that stack.
+checkpoint: anythingV5PrtRE.safetensors
+lora: last.safetensors
+lora_strength: 0.7
+
+# 512×512 is safer on Mac MPS; use 512×768 when VRAM allows.
+width: 512
+height: 512
+steps: 20
+seed: 42
+
+# Optional: shrink sprites to fit within these bounds after generation
+# (aspect preserved, never upscales). Useful for 720p Ren'Py projects.
+# resize_max_width: 1280
+# resize_max_height: 720
+
+output_dir: ./output
+"""
 
 
 @app.command()
@@ -57,11 +96,19 @@ def character(
     if side_image is not None:
         char_config.side_image = side_image
 
+    # One seed for the whole set — identity consistency across poses.
+    run_seed = (
+        char_config.seed
+        if char_config.seed is not None
+        else random.randint(0, 2**32 - 1)
+    )
+
     typer.echo(f"Character: {char_config.name}")
     typer.echo(f"Poses: {', '.join(char_config.poses)}")
     typer.echo(f"Description: {char_config.description}")
     typer.echo(f"Checkpoint: {char_config.checkpoint}")
     typer.echo(f"LoRA: {char_config.lora or '(none)'}")
+    typer.echo(f"Seed: {run_seed} (shared across poses)")
 
     # Preflight: verify the server knows these models before queueing
     # anything, so a wrong name is one clear error, not N opaque 400s.
@@ -77,16 +124,17 @@ def character(
         return
 
     generator = ComfyUIGenerator(server_address=comfyui)
+    negative = build_negative_prompt(char_config.negative_prompt)
 
     generated: list[tuple[str, bytes]] = []  # (pose, image bytes)
     failures: list[tuple[str, str]] = []
     for pose in char_config.poses:
-        prompt = f"{char_config.description}, {pose} pose, visual novel style"
+        prompt = build_pose_prompt(char_config.description, pose)
         typer.echo(f"Generating: {pose}...")
         try:
             images = generator.generate(
                 prompt=prompt,
-                negative_prompt=char_config.negative_prompt,
+                negative_prompt=negative,
                 checkpoint=char_config.checkpoint,
                 lora=char_config.lora,
                 lora_strength=char_config.lora_strength,
@@ -94,8 +142,9 @@ def character(
                 height=char_config.height,
                 steps=char_config.steps,
                 cfg=char_config.cfg,
-                seed=char_config.seed,
+                seed=run_seed,
             )
+            assert_usable_image(images[0], label=pose)
             generated.append((pose, images[0]))
         except GenerationError as e:
             typer.echo(f"  FAILED ({pose}): {e}", err=True)
@@ -110,11 +159,15 @@ def character(
         )
         raise typer.Exit(1)
 
-    temp_dir = Path(tempfile.mkdtemp(prefix="matcha_"))
+    out_dir = Path(char_config.output_dir).expanduser()
+    out_dir.mkdir(parents=True, exist_ok=True)
+    # Also keep a temp copy so deploy formatting never mutates unexpected paths
+    # if the user points output_dir at something shared — we copy into out_dir
+    # as the canonical local artifacts.
     image_paths: list[Path] = []
     poses_done: list[str] = []
     for pose, img_data in generated:
-        img_path = temp_dir / f"{char_config.name}_{pose}.png"
+        img_path = out_dir / f"{char_config.name}_{pose}.png"
         img_path.write_bytes(img_data)
         image_paths.append(img_path)
         poses_done.append(pose)
@@ -126,19 +179,27 @@ def character(
             typer.echo(f"Project not found: {project}", err=True)
             raise typer.Exit(1)
 
+        # format_batch may resize in place — work on copies so output_dir
+        # keeps the originals.
+        work_dir = Path(tempfile.mkdtemp(prefix="matcha_deploy_"))
+        work_paths = []
+        for src in image_paths:
+            dest = work_dir / src.name
+            shutil.copy2(src, dest)
+            work_paths.append(dest)
+
         typer.echo(f"Deploying to {project}...")
         formatter = RenPyFormatter(project)
         deployer = FilesystemDeployer(project)
 
         formatted = formatter.format_batch(
-            image_paths,
+            work_paths,
             char_config.name,
             poses_done,
             max_width=char_config.resize_max_width,
             max_height=char_config.resize_max_height,
         )
         deployed = deployer.deploy_images(formatted, subfolder="characters")
-        # Only the poses that actually generated get definitions.
         script_path = deployer.update_script(
             char_config.name,
             formatter.script_block(
@@ -153,7 +214,7 @@ def character(
         typer.echo(f"Deployed {len(deployed)} images")
         typer.echo(f"Definitions written to {script_path}")
     else:
-        typer.echo(f"Images saved to: {temp_dir}")
+        typer.echo(f"Images saved to: {out_dir}")
         typer.echo("Use --deploy --project /path/to/renpy to deploy")
 
     if failures:
@@ -177,26 +238,7 @@ def init(
     configs_dir.mkdir(exist_ok=True)
 
     example = configs_dir / "example_character.yaml"
-    example.write_text(
-        """name: sakura
-description: "1girl, pink hair, school uniform, visual novel style"
-poses:
-  - idle
-  - happy
-  - sad
-  - surprised
-
-# Model selection — the checkpoint and LoRA must share a base model family
-# (an SD1.5 LoRA on an SDXL checkpoint fails or degrades silently).
-checkpoint: anythingV5PrtRE.safetensors
-lora: small_hours_style_v1.safetensors
-lora_strength: 1.0
-
-width: 512
-height: 768
-output_dir: ./output
-"""
-    )
+    example.write_text(_EXAMPLE_YAML)
 
     typer.echo(f"Created project: {name}")
     typer.echo(f"Edit {example} and run:")
