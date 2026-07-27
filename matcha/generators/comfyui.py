@@ -1,8 +1,8 @@
 import json
 import random
+import uuid
 import urllib.parse
 import urllib.request
-import uuid
 from typing import Optional
 
 import websocket
@@ -24,6 +24,43 @@ class ComfyUIGenerator:
             headers={"Content-Type": "application/json"},
         )
         return json.loads(urllib.request.urlopen(req).read())
+
+    def upload_image(self, data: bytes, filename: str = "matcha_ref.png") -> str:
+        """Upload PNG bytes to ComfyUI's input folder; return the server filename."""
+        boundary = f"----MatchaBoundary{uuid.uuid4().hex}"
+        parts = []
+        parts.append(f"--{boundary}".encode())
+        parts.append(
+            f'Content-Disposition: form-data; name="image"; filename="{filename}"'.encode()
+        )
+        parts.append(b"Content-Type: image/png")
+        parts.append(b"")
+        parts.append(data)
+        parts.append(f"--{boundary}".encode())
+        parts.append(b'Content-Disposition: form-data; name="type"')
+        parts.append(b"")
+        parts.append(b"input")
+        parts.append(f"--{boundary}".encode())
+        parts.append(b'Content-Disposition: form-data; name="overwrite"')
+        parts.append(b"")
+        parts.append(b"true")
+        parts.append(f"--{boundary}--".encode())
+        parts.append(b"")
+        body = b"\r\n".join(parts)
+        req = urllib.request.Request(
+            f"http://{self.server_address}/upload/image",
+            data=body,
+            headers={"Content-Type": f"multipart/form-data; boundary={boundary}"},
+            method="POST",
+        )
+        try:
+            resp = json.loads(urllib.request.urlopen(req).read())
+        except Exception as e:
+            raise GenerationError(f"Failed to upload reference image: {e}") from e
+        name = resp.get("name")
+        if not name:
+            raise GenerationError(f"Upload succeeded but returned no name: {resp}")
+        return name
 
     def get_image(self, filename: str, subfolder: str, folder_type: str) -> bytes:
         data = {"filename": filename, "subfolder": subfolder, "type": folder_type}
@@ -51,15 +88,13 @@ class ComfyUIGenerator:
         steps: int,
         cfg: float,
         seed: Optional[int],
+        init_image: Optional[str] = None,
+        denoise: float = 1.0,
     ) -> dict:
         workflow = {
             "10": {
                 "class_type": "CheckpointLoaderSimple",
                 "inputs": {"ckpt_name": checkpoint},
-            },
-            "12": {
-                "class_type": "EmptyLatentImage",
-                "inputs": {"width": width, "height": height, "batch_size": 1},
             },
         }
         # With no LoRA, text encoders and the sampler read the checkpoint
@@ -73,10 +108,35 @@ class ComfyUIGenerator:
                     "clip": ["10", 1],
                     "lora_name": lora,
                     "strength_model": lora_strength,
-                    "strength_clip": lora_strength,
+                    # Workaround: on Mac MPS, LoRA application can produce
+                    # "half-static" / corrupted decode when both model+clip
+                    # strengths are set. Empirically, setting clip strength to
+                    # 0 keeps the prompt encoding stable while the model
+                    # still gets the style.
+                    "strength_clip": 0.0,
                 },
             }
             model_ref, clip_ref = ["2", 0], ["2", 1]
+
+        if init_image:
+            # img2img: encode a reference sprite and partially denoise.
+            workflow["20"] = {
+                "class_type": "LoadImage",
+                "inputs": {"image": init_image},
+            }
+            workflow["21"] = {
+                "class_type": "VAEEncode",
+                "inputs": {"pixels": ["20", 0], "vae": ["10", 2]},
+            }
+            latent_ref = ["21", 0]
+            denoise_value = denoise
+        else:
+            workflow["12"] = {
+                "class_type": "EmptyLatentImage",
+                "inputs": {"width": width, "height": height, "batch_size": 1},
+            }
+            latent_ref = ["12", 0]
+            denoise_value = 1.0
 
         workflow.update(
             {
@@ -94,13 +154,13 @@ class ComfyUIGenerator:
                         "model": model_ref,
                         "positive": ["6", 0],
                         "negative": ["5", 0],
-                        "latent_image": ["12", 0],
+                        "latent_image": latent_ref,
                         "seed": seed if seed is not None else random.randint(0, 2**32),
                         "steps": steps,
                         "cfg": cfg,
                         "sampler_name": "euler",
                         "scheduler": "normal",
-                        "denoise": 1,
+                        "denoise": denoise_value,
                     },
                 },
                 "8": {
@@ -161,10 +221,19 @@ class ComfyUIGenerator:
         steps: int = 20,
         cfg: float = 8.0,
         seed: Optional[int] = None,
+        init_image_bytes: Optional[bytes] = None,
+        denoise: float = 1.0,
     ) -> list[bytes]:
+        init_name = None
+        if init_image_bytes is not None and denoise < 1.0:
+            init_name = self.upload_image(
+                init_image_bytes, filename=f"matcha_ref_{self.client_id[:8]}.png"
+            )
         workflow = self.build_workflow(
             prompt, negative_prompt, checkpoint, lora, lora_strength,
             width, height, steps, cfg, seed,
+            init_image=init_name,
+            denoise=denoise,
         )
         queued = self.queue_prompt(workflow)
         prompt_id = queued["prompt_id"]
@@ -179,16 +248,33 @@ class ComfyUIGenerator:
             )
         outputs = history[prompt_id]["outputs"]
 
-        images = []
-        for node_output in outputs.values():
-            for image in node_output.get("images", []):
-                images.append(
-                    self.get_image(
-                        image["filename"],
-                        image.get("subfolder", ""),
-                        image.get("type", "output"),
-                    )
+        # The workflow's SaveImage node is stable: "14".
+        # History includes other nodes with "images", and relying on dict
+        # iteration order can occasionally pick the wrong one.
+        save_node = outputs.get("14") or {}
+        save_images = save_node.get("images", [])
+
+        images: list[bytes] = []
+        for image in save_images:
+            images.append(
+                self.get_image(
+                    image["filename"],
+                    image.get("subfolder", ""),
+                    image.get("type", "output"),
                 )
+            )
+
+        # Fallback: older / alternate workflows might not use node id "14".
+        if not images:
+            for node_output in outputs.values():
+                for image in node_output.get("images", []):
+                    images.append(
+                        self.get_image(
+                            image["filename"],
+                            image.get("subfolder", ""),
+                            image.get("type", "output"),
+                        )
+                    )
         if not images:
             raise GenerationError(
                 "Prompt executed but produced no images — check the SaveImage "

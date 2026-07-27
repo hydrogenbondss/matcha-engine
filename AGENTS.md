@@ -62,9 +62,11 @@ Inspected without generating:
 | Checkpoint `sd_xl_base` | `~/ComfyUI/models/checkpoints/` | SDXL — do **not** pair with these LoRAs |
 
 Trigger word observed in training tags: `sh_style`.
-Ren'Py dogfood target: `~/Desktop/LOVE32/LOVE32/`.
-Ren'Py SDK (for lint/compile of generated `.rpy`):
-`~/Desktop/renpy-8.5.2-sdk/renpy.sh`.
+Ren'Py dogfood target: `sandbox-renpy/` in this repo (throwaway). Do **not**
+deploy into the live LOVE32 project while it is being polished — Ren'Py
+auto-loads every `game/*.rpy` and matcha would inject characters into the
+real game. Optional later: hand-copy assets or deploy under a non-conflicting
+name when the user asks.
 
 Start ComfyUI (local Mac MPS — required flags):
 
@@ -83,6 +85,11 @@ PNGs. Prefer `512×512` over `512×768` to avoid MPS OOM; raise
 yields black images on Mac MPS with `anythingV5PrtRE` (even at strength 0.5).
 Working interim: `last.safetensors` (from `~/SmallHours_LoRA_test`) at ~0.7.
 Base checkpoint alone also works.
+
+**LoRA clip strength (2026-07-27):** On Mac MPS, setting both
+`strength_model` and `strength_clip` on `LoraLoader` produces half-static /
+corrupted PNGs. Matcha forces `strength_clip=0.0` and only applies
+`lora_strength` to the model. Base checkpoint with `--lora none` stays clean.
 
 Not useful for matcha: `~/bentopdf` (unrelated client-side PDF toolkit).
 `~/kohya_ss` is only needed if retraining LoRAs.

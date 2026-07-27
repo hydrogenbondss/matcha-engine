@@ -1,98 +1,110 @@
 # Matcha Engine — Timeline & Progress Tracker
 
-A living checklist so we can see, at a glance, whether we're on track. Update
-the status boxes as work lands. Detailed positioning and rationale live in
-[STRATEGY.md](STRATEGY.md); rolling engineering notes live in
+A living checklist so we can see, at a glance, whether we're on track. Detailed
+positioning lives in [STRATEGY.md](STRATEGY.md); engineering notes in
 [AGENT_CONTEXT.md](AGENT_CONTEXT.md). This file is the "are we on track" view
-that ties those together to the phased plan (STRATEGY.md §6).
+of STRATEGY.md §6.
 
 Status legend: `[x]` done · `[~]` in progress · `[ ]` not started · `[!]` blocked
 
-_Last updated: 2026-07-23 (consistency prompts, black-image guard, output_dir)_
+_Last updated: 2026-07-27 (LoRA clip=0 MPS fix; clean 4-pose sandbox re-run)_
+
+---
+
+## Phase map (4 phases)
+
+| # | Phase | Goal | Exit criteria |
+|---|--------|------|----------------|
+| **1** | Pipeline demo | Config → sprites → Ren'Py deploy works on real GPU | 4 usable poses in **sandbox**; play-tested; consistency good enough *or* wrap/IP-Adapter decided |
+| **2** | Free release | A stranger can install and use it | README + example project; cropped side images; license/disclosure helpers; public announce |
+| **3** | First dollar | Money changes hands | Pro pack on itch/Gumroad; acquisition LoRA(s) on Civitai |
+| **4** | Hosted (optional) | Cloud generate | Only if ≥~100 Pro sales — Replicate/fal + auth/billing |
+
+**You are here:** end of **Phase 1** — plumbing is done; the remaining gate is
+**sprite consistency + sandbox play-test**. Do **not** deploy into live LOVE32
+while that game is being polished (use `sandbox-renpy/` only).
 
 ---
 
 ## Where we are right now
 
-- **Current phase:** Month 1 — *Pipeline demo works* (nearly closed).
-- **Shipped:** v0.2.0 pipeline verified on **live ComfyUI (Mac MPS)** —
-  4 sakura poses generated, deployed into LOVE32 with `--layered
-  --side-image`, and `renpy.sh … lint` reports no matcha script errors.
-- **Biggest open risk:** sprite *consistency* across poses (outfit/eye drift,
-  dual-sprite sheets) — prompt locking + shared seed landed 2026-07-23;
-  still need play-test / VNCCS eval. `small_hours_style_v1` still NaNs on
-  Mac MPS (interim LoRA: `last.safetensors`).
+- **Current phase:** Phase 1 — close-out (consistency + sandbox play-test).
+- **Shipped:** v0.2 pipeline on live ComfyUI (Mac MPS); preflight; black-PNG
+  guard; shared seed + locked prompts; layered/side-image scaffolding;
+  dogfood target = `sandbox-renpy/` (LOVE32 cleared of matcha artifacts).
+- **In flight:** IP-Adapter consistency prototype (hair/outfit still drifts).
+- **Biggest open risk:** poses still drift (outfit/hair/ponytail). img2img
+  chaining glitched on MPS — disabled. LoRA on MPS needs `strength_clip=0`
+  (shipped). Next consistency lever: **IP-Adapter** or **VNCCS** wrap-vs-own.
+
+### Phase 1 — next actions (this week)
+
+1. ~~Play-test sandbox sprites~~ — done 2026-07-27 (no side-image double-up).
+2. Prototype IP-Adapter from first pose (preferred over broken img2img on MPS).
+3. ~~Commit pending matcha code~~ (img2img default off; LoRA clip=0 on MPS).
+4. Only then consider Phase 2 polish — **not** more LOVE32 deploys.
 
 ---
 
 ## Phase 1 — Pipeline demo works (Month 1)
 
-Exit criteria: a real character set generates on a GPU and deploys cleanly into
-a real Ren'Py project, with the four product bugs closed.
+Exit criteria: a real character set generates on GPU and deploys cleanly into
+a **sandbox** Ren'Py project; consistency accepted or a wrap path chosen.
 
 - [x] Repo + CLI skeleton (`init`, `character`)
-- [x] Pydantic config schema; checkpoint/LoRA are YAML fields, not hardcoded
-- [x] ComfyUI generator (workflow build, queue, WS completion, image fetch)
-- [x] Ren'Py formatter (naming, resize, script block)
-- [x] Filesystem deployer (images + idempotent `game/matcha_characters.rpy`)
-- [x] First working pipeline verified end-to-end (against mock ComfyUI)
-- [x] v0.2 hardening: preflight `/object_info` validation, loud per-pose
-      failures, no-deploy-on-zero-images, idempotent deploy
-- [x] Dev environment reproducible (venv + `pip install -e .`, tests green)
-- [x] Confirm `small_hours_style_v1` base model — **SD1.5** (safetensors
-      metadata: `stable-diffusion-v1/lora`, trained on `sd-v1-5-pruned`;
-      pairs with `anythingV5PrtRE.safetensors`, already on local Mac)
-- [x] **First real-GPU run** (2026-07-23, Mac MPS) — 4/4 poses via live
-      ComfyUI; use `--fp32-vae --cpu-vae --lowvram` (no `--force-fp16`)
-- [x] Dogfood on the actual **LOVE32** Ren'Py project
-      (`~/Desktop/LOVE32/LOVE32/`) — images under
-      `game/images/characters/sakura_*.png` + `game/matcha_characters.rpy`
-- [x] Verify generated `.rpy` with Ren'Py SDK lint
-      (`~/Desktop/renpy-8.5.2-sdk/renpy.sh … lint`) — clean for matcha
-- [x] Consistency hardening (shared seed, locked outfit prompt, sprite
-      framing positives/negatives, reject black/NaN PNGs, wire `output_dir`)
-- [!] Fix / replace `small_hours_style_v1` on MPS (black/NaN); interim
-      `last.safetensors` @ 0.7 works
-- [ ] Evaluate consistency vs **VNCCS**; decide wrap-vs-own (STRATEGY.md §4.2)
-- [ ] Re-run 4-pose set with new prompts and eyeball / play-test in LOVE32
+- [x] Pydantic config; checkpoint/LoRA are YAML fields
+- [x] ComfyUI generator + Ren'Py formatter + filesystem deployer
+- [x] Mock ComfyUI e2e + 31 unit tests
+- [x] Preflight, loud failures, no-deploy-on-zero, idempotent `.rpy`
+- [x] Dev env (venv, `pip install -e .`); LoRA base confirmed SD1.5
+- [x] First real-GPU run (Mac MPS); Ren'Py SDK lint of generated `.rpy`
+- [x] Consistency prompts + shared seed + black-image guard + `output_dir`
+- [x] img2img chaining code — **default off** (MPS glitch); use `1.0`
+- [x] Stop using live LOVE32 as dogfood; sandbox project only
+  - [x] txt2img-only 4-pose sandbox re-run (LoRA clip=0; no half-static)
+  - [x] Eyeball / play-test in `sandbox-renpy/` (Ren'Py launcher)
+- [!] `small_hours_style_v1` NaNs on MPS — interim `last.safetensors` @ 0.7
+- [ ] Consistency path: IP-Adapter and/or VNCCS wrap-vs-own (STRATEGY §4.2)
+
 ## Phase 2 — Free release (Months 2–3)
 
 Exit criteria: a stranger can install the CLI, generate, and deploy without us.
 
-- [~] Deploy polish: `layeredimage` / side-image / `Character` scaffolding
-      (STRATEGY.md §4.3 — the differentiator, over-invest here)
-      - [x] Opt-in `layeredimage` grouping poses as attributes (`--layered`)
-      - [x] Side-image defs + `Character(image=...)` wiring (`--side-image`)
-      - [x] Richer `Character` (display name + color) via config
-      - [ ] Generate *cropped portrait* side images (currently reuse full sprite)
-      - [x] Verify generated `.rpy` via Ren'Py SDK lint (2026-07-23 on LOVE32)
-      - [ ] Interactive play-test of `show sakura …` in the LOVE32 launcher
-- [ ] Per-model license surfacing (STRATEGY.md §4.6)
-- [ ] Disclosure helper: Steam AI survey text + itch.io tag reminder (§4.7)
-- [ ] Install/README polish for non-us users; example project
+**Do in this phase**
+
+- [~] Deploy polish (STRATEGY §4.3 — over-invest here)
+  - [x] `--layered` / `--side-image` / display name + color
+  - [ ] Cropped portrait side images (not full-sprite reuse)
+  - [ ] Documented play-test recipe against `sandbox-renpy/`
+- [ ] Per-model license surfacing (§4.6)
+- [ ] Disclosure helper: Steam AI survey + itch.io tag reminder (§4.7)
+- [ ] Install/README + example project for outsiders
 - [ ] Announce: Lemma Soft, Ren'Py Discord, r/comfyui, Civitai
 
 ## Phase 3 — First dollar (Months 3–4)
 
 Exit criteria: money changes hands at least once.
 
-- [ ] Pro package (packaged installer, preset library, one-command deploy)
-- [ ] List on itch.io + Gumroad (~$19–29 one-time)
-- [ ] Free VN-style LoRA(s) on Civitai as the acquisition loop
+**Do in this phase**
+
+- [ ] Pro package (installer, presets, one-command deploy)
+- [ ] List on itch.io + Gumroad (~$19–29)
+- [ ] Free VN-style LoRA(s) on Civitai (acquisition loop)
 
 ## Phase 4 — Hosted, conditional (Month 6+)
 
-Only pursue if ≥ ~100 Pro sales.
+Only if ≥ ~100 Pro sales.
+
+**Do in this phase**
 
 - [ ] Serverless inference (Replicate / fal)
 - [ ] Auth + billing + abuse handling
 
 ---
 
-## Open verification items (carry-over from STRATEGY.md §8)
+## Open verification items (STRATEGY.md §8)
 
-- [x] `small_hours_style_v1` base model — **SD1.5** (confirmed 2026-07-22
-      via LoRA safetensors metadata; use `anythingV5PrtRE`, not `sd_xl_base`)
+- [x] `small_hours_style_v1` base — **SD1.5** (use `anythingV5PrtRE`, not SDXL)
 - [ ] VNCCS traction (conflicting star counts)
 - [ ] Re-verify Lemma Soft commission price ranges before public quoting
 - [ ] "No one else does Ren'Py deploy" — searched, not exhaustively proven

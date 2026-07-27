@@ -39,6 +39,10 @@ class CharacterConfig(BaseModel):
     steps: int = 20
     cfg: float = 8.0
     seed: Optional[int] = None
+    # After the first pose, later poses img2img from it at this denoise
+    # (0.45–0.65 typical). Set to 1.0 to disable chaining (pure txt2img).
+    # Default off: Mac MPS currently glitches partial-denoise img2img.
+    consistency_denoise: float = Field(default=1.0, ge=0.0, le=1.0)
     output_dir: Path = Path("./output")
 
 

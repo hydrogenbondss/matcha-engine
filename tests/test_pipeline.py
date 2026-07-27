@@ -120,6 +120,24 @@ class TestGeneratorErrorSurfacing:
             with pytest.raises(GenerationError, match="no images"):
                 gen.generate(prompt="x", checkpoint="c.safetensors")
 
+    def test_uses_saveimage_node_14_images(self):
+        gen = ComfyUIGenerator("127.0.0.1:9999")
+        with mock.patch.object(gen, "queue_prompt", return_value={"prompt_id": "p1"}), \
+             mock.patch.object(gen, "_wait_for_completion"), \
+             mock.patch.object(gen, "get_history", return_value={
+                 "p1": {
+                     "outputs": {
+                         # Wrong node image should be ignored.
+                         "8": {"images": [{"filename": "bad.png", "subfolder": "", "type": "output"}]},
+                         # SaveImage node id in our workflow.
+                         "14": {"images": [{"filename": "good.png", "subfolder": "", "type": "output"}]},
+                     }
+                 }
+             }), \
+             mock.patch.object(gen, "get_image", side_effect=lambda filename, subfolder, folder_type: filename.encode()):
+            images = gen.generate(prompt="x", checkpoint="c.safetensors")
+            assert images == [b"good.png"]
+
     def test_workflow_without_lora_skips_loraloader(self):
         gen = ComfyUIGenerator()
         wf = gen.build_workflow("p", "n", "c.safetensors", None, 1.0, 512, 768, 20, 8.0, 1)
@@ -132,6 +150,18 @@ class TestGeneratorErrorSurfacing:
         wf = gen.build_workflow("p", "n", "c.safetensors", "l.safetensors", 0.8, 512, 768, 20, 8.0, 1)
         assert wf["2"]["inputs"]["lora_name"] == "l.safetensors"
         assert wf["7"]["inputs"]["model"] == ["2", 0]
+
+    def test_workflow_img2img_uses_vae_encode_and_partial_denoise(self):
+        gen = ComfyUIGenerator()
+        wf = gen.build_workflow(
+            "p", "n", "c.safetensors", None, 1.0, 512, 512, 20, 8.0, 1,
+            init_image="ref.png", denoise=0.55,
+        )
+        assert "12" not in wf  # no EmptyLatentImage
+        assert wf["20"]["class_type"] == "LoadImage"
+        assert wf["21"]["class_type"] == "VAEEncode"
+        assert wf["7"]["inputs"]["latent_image"] == ["21", 0]
+        assert wf["7"]["inputs"]["denoise"] == 0.55
 
 
 class TestDeploy:

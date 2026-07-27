@@ -9,17 +9,16 @@ from __future__ import annotations
 
 # Appended to every positive prompt so the model targets a single VN sprite.
 SPRITE_FRAMING = (
-    "single character, one person only, waist-up portrait, facing viewer, "
-    "simple solid light background, clean visual novel sprite, "
+    "single character, one person only, waist-up portrait, clean visual novel sprite, "
     "same outfit, same hairstyle, same eye color"
 )
 
 # Appended to the configured negative prompt.
 SPRITE_NEGATIVES = (
     "multiple views, collage, reference sheet, character sheet, split screen, "
-    "dual pose, two girls, twin, comic panel, panel layout, text, watermark, "
-    "border, frame, different outfit, wardrobe change, clothes change, "
-    "eye color change, hair color change, full body crowd"
+    "comic panel, panel layout, text, watermark, border, frame, "
+    "different outfit, wardrobe change, clothes change, "
+    "eye color change, hair color change"
 )
 
 # Pose label → expression guidance. Outfit stays in the character description.

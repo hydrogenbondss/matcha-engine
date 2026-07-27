@@ -24,8 +24,10 @@ display_name: Sakura
 color: "#ff69b4"
 # Lock identity here: outfit, hair, eyes. Pose prompts only vary expression.
 description: >-
-  sh_style, 1girl, long pink hair, purple eyes, white collared shirt,
-  pink bow tie, black school jumper with gold buttons, visual novel style
+  sh_style, 1girl, long straight pink hair down past shoulders with bangs,
+  not in a ponytail, purple eyes, white collared shirt, pink bow tie,
+  black school sweater with pink trim at the neckline, no chest emblem,
+  visual novel style
 poses:
   - idle
   - happy
@@ -44,6 +46,9 @@ width: 512
 height: 512
 steps: 20
 seed: 42
+# Later poses img2img from the first sprite (identity lock). 1.0 = off.
+# On Mac MPS, values < 1.0 currently produce glitched frames — keep off.
+consistency_denoise: 1.0
 
 # Optional: shrink sprites to fit within these bounds after generation
 # (aspect preserved, never upscales). Useful for 720p Ren'Py projects.
@@ -109,6 +114,11 @@ def character(
     typer.echo(f"Checkpoint: {char_config.checkpoint}")
     typer.echo(f"LoRA: {char_config.lora or '(none)'}")
     typer.echo(f"Seed: {run_seed} (shared across poses)")
+    if char_config.consistency_denoise < 1.0:
+        typer.echo(
+            f"Consistency: later poses img2img from first "
+            f"(denoise={char_config.consistency_denoise})"
+        )
 
     # Preflight: verify the server knows these models before queueing
     # anything, so a wrong name is one clear error, not N opaque 400s.
@@ -128,9 +138,21 @@ def character(
 
     generated: list[tuple[str, bytes]] = []  # (pose, image bytes)
     failures: list[tuple[str, str]] = []
-    for pose in char_config.poses:
+    reference_bytes: Optional[bytes] = None
+    for i, pose in enumerate(char_config.poses):
         prompt = build_pose_prompt(char_config.description, pose)
-        typer.echo(f"Generating: {pose}...")
+        use_ref = (
+            reference_bytes is not None
+            and char_config.consistency_denoise < 1.0
+        )
+        # Slight seed offset per pose so expression can change under img2img.
+        pose_seed = run_seed + i
+        mode = (
+            f"img2img denoise={char_config.consistency_denoise}"
+            if use_ref
+            else "txt2img"
+        )
+        typer.echo(f"Generating: {pose} ({mode})...")
         try:
             images = generator.generate(
                 prompt=prompt,
@@ -142,10 +164,16 @@ def character(
                 height=char_config.height,
                 steps=char_config.steps,
                 cfg=char_config.cfg,
-                seed=run_seed,
+                seed=pose_seed,
+                init_image_bytes=reference_bytes if use_ref else None,
+                denoise=(
+                    char_config.consistency_denoise if use_ref else 1.0
+                ),
             )
             assert_usable_image(images[0], label=pose)
             generated.append((pose, images[0]))
+            if reference_bytes is None:
+                reference_bytes = images[0]
         except GenerationError as e:
             typer.echo(f"  FAILED ({pose}): {e}", err=True)
             failures.append((pose, str(e)))

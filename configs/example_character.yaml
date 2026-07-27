@@ -3,8 +3,10 @@ display_name: Sakura
 color: "#ff69b4"
 # Lock identity here: outfit, hair, eyes. Pose prompts only vary expression.
 description: >-
-  sh_style, 1girl, long pink hair, purple eyes, white collared shirt,
-  pink bow tie, black school jumper with gold buttons, visual novel style
+  sh_style, 1girl, long straight pink hair down past shoulders with bangs,
+  not in a ponytail, purple eyes, white collared shirt, pink bow tie,
+  black school sweater with pink trim at the neckline, no chest emblem,
+  visual novel style
 poses:
   - idle
   - happy
@@ -23,6 +25,9 @@ width: 512
 height: 512
 steps: 20
 seed: 42
+# Later poses img2img from the first sprite (identity lock). 1.0 = off.
+# On Mac MPS, values < 1.0 currently produce glitched frames — keep off.
+consistency_denoise: 1.0
 
 # Optional: shrink sprites to fit within these bounds after generation
 # (aspect preserved, never upscales). Useful for 720p Ren'Py projects.
