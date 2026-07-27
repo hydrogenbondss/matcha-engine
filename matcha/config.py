@@ -43,6 +43,11 @@ class CharacterConfig(BaseModel):
     # (0.45–0.65 typical). Set to 1.0 to disable chaining (pure txt2img).
     # Default off: Mac MPS currently glitches partial-denoise img2img.
     consistency_denoise: float = Field(default=1.0, ge=0.0, le=1.0)
+    # IP-Adapter identity lock: later poses condition on the first sprite.
+    # 0.0 = off. ~0.55–0.75 typical on CUDA. Currently corrupts on Mac MPS.
+    ip_adapter_weight: float = Field(default=0.0, ge=0.0, le=2.0)
+    ip_adapter_file: str = "ip-adapter_sd15.safetensors"
+    clip_vision: str = "CLIP-ViT-H-14-laion2B-s32B-b79K.safetensors"
     output_dir: Path = Path("./output")
 
 

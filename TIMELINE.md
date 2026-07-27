@@ -7,7 +7,7 @@ of STRATEGY.md §6.
 
 Status legend: `[x]` done · `[~]` in progress · `[ ]` not started · `[!]` blocked
 
-_Last updated: 2026-07-27 (LoRA clip=0 MPS fix; clean 4-pose sandbox re-run)_
+_Last updated: 2026-07-27 (Phase 1 closed; prompt+seed consistency accepted)_
 
 ---
 
@@ -20,33 +20,34 @@ _Last updated: 2026-07-27 (LoRA clip=0 MPS fix; clean 4-pose sandbox re-run)_
 | **3** | First dollar | Money changes hands | Pro pack on itch/Gumroad; acquisition LoRA(s) on Civitai |
 | **4** | Hosted (optional) | Cloud generate | Only if ≥~100 Pro sales — Replicate/fal + auth/billing |
 
-**You are here:** end of **Phase 1** — plumbing is done; the remaining gate is
-**sprite consistency + sandbox play-test**. Do **not** deploy into live LOVE32
-while that game is being polished (use `sandbox-renpy/` only).
+**You are here:** start of **Phase 2**. Phase 1 is closed: pipeline demo works on
+Mac MPS; sandbox play-tested; consistency accepted as prompt+seed (IP-Adapter /
+img2img both corrupt on this MPS stack — code kept, default off). Do **not**
+deploy into live LOVE32 while that game is being polished (use `sandbox-renpy/`).
 
 ---
 
 ## Where we are right now
 
-- **Current phase:** Phase 1 — close-out (consistency + sandbox play-test).
-- **Shipped:** v0.2 pipeline on live ComfyUI (Mac MPS); preflight; black-PNG
-  guard; shared seed + locked prompts; layered/side-image scaffolding;
-  dogfood target = `sandbox-renpy/` (LOVE32 cleared of matcha artifacts).
-- **In flight:** IP-Adapter consistency prototype (hair/outfit still drifts).
-- **Biggest open risk:** poses still drift (outfit/hair/ponytail). img2img
-  chaining glitched on MPS — disabled. LoRA on MPS needs `strength_clip=0`
-  (shipped). Next consistency lever: **IP-Adapter** or **VNCCS** wrap-vs-own.
+- **Current phase:** Phase 2 — Free release.
+- **Shipped (Phase 1):** v0.2 pipeline on live ComfyUI (Mac MPS); preflight;
+  black-PNG guard; shared seed + locked prompts; LoRA `strength_clip=0`;
+  layered/side-image scaffolding; sandbox dogfood; IP-Adapter path (default off).
+- **In flight:** Phase 2 polish for outsider install + deploy.
+- **Known MPS limits:** img2img and IP-Adapter corrupt — leave off locally.
+  Re-try IP-Adapter on CUDA when available. Pose drift remains acceptable for
+  Phase 1 exit; improve later if CUDA IPA works.
 
-### Phase 1 — next actions (this week)
+### Phase 2 — next actions
 
-1. ~~Play-test sandbox sprites~~ — done 2026-07-27 (no side-image double-up).
-2. Prototype IP-Adapter from first pose (preferred over broken img2img on MPS).
-3. ~~Commit pending matcha code~~ (img2img default off; LoRA clip=0 on MPS).
-4. Only then consider Phase 2 polish — **not** more LOVE32 deploys.
+1. Documented play-test recipe + README install for strangers.
+2. Cropped portrait side images (not full-sprite reuse).
+3. Example project strangers can clone.
+4. License/disclosure helpers (Steam AI survey, itch tag).
 
 ---
 
-## Phase 1 — Pipeline demo works (Month 1)
+## Phase 1 — Pipeline demo works (Month 1) — CLOSED 2026-07-27
 
 Exit criteria: a real character set generates on GPU and deploys cleanly into
 a **sandbox** Ren'Py project; consistency accepted or a wrap path chosen.
@@ -54,17 +55,18 @@ a **sandbox** Ren'Py project; consistency accepted or a wrap path chosen.
 - [x] Repo + CLI skeleton (`init`, `character`)
 - [x] Pydantic config; checkpoint/LoRA are YAML fields
 - [x] ComfyUI generator + Ren'Py formatter + filesystem deployer
-- [x] Mock ComfyUI e2e + 31 unit tests
+- [x] Mock ComfyUI e2e + unit tests
 - [x] Preflight, loud failures, no-deploy-on-zero, idempotent `.rpy`
 - [x] Dev env (venv, `pip install -e .`); LoRA base confirmed SD1.5
 - [x] First real-GPU run (Mac MPS); Ren'Py SDK lint of generated `.rpy`
 - [x] Consistency prompts + shared seed + black-image guard + `output_dir`
 - [x] img2img chaining code — **default off** (MPS glitch); use `1.0`
 - [x] Stop using live LOVE32 as dogfood; sandbox project only
-  - [x] txt2img-only 4-pose sandbox re-run (LoRA clip=0; no half-static)
-  - [x] Eyeball / play-test in `sandbox-renpy/` (Ren'Py launcher)
+- [x] txt2img-only 4-pose sandbox re-run (LoRA clip=0; no half-static)
+- [x] Eyeball / play-test in `sandbox-renpy/` (Ren'Py launcher)
+- [x] IP-Adapter workflow + preflight (default off; MPS corrupts)
+- [x] Consistency path decision: **accept prompt+seed on MPS**; CUDA IPA / VNCCS optional later
 - [!] `small_hours_style_v1` NaNs on MPS — interim `last.safetensors` @ 0.7
-- [ ] Consistency path: IP-Adapter and/or VNCCS wrap-vs-own (STRATEGY §4.2)
 
 ## Phase 2 — Free release (Months 2–3)
 

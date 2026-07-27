@@ -49,6 +49,11 @@ seed: 42
 # Later poses img2img from the first sprite (identity lock). 1.0 = off.
 # On Mac MPS, values < 1.0 currently produce glitched frames — keep off.
 consistency_denoise: 1.0
+# IP-Adapter identity lock (later poses condition on first sprite).
+# 0.0 = off. Works on CUDA; currently corrupts on Mac MPS — leave off here.
+# ip_adapter_weight: 0.65
+# ip_adapter_file: ip-adapter_sd15.safetensors
+# clip_vision: CLIP-ViT-H-14-laion2B-s32B-b79K.safetensors
 
 # Optional: shrink sprites to fit within these bounds after generation
 # (aspect preserved, never upscales). Useful for 720p Ren'Py projects.
@@ -119,11 +124,32 @@ def character(
             f"Consistency: later poses img2img from first "
             f"(denoise={char_config.consistency_denoise})"
         )
+    if char_config.ip_adapter_weight > 0:
+        typer.echo(
+            f"IP-Adapter: later poses lock to first "
+            f"(weight={char_config.ip_adapter_weight})"
+        )
 
     # Preflight: verify the server knows these models before queueing
     # anything, so a wrong name is one clear error, not N opaque 400s.
     try:
-        preflight.validate_models(comfyui, char_config.checkpoint, char_config.lora)
+        ipa = (
+            char_config.ip_adapter_file
+            if char_config.ip_adapter_weight > 0
+            else None
+        )
+        cv = (
+            char_config.clip_vision
+            if char_config.ip_adapter_weight > 0
+            else None
+        )
+        preflight.validate_models(
+            comfyui,
+            char_config.checkpoint,
+            char_config.lora,
+            ip_adapter_file=ipa,
+            clip_vision=cv,
+        )
     except PreflightError as e:
         typer.echo(f"Preflight failed: {e}", err=True)
         raise typer.Exit(1)
@@ -141,17 +167,22 @@ def character(
     reference_bytes: Optional[bytes] = None
     for i, pose in enumerate(char_config.poses):
         prompt = build_pose_prompt(char_config.description, pose)
-        use_ref = (
+        use_img2img = (
             reference_bytes is not None
             and char_config.consistency_denoise < 1.0
         )
+        use_ipa = (
+            reference_bytes is not None
+            and char_config.ip_adapter_weight > 0
+        )
         # Slight seed offset per pose so expression can change under img2img.
         pose_seed = run_seed + i
-        mode = (
-            f"img2img denoise={char_config.consistency_denoise}"
-            if use_ref
-            else "txt2img"
-        )
+        modes = []
+        if use_img2img:
+            modes.append(f"img2img denoise={char_config.consistency_denoise}")
+        if use_ipa:
+            modes.append(f"ip-adapter w={char_config.ip_adapter_weight}")
+        mode = "+".join(modes) if modes else "txt2img"
         typer.echo(f"Generating: {pose} ({mode})...")
         try:
             images = generator.generate(
@@ -165,10 +196,16 @@ def character(
                 steps=char_config.steps,
                 cfg=char_config.cfg,
                 seed=pose_seed,
-                init_image_bytes=reference_bytes if use_ref else None,
+                init_image_bytes=reference_bytes if use_img2img else None,
                 denoise=(
-                    char_config.consistency_denoise if use_ref else 1.0
+                    char_config.consistency_denoise if use_img2img else 1.0
                 ),
+                ip_adapter_image_bytes=reference_bytes if use_ipa else None,
+                ip_adapter_weight=(
+                    char_config.ip_adapter_weight if use_ipa else 0.0
+                ),
+                ip_adapter_file=char_config.ip_adapter_file,
+                clip_vision=char_config.clip_vision,
             )
             assert_usable_image(images[0], label=pose)
             generated.append((pose, images[0]))

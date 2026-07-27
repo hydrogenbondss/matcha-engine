@@ -90,6 +90,10 @@ class ComfyUIGenerator:
         seed: Optional[int],
         init_image: Optional[str] = None,
         denoise: float = 1.0,
+        ip_adapter_image: Optional[str] = None,
+        ip_adapter_weight: float = 0.65,
+        ip_adapter_file: str = "ip-adapter_sd15.safetensors",
+        clip_vision: str = "CLIP-ViT-H-14-laion2B-s32B-b79K.safetensors",
     ) -> dict:
         workflow = {
             "10": {
@@ -118,15 +122,62 @@ class ComfyUIGenerator:
             }
             model_ref, clip_ref = ["2", 0], ["2", 1]
 
+        # Optional IP-Adapter: lock identity to a reference sprite while
+        # still allowing expression/pose to follow the text prompt.
+        if ip_adapter_image:
+            workflow["30"] = {
+                "class_type": "IPAdapterModelLoader",
+                "inputs": {"ipadapter_file": ip_adapter_file},
+            }
+            workflow["31"] = {
+                "class_type": "CLIPVisionLoader",
+                "inputs": {"clip_name": clip_vision},
+            }
+            workflow["32"] = {
+                "class_type": "LoadImage",
+                "inputs": {"image": ip_adapter_image},
+            }
+            workflow["33"] = {
+                "class_type": "PrepImageForClipVision",
+                "inputs": {
+                    "image": ["32", 0],
+                    "interpolation": "LANCZOS",
+                    "crop_position": "center",
+                    "sharpening": 0.0,
+                },
+            }
+            workflow["34"] = {
+                "class_type": "IPAdapterAdvanced",
+                "inputs": {
+                    "model": model_ref,
+                    "ipadapter": ["30", 0],
+                    "image": ["33", 0],
+                    "weight": ip_adapter_weight,
+                    "weight_type": "linear",
+                    "combine_embeds": "concat",
+                    "start_at": 0.0,
+                    "end_at": 1.0,
+                    "embeds_scaling": "V only",
+                    "clip_vision": ["31", 0],
+                },
+            }
+            model_ref = ["34", 0]
+
         if init_image:
             # img2img: encode a reference sprite and partially denoise.
-            workflow["20"] = {
-                "class_type": "LoadImage",
-                "inputs": {"image": init_image},
-            }
+            # Reuse LoadImage node 32 when IP-Adapter already loaded the same
+            # filename; otherwise add a dedicated loader.
+            if ip_adapter_image == init_image:
+                load_ref = ["32", 0]
+            else:
+                workflow["20"] = {
+                    "class_type": "LoadImage",
+                    "inputs": {"image": init_image},
+                }
+                load_ref = ["20", 0]
             workflow["21"] = {
                 "class_type": "VAEEncode",
-                "inputs": {"pixels": ["20", 0], "vae": ["10", 2]},
+                "inputs": {"pixels": load_ref, "vae": ["10", 2]},
             }
             latent_ref = ["21", 0]
             denoise_value = denoise
@@ -223,17 +274,39 @@ class ComfyUIGenerator:
         seed: Optional[int] = None,
         init_image_bytes: Optional[bytes] = None,
         denoise: float = 1.0,
+        ip_adapter_image_bytes: Optional[bytes] = None,
+        ip_adapter_weight: float = 0.65,
+        ip_adapter_file: str = "ip-adapter_sd15.safetensors",
+        clip_vision: str = "CLIP-ViT-H-14-laion2B-s32B-b79K.safetensors",
     ) -> list[bytes]:
         init_name = None
         if init_image_bytes is not None and denoise < 1.0:
             init_name = self.upload_image(
                 init_image_bytes, filename=f"matcha_ref_{self.client_id[:8]}.png"
             )
+        ip_name = None
+        if ip_adapter_image_bytes is not None and ip_adapter_weight > 0:
+            # Reuse the uploaded img2img file when it's the same reference.
+            if (
+                init_name is not None
+                and init_image_bytes is not None
+                and ip_adapter_image_bytes is init_image_bytes
+            ):
+                ip_name = init_name
+            else:
+                ip_name = self.upload_image(
+                    ip_adapter_image_bytes,
+                    filename=f"matcha_ipa_{self.client_id[:8]}.png",
+                )
         workflow = self.build_workflow(
             prompt, negative_prompt, checkpoint, lora, lora_strength,
             width, height, steps, cfg, seed,
             init_image=init_name,
             denoise=denoise,
+            ip_adapter_image=ip_name,
+            ip_adapter_weight=ip_adapter_weight,
+            ip_adapter_file=ip_adapter_file,
+            clip_vision=clip_vision,
         )
         queued = self.queue_prompt(workflow)
         prompt_id = queued["prompt_id"]

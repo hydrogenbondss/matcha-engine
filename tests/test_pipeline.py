@@ -163,6 +163,23 @@ class TestGeneratorErrorSurfacing:
         assert wf["7"]["inputs"]["latent_image"] == ["21", 0]
         assert wf["7"]["inputs"]["denoise"] == 0.55
 
+    def test_workflow_ip_adapter_routes_model_through_advanced_node(self):
+        gen = ComfyUIGenerator()
+        wf = gen.build_workflow(
+            "p", "n", "c.safetensors", "l.safetensors", 0.7, 512, 512, 12, 8.0, 1,
+            ip_adapter_image="ref.png",
+            ip_adapter_weight=0.65,
+            ip_adapter_file="ip-adapter_sd15.safetensors",
+            clip_vision="CLIP-ViT-H-14-laion2B-s32B-b79K.safetensors",
+        )
+        assert wf["30"]["class_type"] == "IPAdapterModelLoader"
+        assert wf["31"]["class_type"] == "CLIPVisionLoader"
+        assert wf["34"]["class_type"] == "IPAdapterAdvanced"
+        assert wf["34"]["inputs"]["model"] == ["2", 0]  # after LoRA
+        assert wf["34"]["inputs"]["weight"] == 0.65
+        assert wf["7"]["inputs"]["model"] == ["34", 0]
+        assert "12" in wf  # still txt2img latent
+
 
 class TestDeploy:
     def test_deploy_and_script(self, tmp_path):

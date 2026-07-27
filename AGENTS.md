@@ -91,5 +91,11 @@ Base checkpoint alone also works.
 corrupted PNGs. Matcha forces `strength_clip=0.0` and only applies
 `lora_strength` to the model. Base checkpoint with `--lora none` stays clean.
 
+**IP-Adapter (2026-07-27):** Code path exists (`ip_adapter_weight` > 0) and
+CLIP-ViT-H + `ip-adapter_sd15` are installed under `~/ComfyUI/models/`. On
+this Mac MPS stack, IP-Adapter currently yields noise/corruption (even with
+`--lora none` / light adapter). Leave `ip_adapter_weight: 0` locally; try on
+CUDA when available. Consistency on MPS stays prompt+seed for now.
+
 Not useful for matcha: `~/bentopdf` (unrelated client-side PDF toolkit).
 `~/kohya_ss` is only needed if retraining LoRAs.

@@ -41,6 +41,9 @@ def validate_models(
     server_address: str,
     checkpoint: str,
     lora: str | None = None,
+    *,
+    ip_adapter_file: str | None = None,
+    clip_vision: str | None = None,
 ) -> None:
     """Raise PreflightError unless the server knows both model names."""
     ckpt_info = _object_info(server_address, "CheckpointLoaderSimple")
@@ -63,6 +66,38 @@ def validate_models(
                 "Set 'lora:' in your character YAML to one of these, set it "
                 "to null to skip the LoRA, or install the file into "
                 "ComfyUI/models/loras/."
+            )
+
+    if ip_adapter_file:
+        try:
+            ipa_info = _object_info(server_address, "IPAdapterModelLoader")
+        except PreflightError as e:
+            raise PreflightError(
+                f"IP-Adapter requested but ComfyUI has no IPAdapterModelLoader "
+                f"node (is ComfyUI_IPAdapter_plus installed?): {e}"
+            ) from e
+        files = _available(ipa_info, "IPAdapterModelLoader", "ipadapter_file")
+        if ip_adapter_file not in files:
+            raise PreflightError(
+                f"IP-Adapter '{ip_adapter_file}' not found on the ComfyUI "
+                f"server.\nAvailable: {', '.join(files) or '(none)'}\n"
+                "Install into ComfyUI/models/ipadapter/."
+            )
+
+    if clip_vision:
+        try:
+            cv_info = _object_info(server_address, "CLIPVisionLoader")
+        except PreflightError as e:
+            raise PreflightError(
+                f"CLIP vision requested but CLIPVisionLoader is unavailable: {e}"
+            ) from e
+        files = _available(cv_info, "CLIPVisionLoader", "clip_name")
+        if clip_vision not in files:
+            raise PreflightError(
+                f"CLIP vision '{clip_vision}' not found on the ComfyUI server.\n"
+                f"Available: {', '.join(files) or '(none)'}\n"
+                "Download CLIP-ViT-H-14-laion2B-s32B-b79K.safetensors into "
+                "ComfyUI/models/clip_vision/ (see ComfyUI_IPAdapter_plus README)."
             )
 
 
