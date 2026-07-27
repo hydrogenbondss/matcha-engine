@@ -77,7 +77,7 @@ Exit criteria: a stranger can install the CLI, generate, and deploy without us.
 - [~] Deploy polish (STRATEGY §4.3 — over-invest here)
   - [x] `--layered` / `--side-image` / display name + color
   - [ ] Cropped portrait side images (not full-sprite reuse)
-  - [ ] Documented play-test recipe against `sandbox-renpy/`
+  - [x] Documented play-test recipe against `sandbox-renpy/` (README)
 - [ ] Per-model license surfacing (§4.6)
 - [ ] Disclosure helper: Steam AI survey + itch.io tag reminder (§4.7)
 - [ ] Install/README + example project for outsiders

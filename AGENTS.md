@@ -97,5 +97,9 @@ this Mac MPS stack, IP-Adapter currently yields noise/corruption (even with
 `--lora none` / light adapter). Leave `ip_adapter_weight: 0` locally; try on
 CUDA when available. Consistency on MPS stays prompt+seed for now.
 
+**After heavy IP-Adapter runs:** ComfyUI/MPS can stay wedged so even plain
+txt2img (no LoRA) produces half-static frames. Fully quit ComfyUI (or reboot)
+before the next clean run; do not rely on a soft restart alone.
+
 Not useful for matcha: `~/bentopdf` (unrelated client-side PDF toolkit).
 `~/kohya_ss` is only needed if retraining LoRAs.

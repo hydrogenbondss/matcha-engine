@@ -10,7 +10,8 @@ See [STRATEGY.md](STRATEGY.md) for positioning, roadmap, and business model.
 ## Install
 
 ```bash
-pip install -e .
+python3.12 -m venv .venv
+.venv/bin/pip install -e .
 ```
 
 Requires a running [ComfyUI](https://github.com/comfyanonymous/ComfyUI)
@@ -18,19 +19,35 @@ server with your checkpoint in `models/checkpoints/` and (optionally) a
 LoRA in `models/loras/`. The checkpoint and LoRA must share a base model
 family — an SD1.5 LoRA on an SDXL checkpoint fails or silently degrades.
 
+### Mac MPS (Apple Silicon)
+
+Start ComfyUI with these flags (avoid `--force-fp16` — it produces solid
+black PNGs):
+
+```bash
+export PYTORCH_MPS_HIGH_WATERMARK_RATIO=0.0
+cd ~/ComfyUI && ./venv/bin/python main.py \
+  --listen 127.0.0.1 --port 8188 \
+  --fp32-vae --cpu-vae --lowvram --use-split-cross-attention
+```
+
+Prefer `512×512` and keep `consistency_denoise: 1.0` and
+`ip_adapter_weight: 0` — partial img2img and IP-Adapter currently corrupt
+on MPS. Matcha already forces LoRA `strength_clip=0` for the same reason.
+
 ## Usage
 
 ```bash
 # Scaffold a project with an example character config
-matcha init myproject
+.venv/bin/matcha init myproject
 
 # Validate config + models without generating (checks the ComfyUI server
 # actually has the checkpoint/LoRA you named)
-matcha character configs/example_character.yaml --dry-run
+.venv/bin/matcha character configs/example_character.yaml --dry-run
 
 # Generate and deploy into a Ren'Py project
-matcha character configs/example_character.yaml \
-  --deploy --project ~/path/to/renpy-project
+.venv/bin/matcha character configs/example_character.yaml \
+  --deploy --project ~/path/to/renpy-project --layered
 ```
 
 Model selection lives in the YAML (`checkpoint:`, `lora:`,
@@ -41,6 +58,24 @@ Generated Ren'Py definitions go to `game/matcha_characters.rpy` — a
 dedicated file that re-runs update idempotently, never touching your
 hand-written script files. Only poses that actually generated get
 definitions; the CLI exits non-zero if any pose fails.
+
+### Sandbox play-test (dogfood)
+
+Use a throwaway Ren'Py project — do **not** deploy into a live game while
+you're polishing it (Ren'Py auto-loads every `game/*.rpy`).
+
+```bash
+# After generating into sandbox-renpy/ (create once with a minimal project
+# + options.rpy/gui.rpy/screens.rpy from the Ren'Py SDK "the_question" sample):
+.venv/bin/matcha character configs/example_character.yaml \
+  --deploy --project ./sandbox-renpy --layered
+
+# Launch with the Ren'Py SDK:
+~/Desktop/renpy-8.5.2-sdk/renpy.sh ./sandbox-renpy
+```
+
+Click through each pose. Prefer `--layered` without `--side-image` for
+play-test — full-sprite side images double the character on screen.
 
 ### Ren'Py scaffolding options
 
