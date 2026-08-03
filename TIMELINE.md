@@ -7,23 +7,30 @@ of STRATEGY.md §6.
 
 Status legend: `[x]` done · `[~]` in progress · `[ ]` not started · `[!]` blocked
 
-_Last updated: 2026-07-27 (Phase 1 closed; prompt+seed consistency accepted)_
+_Last updated: 2026-08-03 (4-phase map + branding checklists; Phase 2 ordered)_
 
 ---
 
 ## Phase map (4 phases)
 
+Keep **four** phases — do not invent a fifth for consistency. CUDA IP-Adapter /
+VNCCS stay optional levers inside Phase 2/3, not a gate that stalls forever on
+Mac MPS.
+
 | # | Phase | Goal | Exit criteria |
 |---|--------|------|----------------|
-| **1** | Pipeline demo | Config → sprites → Ren'Py deploy works on real GPU | 4 usable poses in **sandbox**; play-tested; consistency good enough *or* wrap/IP-Adapter decided |
-| **2** | Free release | A stranger can install and use it | README + example project; cropped side images; license/disclosure helpers; public announce |
-| **3** | First dollar | Money changes hands | Pro pack on itch/Gumroad; acquisition LoRA(s) on Civitai |
-| **4** | Hosted (optional) | Cloud generate | Only if ≥~100 Pro sales — Replicate/fal + auth/billing |
+| **1** | Pipeline demo | Config → sprites → Ren'Py deploy works on a real GPU *for you* | 4 usable poses in **sandbox**; play-tested; consistency path decided |
+| **2** | Free release | A stranger can install, generate, and deploy without us | Example project; cropped side images; license/disclosure helpers; README limits honest; public announce |
+| **3** | First dollar | Money changes hands | Pro pack on itch/Gumroad; ≥1 paid sale; acquisition LoRA(s) on Civitai |
+| **4** | Hosted (conditional) | Cloud generate | Only if ≥~100 Pro sales — Replicate/fal + auth/billing |
 
-**You are here:** start of **Phase 2**. Phase 1 is closed: pipeline demo works on
-Mac MPS; sandbox play-tested; consistency accepted as prompt+seed (IP-Adapter /
-img2img both corrupt on this MPS stack — code kept, default off). Do **not**
-deploy into live LOVE32 while that game is being polished (use `sandbox-renpy/`).
+```
+Phase1 → Phase2 → Phase3 ──(if ~100 Pro sales)──► Phase4
+```
+
+**You are here:** **Phase 2 — Free release.** Phase 1 is closed (2026-07-27).
+Do **not** deploy into live LOVE32 while that game is being polished — use
+`sandbox-renpy/` only.
 
 ---
 
@@ -33,24 +40,32 @@ deploy into live LOVE32 while that game is being polished (use `sandbox-renpy/`)
 - **Shipped (Phase 1):** v0.2 pipeline on live ComfyUI (Mac MPS); preflight;
   black-PNG guard; shared seed + locked prompts; LoRA `strength_clip=0`;
   layered/side-image scaffolding; sandbox dogfood; IP-Adapter path (default off).
-- **In flight:** Phase 2 polish for outsider install + deploy.
-- **Known MPS limits:** img2img and IP-Adapter corrupt — leave off locally.
-  Re-try IP-Adapter on CUDA when available. Pose drift remains acceptable for
-  Phase 1 exit; improve later if CUDA IPA works.
+- **In flight:** Phase 2 must-haves in order below.
+- **Mac / MPS limits (document in README, do not hide):** img2img and
+  IP-Adapter corrupt — leave off locally (`consistency_denoise: 1.0`,
+  `ip_adapter_weight: 0`). Consistency = prompt + shared seed. CUDA IPA is
+  Phase 2 stretch / Phase 3 Pro value-add, **not** a Phase 2 exit gate.
+  After heavy IPA runs, fully quit ComfyUI (or reboot) before the next clean
+  generation.
 
-### Phase 2 — next actions
+### Phase 2 — next actions (ordered)
 
-1. Documented play-test recipe + README install for strangers.
-2. Cropped portrait side images (not full-sprite reuse).
-3. Example project strangers can clone.
-4. License/disclosure helpers (Steam AI survey, itch tag).
+1. Cropped portrait side images (not full-sprite reuse).
+2. Example / sample Ren'Py project strangers can clone (not a live game).
+3. Per-model license surfacing + Steam/itch disclosure helpers.
+4. Finish outsider install/README cold-start polish (Mac MPS caveats partly done).
+5. Announce: Lemma Soft, Ren'Py Discord, r/comfyui, Civitai.
 
 ---
 
-## Phase 1 — Pipeline demo works (Month 1) — CLOSED 2026-07-27
+## Phase 1 — Pipeline demo (Month 1) — CLOSED 2026-07-27
 
-Exit criteria: a real character set generates on GPU and deploys cleanly into
-a **sandbox** Ren'Py project; consistency accepted or a wrap path chosen.
+**Goal:** Config → sprites → Ren'Py deploy works on a real GPU for *you*.
+
+**Exit (met):** 4 usable poses in `sandbox-renpy/`; play-tested; consistency
+path decided (prompt+seed on MPS; IP-Adapter/img2img default off).
+
+**Out of scope for this phase:** public announce, payments, LOVE32 live deploy.
 
 - [x] Repo + CLI skeleton (`init`, `character`)
 - [x] Pydantic config; checkpoint/LoRA are YAML fields
@@ -60,7 +75,7 @@ a **sandbox** Ren'Py project; consistency accepted or a wrap path chosen.
 - [x] Dev env (venv, `pip install -e .`); LoRA base confirmed SD1.5
 - [x] First real-GPU run (Mac MPS); Ren'Py SDK lint of generated `.rpy`
 - [x] Consistency prompts + shared seed + black-image guard + `output_dir`
-- [x] img2img chaining code — **default off** (MPS glitch); use `1.0`
+- [x] img2img chaining code — **default off** (MPS glitch)
 - [x] Stop using live LOVE32 as dogfood; sandbox project only
 - [x] txt2img-only 4-pose sandbox re-run (LoRA clip=0; no half-static)
 - [x] Eyeball / play-test in `sandbox-renpy/` (Ren'Py launcher)
@@ -68,39 +83,85 @@ a **sandbox** Ren'Py project; consistency accepted or a wrap path chosen.
 - [x] Consistency path decision: **accept prompt+seed on MPS**; CUDA IPA / VNCCS optional later
 - [!] `small_hours_style_v1` NaNs on MPS — interim `last.safetensors` @ 0.7
 
+**Branding / identity (deferred — Phase 1 closed with minimal brand)**
+
+- [x] No dedicated brand system this phase — CLI name `matcha` + README title only
+- [x] Visual identity / wordmark / marketing polish deferred to Phase 2 announce prep
+
+---
+
 ## Phase 2 — Free release (Months 2–3)
 
-Exit criteria: a stranger can install the CLI, generate, and deploy without us.
+**Goal:** A stranger can install, generate, and deploy without us sitting next
+to them.
 
-**Do in this phase**
+**Exit:** stranger walkthrough succeeds once; announce posts go out; known
+Mac/MPS limits are written in README (not hidden).
 
-- [~] Deploy polish (STRATEGY §4.3 — over-invest here)
-  - [x] `--layered` / `--side-image` / display name + color
-  - [ ] Cropped portrait side images (not full-sprite reuse)
-  - [x] Documented play-test recipe against `sandbox-renpy/` (README)
-- [ ] Per-model license surfacing (§4.6)
-- [ ] Disclosure helper: Steam AI survey + itch.io tag reminder (§4.7)
-- [ ] Install/README + example project for outsiders
-- [ ] Announce: Lemma Soft, Ren'Py Discord, r/comfyui, Civitai
+**Out of scope:** Pro installer, Gumroad listing, hosted API.
+
+**Must (in this order)**
+
+1. [ ] Cropped portrait side images (not full-sprite reuse) — STRATEGY §4.3
+2. [ ] Example / sample Ren'Py project strangers can clone (not a live game)
+3. [ ] Per-model license surfacing (§4.6)
+4. [ ] Disclosure helper: Steam AI survey + itch.io tag reminder (§4.7)
+5. [~] Install/README cold-start for outsiders (venv + ComfyUI + Mac MPS notes partly done; play-test recipe in README)
+6. [ ] Announce: Lemma Soft, Ren'Py Discord, r/comfyui, Civitai — **not** artist-heavy general VN forums
+
+**Branding / marketing / design (same phase — not a 5th phase)**
+
+- [ ] Product name consistency everywhere (**Matcha Engine** / `matcha` — fix leftover “Match Engine” in STRATEGY)
+- [ ] README voice: clear, honest (Mac MPS limits), outsider-friendly tone
+- [ ] Wordmark / simple logo if announce posts need one (skip if text-only is enough)
+- [ ] Announce screenshots + short GIF (config → sprites → Ren'Py)
+- [ ] Announce copy drafts for Lemma Soft, Ren'Py Discord, r/comfyui, Civitai
+
+**Already shipped toward Phase 2**
+
+- [x] `--layered` / `--side-image` / display name + color
+- [x] Documented sandbox play-test recipe (README)
+
+**Stretch (not an exit gate)**
+
+- [ ] CUDA IP-Adapter retest when a GPU is available
+- [ ] Document “Mac = prompt+seed only” next to any CUDA-improved path
+
+---
 
 ## Phase 3 — First dollar (Months 3–4)
 
-Exit criteria: money changes hands at least once.
+**Goal:** Money changes hands once.
 
-**Do in this phase**
+**Exit:** ≥1 paid sale (prefer actual sale over listing-only).
 
-- [ ] Pro package (installer, presets, one-command deploy)
-- [ ] List on itch.io + Gumroad (~$19–29)
+**Out of scope:** auth/billing for cloud credits; marketing site/landing.
+
+- [ ] Pro package (installer, presets, one-command deploy) ~$19–29
+- [ ] List on itch.io + Gumroad
 - [ ] Free VN-style LoRA(s) on Civitai (acquisition loop)
+
+**Branding / marketing / design**
+
+- [ ] itch.io + Gumroad listing visuals (cover, gallery, short trailer/GIF)
+- [ ] Package naming clarity (Free CLI vs Pro pack)
+- [ ] Civitai LoRA card branding (“made for Matcha Engine”)
+- [ ] Pricing clarity on listings (~$19–29 one-time; what’s in Free vs Pro)
+
+---
 
 ## Phase 4 — Hosted, conditional (Month 6+)
 
-Only if ≥ ~100 Pro sales.
+**Goal:** Cloud generate only if the Pro business earned it.
 
-**Do in this phase**
+**Gate:** ≥ ~100 Pro sales. If the gate never hits: stay offline CLI + Pro.
 
 - [ ] Serverless inference (Replicate / fal)
 - [ ] Auth + billing + abuse handling
+
+**Branding / marketing / design**
+
+- [ ] Marketing site / landing **only if** the ≥~100 Pro sales gate hits (do not build earlier)
 
 ---
 

@@ -115,12 +115,16 @@ only subscription-scale upside found.
 
 ## 6. Timeline (at 10–25 hrs/week shared across five projects)
 
+Four phases only — see [TIMELINE.md](TIMELINE.md) for the living checklist.
+Consistency levers (CUDA IP-Adapter, VNCCS wrap) are optional polish inside
+Phase 2/3, not a fifth phase and not a free-release gate.
+
 | Phase | Target | Work |
 |---|---|---|
-| Month 1 | Pipeline demo works | Correct anime checkpoint (match the LoRA's base — SD1.5 vs SDXL), fix the four product bugs (§4.1, .4, .5), evaluate VNCCS, dogfood on LOVE32 |
-| Months 2–3 | Free release | Deploy polish, license + disclosure features, announce on Lemma Soft, Ren'Py Discord, r/comfyui, Civitai — **not** artist-heavy general VN forums |
-| Months 3–4 | **First dollar** | Pro package on itch.io/Gumroad |
-| Month 6+ | Hosted (conditional) | Only if ≥~100 Pro sales; serverless inference (Replicate/fal) |
+| Month 1 | Pipeline demo works | SD1.5 checkpoint + LoRA pairing; product bugs (§4.1, .4, .5); dogfood in **sandbox Ren'Py** (not live LOVE32); consistency = prompt+shared seed on Mac MPS (img2img / IP-Adapter default off — corrupt on MPS) |
+| Months 2–3 | Free release | Deploy polish (cropped side images, example project), license + disclosure features, honest Mac/MPS limits in README, announce on Lemma Soft, Ren'Py Discord, r/comfyui, Civitai — **not** artist-heavy general VN forums |
+| Months 3–4 | **First dollar** | Pro package on itch.io/Gumroad; free branded LoRA(s) on Civitai |
+| Month 6+ | Hosted (conditional) | Only if ≥~100 Pro sales; serverless inference (Replicate/fal) + auth/billing |
 
 ## 7. Blockers & mitigations
 
