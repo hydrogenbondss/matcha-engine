@@ -59,23 +59,40 @@ dedicated file that re-runs update idempotently, never touching your
 hand-written script files. Only poses that actually generated get
 definitions; the CLI exits non-zero if any pose fails.
 
-### Sandbox play-test (dogfood)
+### Example project
 
-Use a throwaway Ren'Py project — do **not** deploy into a live game while
-you're polishing it (Ren'Py auto-loads every `game/*.rpy`).
+Checked-in Ren'Py sample at [`examples/sample-vn/`](examples/sample-vn/).
+Character PNGs are not committed — starter `Placeholder` art makes it
+playable before generation; `matcha character --deploy` replaces them.
 
 ```bash
-# After generating into sandbox-renpy/ (create once with a minimal project
-# + options.rpy/gui.rpy/screens.rpy from the Ren'Py SDK "the_question" sample):
+# Validate against ComfyUI (no GPU generation):
+.venv/bin/matcha character examples/sample-vn/configs/example_character.yaml \
+  --dry-run
+
+# Generate + deploy into the sample project:
+.venv/bin/matcha character examples/sample-vn/configs/example_character.yaml \
+  --deploy --project examples/sample-vn --layered
+
+# Open with the Ren'Py SDK (adjust the SDK path if needed):
+~/Desktop/renpy-8.5.2-sdk/renpy.sh examples/sample-vn
+```
+
+Click through the pose lineup in `script.rpy`. With `--side-image`, dialogue
+portraits use cropped head/shoulders PNGs (not the full sprite).
+
+### Sandbox play-test (local dogfood)
+
+For private experiments, use a throwaway `sandbox-renpy/` (gitignored) —
+do **not** deploy into a live game while you're polishing it (Ren'Py
+auto-loads every `game/*.rpy`).
+
+```bash
 .venv/bin/matcha character configs/example_character.yaml \
   --deploy --project ./sandbox-renpy --layered
 
-# Launch with the Ren'Py SDK:
 ~/Desktop/renpy-8.5.2-sdk/renpy.sh ./sandbox-renpy
 ```
-
-Click through each pose. With `--side-image`, dialogue portraits use cropped
-head/shoulders PNGs (not the full sprite), so they won't double up on screen.
 
 ### Ren'Py scaffolding options
 

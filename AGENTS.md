@@ -62,11 +62,13 @@ Inspected without generating:
 | Checkpoint `sd_xl_base` | `~/ComfyUI/models/checkpoints/` | SDXL — do **not** pair with these LoRAs |
 
 Trigger word observed in training tags: `sh_style`.
-Ren'Py dogfood target: `sandbox-renpy/` in this repo (throwaway). Do **not**
-deploy into the live LOVE32 project while it is being polished — Ren'Py
-auto-loads every `game/*.rpy` and matcha would inject characters into the
-real game. Optional later: hand-copy assets or deploy under a non-conflicting
-name when the user asks.
+Checked-in example Ren'Py project for strangers: `examples/sample-vn/`
+(Placeholder art until `matcha character --deploy`). Local dogfood target:
+`sandbox-renpy/` (gitignored throwaway). Do **not** deploy into the live
+LOVE32 project while it is being polished — Ren'Py auto-loads every
+`game/*.rpy` and matcha would inject characters into the real game.
+Optional later: hand-copy assets or deploy under a non-conflicting name
+when the user asks.
 
 Start ComfyUI (local Mac MPS — required flags):
 

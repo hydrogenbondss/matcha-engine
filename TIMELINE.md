@@ -7,7 +7,7 @@ of STRATEGY.md §6.
 
 Status legend: `[x]` done · `[~]` in progress · `[ ]` not started · `[!]` blocked
 
-_Last updated: 2026-08-03 (4-phase map + branding checklists; Phase 2 ordered)_
+_Last updated: 2026-08-04 (Phase 2 #2 — examples/sample-vn checked in)_
 
 ---
 
@@ -30,7 +30,7 @@ Phase1 → Phase2 → Phase3 ──(if ~100 Pro sales)──► Phase4
 
 **You are here:** **Phase 2 — Free release.** Phase 1 is closed (2026-07-27).
 Do **not** deploy into live LOVE32 while that game is being polished — use
-`sandbox-renpy/` only.
+`examples/sample-vn/` (checked in) or gitignored `sandbox-renpy/`.
 
 ---
 
@@ -51,7 +51,7 @@ Do **not** deploy into live LOVE32 while that game is being polished — use
 ### Phase 2 — next actions (ordered)
 
 1. ~~Cropped portrait side images (not full-sprite reuse).~~ **done**
-2. Example / sample Ren'Py project strangers can clone (not a live game).
+2. ~~Example / sample Ren'Py project strangers can clone.~~ **done** (`examples/sample-vn/`)
 3. Per-model license surfacing + Steam/itch disclosure helpers.
 4. Finish outsider install/README cold-start polish (Mac MPS caveats partly done).
 5. Announce: Lemma Soft, Ren'Py Discord, r/comfyui, Civitai.
@@ -103,10 +103,10 @@ Mac/MPS limits are written in README (not hidden).
 **Must (in this order)**
 
 1. [x] Cropped portrait side images (not full-sprite reuse) — STRATEGY §4.3
-2. [ ] Example / sample Ren'Py project strangers can clone (not a live game)
+2. [x] Example / sample Ren'Py project strangers can clone — `examples/sample-vn/`
 3. [ ] Per-model license surfacing (§4.6)
 4. [ ] Disclosure helper: Steam AI survey + itch.io tag reminder (§4.7)
-5. [~] Install/README cold-start for outsiders (venv + ComfyUI + Mac MPS notes partly done; play-test recipe in README)
+5. [~] Install/README cold-start for outsiders (venv + ComfyUI + Mac MPS notes partly done; example-project recipe in README)
 6. [ ] Announce: Lemma Soft, Ren'Py Discord, r/comfyui, Civitai — **not** artist-heavy general VN forums
 
 **Branding / marketing / design (same phase — not a 5th phase)**
@@ -122,6 +122,7 @@ Mac/MPS limits are written in README (not hidden).
 - [x] `--layered` / `--side-image` / display name + color
 - [x] Documented sandbox play-test recipe (README)
 - [x] Cropped portrait side images (`<name>_<pose>_side.png`, `side_image_height_ratio`)
+- [x] Checked-in example Ren'Py project (`examples/sample-vn/`) + README recipe
 
 **Stretch (not an exit gate)**
 
