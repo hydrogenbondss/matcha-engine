@@ -60,6 +60,11 @@ consistency_denoise: 1.0
 # resize_max_width: 1280
 # resize_max_height: 720
 
+# Side-image portraits (opt in with --side-image or side_image: true).
+# Crops the top fraction of each sprite for Ren'Py dialogue portraits.
+# side_image: true
+# side_image_height_ratio: 0.45
+
 output_dir: ./output
 """
 
@@ -85,7 +90,10 @@ def character(
     ),
     side_image: Optional[bool] = typer.Option(
         None, "--side-image/--no-side-image",
-        help="Emit side-image definitions and wire Character(image=...)",
+        help=(
+            "Crop head/shoulders portraits, emit image side defs, "
+            "and wire Character(image=...)"
+        ),
     ),
 ):
     """Generate character assets and optionally deploy to Ren'Py."""
@@ -265,6 +273,26 @@ def character(
             max_height=char_config.resize_max_height,
         )
         deployed = deployer.deploy_images(formatted, subfolder="characters")
+
+        if char_config.side_image:
+            # Crop from resized work copies so portraits match deployed sprites.
+            side_formatted = formatter.format_side_images(
+                work_paths,
+                char_config.name,
+                poses_done,
+                height_ratio=char_config.side_image_height_ratio,
+                dest_dir=work_dir,
+            )
+            side_deployed = deployer.deploy_images(
+                side_formatted, subfolder="characters"
+            )
+            deployed.extend(side_deployed)
+            # Also keep local copies next to the full sprites.
+            for src, filename in side_formatted:
+                local = out_dir / filename
+                shutil.copy2(src, local)
+                typer.echo(f"Saved side portrait: {local}")
+
         script_path = deployer.update_script(
             char_config.name,
             formatter.script_block(
@@ -279,6 +307,17 @@ def character(
         typer.echo(f"Deployed {len(deployed)} images")
         typer.echo(f"Definitions written to {script_path}")
     else:
+        if char_config.side_image:
+            formatter = RenPyFormatter(out_dir)
+            side_formatted = formatter.format_side_images(
+                image_paths,
+                char_config.name,
+                poses_done,
+                height_ratio=char_config.side_image_height_ratio,
+                dest_dir=out_dir,
+            )
+            for _, filename in side_formatted:
+                typer.echo(f"Saved side portrait: {out_dir / filename}")
         typer.echo(f"Images saved to: {out_dir}")
         typer.echo("Use --deploy --project /path/to/renpy to deploy")
 

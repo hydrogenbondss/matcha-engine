@@ -269,8 +269,10 @@ class TestRenPyScaffolding:
         f = RenPyFormatter(tmp_path)
         block = f.script_block("sakura", ["idle", "happy"], side_image=True)
         assert 'define sakura = Character("Sakura", image="sakura")' in block
-        assert 'image side sakura idle = "images/characters/sakura_idle.png"' in block
-        assert 'image side sakura happy = "images/characters/sakura_happy.png"' in block
+        assert 'image side sakura idle = "images/characters/sakura_idle_side.png"' in block
+        assert 'image side sakura happy = "images/characters/sakura_happy_side.png"' in block
+        # Full sprites stay for main show; side defs must not reuse them.
+        assert 'image side sakura idle = "images/characters/sakura_idle.png"' not in block
 
     def test_display_name_and_color(self, tmp_path):
         f = RenPyFormatter(tmp_path)
@@ -283,7 +285,8 @@ class TestRenPyScaffolding:
         f = RenPyFormatter(tmp_path)
         block = f.script_block("sakura", ["idle", "happy"], layered=True, side_image=True)
         assert "layeredimage sakura:" in block
-        assert 'image side sakura happy = "images/characters/sakura_happy.png"' in block
+        assert 'attribute idle default "images/characters/sakura_idle.png"' in block
+        assert 'image side sakura happy = "images/characters/sakura_happy_side.png"' in block
         assert 'define sakura = Character("Sakura", image="sakura")' in block
 
     def test_default_output_is_unchanged(self, tmp_path):
@@ -298,8 +301,56 @@ class TestRenPyScaffolding:
         cfg = CharacterConfig(name="s", description="d", poses=["idle"])
         assert cfg.layered is False
         assert cfg.side_image is False
+        assert cfg.side_image_height_ratio == 0.45
         assert cfg.display_name is None
         assert cfg.color is None
+
+    def test_crop_side_portrait_top_fraction(self, tmp_path):
+        from PIL import Image
+
+        src = tmp_path / "sakura_idle.png"
+        # Distinct top/bottom bands so we can verify which region was kept.
+        img = Image.new("RGB", (200, 400), (0, 0, 255))  # blue bottom
+        for y in range(180):
+            for x in range(200):
+                img.putpixel((x, y), (255, 0, 0))  # red top
+        img.save(src)
+
+        dest = tmp_path / "sakura_idle_side.png"
+        RenPyFormatter(tmp_path).crop_side_portrait(src, dest, height_ratio=0.45)
+        out = Image.open(dest)
+        assert out.size == (200, 180)  # 400 * 0.45
+        assert out.getpixel((100, 0)) == (255, 0, 0)
+        assert out.getpixel((100, 179)) == (255, 0, 0)
+
+    def test_format_side_images_names_and_deploys(self, tmp_path):
+        from PIL import Image
+
+        project = tmp_path / "vn"
+        (project / "game").mkdir(parents=True)
+        idle = tmp_path / "sakura_idle.png"
+        happy = tmp_path / "sakura_happy.png"
+        Image.new("RGBA", (100, 200), (200, 100, 150, 255)).save(idle)
+        Image.new("RGBA", (100, 200), (200, 100, 150, 255)).save(happy)
+
+        formatter = RenPyFormatter(project)
+        deployer = FilesystemDeployer(project)
+        side = formatter.format_side_images(
+            [idle, happy], "sakura", ["idle", "happy"], height_ratio=0.5
+        )
+        assert [fn for _, fn in side] == [
+            "sakura_idle_side.png",
+            "sakura_happy_side.png",
+        ]
+        deployed = deployer.deploy_images(side, subfolder="characters")
+        assert deployed[0].name == "sakura_idle_side.png"
+        assert Image.open(deployed[0]).size == (100, 100)
+
+        block = formatter.script_block("sakura", ["idle", "happy"], side_image=True)
+        deployer.update_script("sakura", block)
+        text = deployer.script_path.read_text()
+        assert "sakura_idle_side.png" in text
+        assert 'image sakura idle = "images/characters/sakura_idle.png"' in text
 
 
 class TestPrompts:

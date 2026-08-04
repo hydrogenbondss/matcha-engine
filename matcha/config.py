@@ -21,6 +21,9 @@ class CharacterConfig(BaseModel):
     color: Optional[str] = None  # dialogue name color, e.g. "#ffcc00"
     layered: bool = False  # emit a layeredimage grouping poses as attributes
     side_image: bool = False  # emit side-image defs + wire Character(image=...)
+    # Fraction of sprite height kept for side portraits (top-center crop).
+    # ~0.45 ≈ head/shoulders on typical waist-up VN sprites.
+    side_image_height_ratio: float = Field(default=0.45, gt=0.0, le=1.0)
     checkpoint: str = "anythingV5PrtRE.safetensors"
     # Prefer small_hours_style_v1 when it works; on Mac MPS it currently
     # NaNs — example configs use last.safetensors as the interim.

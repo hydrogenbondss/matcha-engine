@@ -39,4 +39,9 @@ consistency_denoise: 1.0
 # resize_max_width: 1280
 # resize_max_height: 720
 
+# Side-image portraits (also: --side-image). Crops the top fraction of each
+# sprite for Ren'Py dialogue portraits; full sprites stay for show/layeredimage.
+# side_image: true
+# side_image_height_ratio: 0.45
+
 output_dir: ./output

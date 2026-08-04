@@ -74,8 +74,8 @@ you're polishing it (Ren'Py auto-loads every `game/*.rpy`).
 ~/Desktop/renpy-8.5.2-sdk/renpy.sh ./sandbox-renpy
 ```
 
-Click through each pose. Prefer `--layered` without `--side-image` for
-play-test — full-sprite side images double the character on screen.
+Click through each pose. With `--side-image`, dialogue portraits use cropped
+head/shoulders PNGs (not the full sprite), so they won't double up on screen.
 
 ### Ren'Py scaffolding options
 
@@ -85,10 +85,11 @@ richer, more idiomatic Ren'Py setup you can opt into:
 - `--layered` / `layered: true` — emit a `layeredimage` that groups the poses
   as attributes, so `show sakura happy` composes from one declared sprite set
   (the first pose becomes the `default`).
-- `--side-image` / `side_image: true` — emit `image side <char> <pose>`
-  definitions and wire `Character(image="<char>")` so a portrait auto-shows
-  beside that character's dialogue. (These reuse the full sprite; regenerate as
-  cropped portraits for best results.)
+- `--side-image` / `side_image: true` — crop a head/shoulders portrait from
+  each sprite (top `side_image_height_ratio`, default `0.45`), deploy as
+  `images/characters/<name>_<pose>_side.png`, emit `image side <char> <pose>`
+  pointing at those files, and wire `Character(image="<char>")` so the portrait
+  auto-shows beside dialogue. Full sprites remain for `show` / layeredimage.
 - `display_name:` and `color:` in the YAML — set the `Character` display name
   and dialogue name color.
 
@@ -105,7 +106,7 @@ layeredimage sakura:
     group pose:
         attribute idle default "images/characters/sakura_idle.png"
         attribute happy "images/characters/sakura_happy.png"
-image side sakura idle = "images/characters/sakura_idle.png"
+image side sakura idle = "images/characters/sakura_idle_side.png"
 ```
 
 ## Development

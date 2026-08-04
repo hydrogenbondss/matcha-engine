@@ -50,7 +50,7 @@ Do **not** deploy into live LOVE32 while that game is being polished — use
 
 ### Phase 2 — next actions (ordered)
 
-1. Cropped portrait side images (not full-sprite reuse).
+1. ~~Cropped portrait side images (not full-sprite reuse).~~ **done**
 2. Example / sample Ren'Py project strangers can clone (not a live game).
 3. Per-model license surfacing + Steam/itch disclosure helpers.
 4. Finish outsider install/README cold-start polish (Mac MPS caveats partly done).
@@ -102,7 +102,7 @@ Mac/MPS limits are written in README (not hidden).
 
 **Must (in this order)**
 
-1. [ ] Cropped portrait side images (not full-sprite reuse) — STRATEGY §4.3
+1. [x] Cropped portrait side images (not full-sprite reuse) — STRATEGY §4.3
 2. [ ] Example / sample Ren'Py project strangers can clone (not a live game)
 3. [ ] Per-model license surfacing (§4.6)
 4. [ ] Disclosure helper: Steam AI survey + itch.io tag reminder (§4.7)
@@ -121,6 +121,7 @@ Mac/MPS limits are written in README (not hidden).
 
 - [x] `--layered` / `--side-image` / display name + color
 - [x] Documented sandbox play-test recipe (README)
+- [x] Cropped portrait side images (`<name>_<pose>_side.png`, `side_image_height_ratio`)
 
 **Stretch (not an exit gate)**
 
