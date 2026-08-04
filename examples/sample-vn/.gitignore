@@ -1,0 +1,20 @@
+# Ren'Py runtime / build junk (from the SDK template).
+/game/saves
+/game/cache
+/game/**/*.rpyc
+/game/**/*.rpymc
+/game/**/*.bak
+/game/**/*.new
+/game/**/*.old
+/errors.txt
+/files.txt
+/image_cache.txt
+/log.txt
+/save_dump.txt
+/traceback.txt
+/dialogue.tab
+/dialogue.txt
+/strings.json
+
+# Generated character sprites (run matcha character --deploy to create them).
+/game/images/characters/*.png

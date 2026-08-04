@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "matcha-engine"
+version = "0.2.0"
+description = "Matcha Engine — AI game asset pipeline: YAML character configs to consistent sprite sets deployed into Ren'Py projects"
+requires-python = ">=3.10"
+dependencies = [
+    "typer>=0.9",
+    "pyyaml>=6.0",
+    "pydantic>=2.0",
+    "websocket-client>=1.6",
+    "pillow>=10.0",
+]
+
+[project.scripts]
+matcha = "matcha.cli:app"
+
+[tool.setuptools.packages.find]
+include = ["matcha*"]

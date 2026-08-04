@@ -1,0 +1,47 @@
+name: sakura
+display_name: Sakura
+color: "#ff69b4"
+# Lock identity here: outfit, hair, eyes. Pose prompts only vary expression.
+description: >-
+  sh_style, 1girl, long straight pink hair down past shoulders with bangs,
+  not in a ponytail, purple eyes, white collared shirt, pink bow tie,
+  black school sweater with pink trim at the neckline, no chest emblem,
+  visual novel style
+poses:
+  - idle
+  - happy
+  - sad
+  - surprised
+
+# Model selection — checkpoint and LoRA must share a base model family.
+# small_hours_style_v1 is SD1.5 but currently NaNs/blacks on Mac MPS;
+# last.safetensors is the working interim on that stack.
+checkpoint: anythingV5PrtRE.safetensors
+lora: last.safetensors
+lora_strength: 0.7
+
+# 512×512 is safer on Mac MPS; use 512×768 when VRAM allows.
+width: 512
+height: 512
+steps: 20
+seed: 42
+# Later poses img2img from the first sprite (identity lock). 1.0 = off.
+# On Mac MPS, values < 1.0 currently produce glitched frames — keep off.
+consistency_denoise: 1.0
+# IP-Adapter identity lock (later poses condition on first sprite).
+# 0.0 = off. Works on CUDA; currently corrupts on Mac MPS — leave off here.
+# ip_adapter_weight: 0.65
+# ip_adapter_file: ip-adapter_sd15.safetensors
+# clip_vision: CLIP-ViT-H-14-laion2B-s32B-b79K.safetensors
+
+# Optional: shrink sprites to fit within these bounds after generation
+# (aspect preserved, never upscales). Useful for 720p Ren'Py projects.
+# resize_max_width: 1280
+# resize_max_height: 720
+
+# Side-image portraits (also: --side-image). Crops the top fraction of each
+# sprite for Ren'Py dialogue portraits; full sprites stay for show/layeredimage.
+# side_image: true
+# side_image_height_ratio: 0.45
+
+output_dir: ./output
