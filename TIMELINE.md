@@ -7,7 +7,7 @@ of STRATEGY.md §6.
 
 Status legend: `[x]` done · `[~]` in progress · `[ ]` not started · `[!]` blocked
 
-_Last updated: 2026-08-04 (Phase 2 #5 — README cold-start polish)_
+_Last updated: 2026-08-04 (Phase 2 announce prep — sample-vn polish + docs/ANNOUNCE.md)_
 
 ---
 
@@ -40,7 +40,9 @@ Do **not** deploy into live LOVE32 while that game is being polished — use
 - **Shipped (Phase 1):** v0.2 pipeline on live ComfyUI (Mac MPS); preflight;
   black-PNG guard; shared seed + locked prompts; LoRA `strength_clip=0`;
   layered/side-image scaffolding; sandbox dogfood; IP-Adapter path (default off).
-- **In flight:** Phase 2 announce (#6) next; README cold-start (#5) done.
+- **In flight:** Phase 2 announce (#6) — copy drafts + shot list in
+  [`docs/ANNOUNCE.md`](docs/ANNOUNCE.md); screenshots/GIF still need a local
+  generate (ComfyUI). README cold-start (#5) done.
 - **Mac / MPS limits (document in README, do not hide):** img2img and
   IP-Adapter corrupt — leave off locally (`consistency_denoise: 1.0`,
   `ip_adapter_weight: 0`). Consistency = prompt + shared seed. CUDA IPA is
@@ -55,7 +57,8 @@ Do **not** deploy into live LOVE32 while that game is being polished — use
 3. ~~Per-model license surfacing + Steam/itch disclosure helpers.~~ **done**
    (`matcha licenses`, `matcha disclose`, printed on `character` runs)
 4. ~~Finish outsider install/README cold-start polish.~~ **done**
-5. Announce: Lemma Soft, Ren'Py Discord, r/comfyui, Civitai.
+5. Announce: Lemma Soft, Ren'Py Discord, r/comfyui, Civitai —
+   copy/shot plan in `docs/ANNOUNCE.md`; posts + screenshots still pending.
 
 ---
 
@@ -108,15 +111,16 @@ Mac/MPS limits are written in README (not hidden).
 3. [x] Per-model license surfacing (§4.6) — `matcha/licenses.py`, `matcha licenses`, echoed on `character`
 4. [x] Disclosure helper: Steam AI survey + itch.io tag reminder (§4.7) — `matcha/disclosure.py`, `matcha disclose`
 5. [x] Install/README cold-start for outsiders (venv + ComfyUI + Mac MPS limits + sample-vn recipe + licenses/disclose)
-6. [ ] Announce: Lemma Soft, Ren'Py Discord, r/comfyui, Civitai — **not** artist-heavy general VN forums
+6. [~] Announce: Lemma Soft, Ren'Py Discord, r/comfyui, Civitai — **not** artist-heavy general VN forums
+   (prep: [`docs/ANNOUNCE.md`](docs/ANNOUNCE.md); posts not live yet)
 
 **Branding / marketing / design (same phase — not a 5th phase)**
 
-- [ ] Product name consistency everywhere (**Matcha Engine** / `matcha` — fix leftover “Match Engine” in STRATEGY)
+- [x] Product name consistency everywhere (**Matcha Engine** / `matcha` — STRATEGY leftovers fixed)
 - [x] README voice: clear, honest (Mac MPS limits), outsider-friendly tone
 - [ ] Wordmark / simple logo if announce posts need one (skip if text-only is enough)
-- [ ] Announce screenshots + short GIF (config → sprites → Ren'Py)
-- [ ] Announce copy drafts for Lemma Soft, Ren'Py Discord, r/comfyui, Civitai
+- [ ] Announce screenshots + short GIF (config → sprites → Ren'Py) — shot list in `docs/ANNOUNCE.md`; capture pending local generate
+- [x] Announce copy drafts for Lemma Soft, Ren'Py Discord, r/comfyui, Civitai — `docs/ANNOUNCE.md`
 
 **Already shipped toward Phase 2**
 

@@ -1,6 +1,7 @@
 # Starter character defs so the project is playable before generation.
 # Running `matcha character ... --deploy` replaces the block below with
 # real image / layeredimage definitions pointing at game/images/characters/.
+# Optional --side-image adds side portraits + Character(image=...).
 
 # --- matcha: sakura (generated) ---
 define sakura = Character("Sakura", color="#ff69b4")

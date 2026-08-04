@@ -12,7 +12,7 @@
 ##
 ## The _() surrounding the string marks it as eligible for translation.
 
-define config.name = _("Matcha Sample VN")
+define config.name = _("Matcha Engine Sample")
 
 
 ## Determines if the title given above is shown on the main menu screen. Set
@@ -23,27 +23,25 @@ define gui.show_name = True
 
 ## The version of the game.
 
-define config.version = "0.1"
+define config.version = "0.2"
 
 
 ## Text that is placed on the game's about screen. To insert a blank line
 ## between paragraphs, write \n\n.
 
-define gui.about = _("""Sample Ren'Py project for Matcha Engine.
+define gui.about = _("""Demo Ren'Py project for Matcha Engine — a CLI that turns a YAML character config into consistent sprites via ComfyUI and deploys them here.
 
-Clone the repo, install matcha, generate (or dry-run) with the config under
-configs/, deploy into this project, then open it with the Ren'Py SDK to walk
-the pose lineup in script.rpy.""")
+Generate with configs/example_character.yaml, then click through the pose lineup in script.rpy. Sprites land in game/images/characters/; definitions in matcha_characters.rpy.""")
 
 
 ## A short name for the game used for executables and directories in the built
 ## distribution. This must be ASCII-only, and must not contain spaces, colons,
 ## or semicolons.
 
-define build.name = "matcha_sample_vn"
+define build.name = "matcha_engine_sample"
 
 ## Change the version used by the build system.
-define build.version = "0.1"
+define build.version = "0.2"
 
 ## Sounds and music ############################################################
 
@@ -142,7 +140,7 @@ default preferences.afm_time = 15
 ## This generally should not be changed, and if it is, should always be a
 ## literal string, not an expression.
 
-define config.save_directory = "the_question-7"
+define config.save_directory = "matcha_engine_sample-1"
 
 
 ## Icon ########################################################################
@@ -209,8 +207,8 @@ init python:
 ## The username and project name associated with an itch.io project, separated
 ## by a slash.
 
-define build.itch_project = "renpytom/the-question"
+# define build.itch_project = "username/project"
 
 
-# Enable the console.
+# Enable the console (handy while dogfooding Matcha deploys).
 define config.console = True

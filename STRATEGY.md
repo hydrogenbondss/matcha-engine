@@ -1,4 +1,4 @@
-# Match Engine — Strategy & v1 Spec
+# Matcha Engine — Strategy & v1 Spec
 
 *Drafted 2026-07-16 from a three-track research pass (competitors, VN-dev pain
 points + platform AI policy, monetization). Claims are tagged: plain statements
@@ -7,7 +7,7 @@ snippet-level evidence; "Assumption" = supplied judgment. Source links inline.*
 
 ---
 
-## 1. What Match Engine is
+## 1. What Matcha Engine is
 
 **The Ren'Py-native character pipeline.** Define a character once in a YAML
 config; get a consistent pose × expression × outfit sprite matrix generated on
@@ -101,7 +101,7 @@ full, one-time, itch.io + Gumroad** (prices verified on listings).
 1. **Free open CLI** — funnel + community trust.
 2. **Pro package, ~$19–29 one-time** (itch.io + Gumroad): packaged installer,
    preset library, one-command deploy, priority fixes.
-3. **Free VN-style LoRAs on Civitai**, branded "made for Match Engine," as the
+3. **Free VN-style LoRAs on Civitai**, branded "made for Matcha Engine," as the
    acquisition loop; sell curated packs later.
 4. **Hosted credits version only after ~100 Pro sales.** Unit economics work —
    ~$0.20 compute per full character set at Replicate SDXL ~$0.0049/image →
