@@ -1,28 +1,48 @@
 # Matcha Engine
 
-AI game asset pipeline: define a character once in YAML, generate a
-consistent sprite set on your own GPU (ComfyUI + Stable Diffusion/LoRA),
-and deploy it straight into a Ren'Py project — images in the right folder,
+Define a character once in YAML, generate a consistent sprite set on your own
+GPU ([ComfyUI](https://github.com/comfyanonymous/ComfyUI) + Stable Diffusion /
+LoRA), and deploy it into a Ren'Py project — images in the right folder,
 `.rpy` definitions written for you.
 
-See [STRATEGY.md](STRATEGY.md) for positioning, roadmap, and business model.
+Positioning and roadmap: [STRATEGY.md](STRATEGY.md) · progress:
+[TIMELINE.md](TIMELINE.md).
 
 ## Install
+
+Python 3.12 recommended (`>=3.10`):
 
 ```bash
 python3.12 -m venv .venv
 .venv/bin/pip install -e .
 ```
 
-Requires a running [ComfyUI](https://github.com/comfyanonymous/ComfyUI)
-server with your checkpoint in `models/checkpoints/` and (optionally) a
-LoRA in `models/loras/`. The checkpoint and LoRA must share a base model
-family — an SD1.5 LoRA on an SDXL checkpoint fails or silently degrades.
+Use `.venv/bin/matcha` (or `source .venv/bin/activate` first).
 
-### Mac MPS (Apple Silicon)
+## ComfyUI requirement
 
-Start ComfyUI with these flags (avoid `--force-fp16` — it produces solid
-black PNGs):
+`matcha character` (without `--dry-run`) needs a ComfyUI server at
+`127.0.0.1:8188` (HTTP + WebSocket) with the checkpoint named in your YAML
+under `models/checkpoints/` and any LoRA under `models/loras/`. Checkpoint and
+LoRA must share a base model family — an SD1.5 LoRA on an SDXL checkpoint
+fails or silently degrades.
+
+`--dry-run` only checks that those models exist on the server (no generation).
+
+### Mac MPS (Apple Silicon) — read this
+
+On Apple Silicon, several “nice” consistency features currently **corrupt**
+output. Matcha defaults keep you safe; do not turn them on locally:
+
+| Setting | Safe on MPS | Notes |
+|---|---|---|
+| Resolution | `512×512` | Prefer over `512×768` (OOM risk) |
+| `consistency_denoise` | `1.0` (off) | Below `1.0` → glitched frames |
+| `ip_adapter_weight` | `0` (off) | IPA → noise/corruption on MPS |
+| LoRA clip strength | forced `0` by Matcha | Non-zero clip → half-static PNGs |
+
+Start ComfyUI with these flags. **Do not** pass `--force-fp16` — it produces
+solid black PNGs:
 
 ```bash
 export PYTORCH_MPS_HIGH_WATERMARK_RATIO=0.0
@@ -31,122 +51,85 @@ cd ~/ComfyUI && ./venv/bin/python main.py \
   --fp32-vae --cpu-vae --lowvram --use-split-cross-attention
 ```
 
-Prefer `512×512` and keep `consistency_denoise: 1.0` and
-`ip_adapter_weight: 0` — partial img2img and IP-Adapter currently corrupt
-on MPS. Matcha already forces LoRA `strength_clip=0` for the same reason.
+Consistency on MPS is **prompt + shared seed** for now. After a heavy
+IP-Adapter experiment, fully quit ComfyUI (or reboot) before the next clean
+run — a soft restart is not enough.
 
-## Usage
+## Quick start (stranger path)
 
-```bash
-# Scaffold a project with an example character config
-.venv/bin/matcha init myproject
-
-# Validate config + models without generating (checks the ComfyUI server
-# actually has the checkpoint/LoRA you named)
-.venv/bin/matcha character configs/example_character.yaml --dry-run
-
-# Generate and deploy into a Ren'Py project
-.venv/bin/matcha character configs/example_character.yaml \
-  --deploy --project ~/path/to/renpy-project --layered
-```
-
-Model selection lives in the YAML (`checkpoint:`, `lora:`,
-`lora_strength:`) and can be overridden per-run with `--checkpoint` /
-`--lora` (`--lora none` disables the LoRA).
-
-`matcha character` prints a short **model license status** for the
-checkpoint/LoRA (not legal advice — verify on Civitai/Hugging Face). Quick
-lookup without generating:
+Checked-in sample Ren'Py project: [`examples/sample-vn/`](examples/sample-vn/).
+Sprites are not committed — starter `Placeholder` art keeps it playable until
+you generate.
 
 ```bash
-.venv/bin/matcha licenses --checkpoint anythingV5PrtRE.safetensors
-.venv/bin/matcha licenses configs/example_character.yaml
-```
-
-For Steam / itch.io AI disclosure drafts (Content Survey text + itch tag
-reminder):
-
-```bash
-.venv/bin/matcha disclose configs/example_character.yaml
-.venv/bin/matcha disclose --name sakura -c anythingV5PrtRE.safetensors \
-  --project /path/to/renpy   # writes matcha_disclosure.md
-```
-
-Generated Ren'Py definitions go to `game/matcha_characters.rpy` — a
-dedicated file that re-runs update idempotently, never touching your
-hand-written script files. Only poses that actually generated get
-definitions; the CLI exits non-zero if any pose fails.
-
-### Example project
-
-Checked-in Ren'Py sample at [`examples/sample-vn/`](examples/sample-vn/).
-Character PNGs are not committed — starter `Placeholder` art makes it
-playable before generation; `matcha character --deploy` replaces them.
-
-```bash
-# Validate against ComfyUI (no GPU generation):
+# 1. Validate config + models (ComfyUI must be running; no GPU work)
 .venv/bin/matcha character examples/sample-vn/configs/example_character.yaml \
   --dry-run
 
-# Generate + deploy into the sample project:
+# 2. Generate + deploy into the sample project
 .venv/bin/matcha character examples/sample-vn/configs/example_character.yaml \
   --deploy --project examples/sample-vn --layered
 
-# Open with the Ren'Py SDK (adjust the SDK path if needed):
+# 3. Open with the Ren'Py SDK (adjust path)
 ~/Desktop/renpy-8.5.2-sdk/renpy.sh examples/sample-vn
 ```
 
-Click through the pose lineup in `script.rpy`. With `--side-image`, dialogue
-portraits use cropped head/shoulders PNGs (not the full sprite).
+Click through the pose lineup in `script.rpy`. Edit the YAML’s `checkpoint:` /
+`lora:` to match what you installed in ComfyUI (`--checkpoint` / `--lora` also
+override; `--lora none` disables the LoRA).
 
-### Sandbox play-test (local dogfood)
+Or scaffold your own tree: `.venv/bin/matcha init myproject`, then point
+`--project` at any Ren'Py game directory.
 
-For private experiments, use a throwaway `sandbox-renpy/` (gitignored) —
-do **not** deploy into a live game while you're polishing it (Ren'Py
-auto-loads every `game/*.rpy`).
+**Do not** deploy into a live game you are polishing — Ren'Py auto-loads every
+`game/*.rpy`. Use `examples/sample-vn/` or a throwaway `sandbox-renpy/`
+(gitignored).
 
-```bash
-.venv/bin/matcha character configs/example_character.yaml \
-  --deploy --project ./sandbox-renpy --layered
+## CLI overview
 
-~/Desktop/renpy-8.5.2-sdk/renpy.sh ./sandbox-renpy
-```
-
-### Ren'Py scaffolding options
-
-By default each pose becomes a flat `image <char> <pose>` definition. For a
-richer, more idiomatic Ren'Py setup you can opt into:
-
-- `--layered` / `layered: true` — emit a `layeredimage` that groups the poses
-  as attributes, so `show sakura happy` composes from one declared sprite set
-  (the first pose becomes the `default`).
-- `--side-image` / `side_image: true` — crop a head/shoulders portrait from
-  each sprite (top `side_image_height_ratio`, default `0.45`), deploy as
-  `images/characters/<name>_<pose>_side.png`, emit `image side <char> <pose>`
-  pointing at those files, and wire `Character(image="<char>")` so the portrait
-  auto-shows beside dialogue. Full sprites remain for `show` / layeredimage.
-- `display_name:` and `color:` in the YAML — set the `Character` display name
-  and dialogue name color.
+| Command | What it does |
+|---|---|
+| `matcha character <config.yaml>` | Generate sprites; optional `--deploy` / `--dry-run` |
+| `matcha licenses …` | Commercial-use status for checkpoint/LoRA (**not legal advice**) |
+| `matcha disclose …` | Draft Steam AI survey + itch.io AI-tag text |
+| `matcha init <name>` | Scaffold a project + example character YAML |
 
 ```bash
-matcha character configs/example_character.yaml \
-  --deploy --project ~/my-vn --layered --side-image
+# License lookup (YAML and/or flags)
+.venv/bin/matcha licenses examples/sample-vn/configs/example_character.yaml
+.venv/bin/matcha licenses --checkpoint anythingV5PrtRE.safetensors
+
+# Disclosure draft (stdout, or write into a Ren'Py project)
+.venv/bin/matcha disclose examples/sample-vn/configs/example_character.yaml
+.venv/bin/matcha disclose --name sakura -c anythingV5PrtRE.safetensors \
+  --project examples/sample-vn   # writes matcha_disclosure.md
 ```
 
-Produces, for example:
+`matcha character` also prints a short license status before generating.
+Generated definitions go to `game/matcha_characters.rpy` — idempotent on
+re-run, never touches your hand-written scripts. Only poses that actually
+generated get definitions; the CLI exits non-zero if any pose fails.
 
-```renpy
-define sakura = Character("Sakura Kinomoto", color="#ff77aa", image="sakura")
-layeredimage sakura:
-    group pose:
-        attribute idle default "images/characters/sakura_idle.png"
-        attribute happy "images/characters/sakura_happy.png"
-image side sakura idle = "images/characters/sakura_idle_side.png"
+### Ren'Py scaffolding flags
+
+Default: flat `image <char> <pose>` per pose. Opt in for a richer setup:
+
+- `--layered` / `layered: true` — `layeredimage` with poses as attributes
+  (`show sakura happy`; first pose is `default`)
+- `--side-image` / `side_image: true` — crop head/shoulders portraits, emit
+  `image side <char> <pose>`, wire `Character(image="<char>")` for dialogue
+- YAML `display_name:` / `color:` — Character display name and name color
+
+```bash
+.venv/bin/matcha character examples/sample-vn/configs/example_character.yaml \
+  --deploy --project examples/sample-vn --layered --side-image
 ```
 
 ## Development
 
 ```bash
-pip install -e . pytest
-python -m pytest tests/
+.venv/bin/pip install -e . pytest
+.venv/bin/python -m pytest tests/
 ```
+
+Tests are fully mocked — no ComfyUI or GPU required.
