@@ -7,7 +7,7 @@ of STRATEGY.md §6.
 
 Status legend: `[x]` done · `[~]` in progress · `[ ]` not started · `[!]` blocked
 
-_Last updated: 2026-08-04 (Phase 2 #2 — examples/sample-vn checked in)_
+_Last updated: 2026-08-04 (Phase 2 #3–4 — license surfacing + disclosure helpers)_
 
 ---
 
@@ -52,7 +52,8 @@ Do **not** deploy into live LOVE32 while that game is being polished — use
 
 1. ~~Cropped portrait side images (not full-sprite reuse).~~ **done**
 2. ~~Example / sample Ren'Py project strangers can clone.~~ **done** (`examples/sample-vn/`)
-3. Per-model license surfacing + Steam/itch disclosure helpers.
+3. ~~Per-model license surfacing + Steam/itch disclosure helpers.~~ **done**
+   (`matcha licenses`, `matcha disclose`, printed on `character` runs)
 4. Finish outsider install/README cold-start polish (Mac MPS caveats partly done).
 5. Announce: Lemma Soft, Ren'Py Discord, r/comfyui, Civitai.
 
@@ -104,8 +105,8 @@ Mac/MPS limits are written in README (not hidden).
 
 1. [x] Cropped portrait side images (not full-sprite reuse) — STRATEGY §4.3
 2. [x] Example / sample Ren'Py project strangers can clone — `examples/sample-vn/`
-3. [ ] Per-model license surfacing (§4.6)
-4. [ ] Disclosure helper: Steam AI survey + itch.io tag reminder (§4.7)
+3. [x] Per-model license surfacing (§4.6) — `matcha/licenses.py`, `matcha licenses`, echoed on `character`
+4. [x] Disclosure helper: Steam AI survey + itch.io tag reminder (§4.7) — `matcha/disclosure.py`, `matcha disclose`
 5. [~] Install/README cold-start for outsiders (venv + ComfyUI + Mac MPS notes partly done; example-project recipe in README)
 6. [ ] Announce: Lemma Soft, Ren'Py Discord, r/comfyui, Civitai — **not** artist-heavy general VN forums
 
@@ -123,6 +124,7 @@ Mac/MPS limits are written in README (not hidden).
 - [x] Documented sandbox play-test recipe (README)
 - [x] Cropped portrait side images (`<name>_<pose>_side.png`, `side_image_height_ratio`)
 - [x] Checked-in example Ren'Py project (`examples/sample-vn/`) + README recipe
+- [x] Per-model license surfacing + Steam/itch disclosure helpers (`licenses` / `disclose`)
 
 **Stretch (not an exit gate)**
 

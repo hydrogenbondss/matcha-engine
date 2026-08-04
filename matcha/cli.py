@@ -8,11 +8,13 @@ import typer
 import yaml
 
 from matcha.config import CharacterConfig
+from matcha.disclosure import build_disclosure_document
 from matcha.errors import GenerationError, PreflightError
 from matcha.formatters.renpy import RenPyFormatter
 from matcha.deployers.filesystem import FilesystemDeployer
 from matcha.generators.comfyui import ComfyUIGenerator
 from matcha.images import assert_usable_image
+from matcha.licenses import format_license_report
 from matcha.prompts import build_negative_prompt, build_pose_prompt
 from matcha import preflight
 
@@ -127,6 +129,7 @@ def character(
     typer.echo(f"Checkpoint: {char_config.checkpoint}")
     typer.echo(f"LoRA: {char_config.lora or '(none)'}")
     typer.echo(f"Seed: {run_seed} (shared across poses)")
+    typer.echo(format_license_report(char_config.checkpoint, char_config.lora))
     if char_config.consistency_denoise < 1.0:
         typer.echo(
             f"Consistency: later poses img2img from first "
@@ -347,6 +350,124 @@ def init(
     typer.echo(f"Created project: {name}")
     typer.echo(f"Edit {example} and run:")
     typer.echo(f"  matcha character {example} --deploy --project /path/to/renpy")
+
+
+@app.command("licenses")
+def licenses_cmd(
+    checkpoint: Optional[str] = typer.Option(
+        None, "--checkpoint", "-c", help="Checkpoint filename to look up"
+    ),
+    lora: Optional[str] = typer.Option(
+        None, "--lora", help="LoRA filename to look up ('none' to skip)"
+    ),
+    config: Optional[Path] = typer.Argument(
+        None,
+        help="Optional character YAML — uses its checkpoint/LoRA if flags omitted",
+    ),
+):
+    """Look up commercial-use status for a checkpoint / LoRA (not legal advice)."""
+    ckpt = checkpoint
+    lr: Optional[str] = None if (lora and lora.lower() == "none") else lora
+
+    if config is not None:
+        if not config.exists():
+            typer.echo(f"Config not found: {config}", err=True)
+            raise typer.Exit(1)
+        with open(config) as f:
+            data = yaml.safe_load(f) or {}
+        if ckpt is None:
+            ckpt = data.get("checkpoint")
+        if lr is None and lora is None:
+            lr = data.get("lora")
+
+    if not ckpt:
+        typer.echo(
+            "Provide a checkpoint via --checkpoint or a character YAML path.",
+            err=True,
+        )
+        raise typer.Exit(1)
+
+    typer.echo(format_license_report(ckpt, lr))
+
+
+@app.command()
+def disclose(
+    config: Optional[Path] = typer.Argument(
+        None,
+        help="Optional character YAML — fills name/checkpoint/LoRA",
+    ),
+    checkpoint: Optional[str] = typer.Option(
+        None, "--checkpoint", "-c", help="Checkpoint filename used for generation"
+    ),
+    lora: Optional[str] = typer.Option(
+        None, "--lora", help="LoRA filename ('none' to omit)"
+    ),
+    name: Optional[str] = typer.Option(
+        None, "--name", "-n", help="Character name for the disclosure draft"
+    ),
+    write: Optional[Path] = typer.Option(
+        None,
+        "--write",
+        "-w",
+        help="Write markdown to this path instead of printing",
+    ),
+    project: Optional[Path] = typer.Option(
+        None,
+        "--project",
+        "-p",
+        help="Ren'Py project dir — writes matcha_disclosure.md there "
+        "(unless --write is set)",
+    ),
+    live_generated: bool = typer.Option(
+        False,
+        "--live-generated",
+        help="Draft Steam survey as Live-Generated instead of Pre-Generated",
+    ),
+):
+    """Draft Steam AI Content Survey + itch.io AI-tag disclosure text.
+
+    Not legal advice. Use a character YAML and/or --checkpoint/--lora/--name.
+    Prints markdown to stdout, or write with --write / --project.
+    """
+    char_name = name
+    ckpt = checkpoint
+    lr: Optional[str] = None if (lora and lora.lower() == "none") else lora
+
+    if config is not None:
+        if not config.exists():
+            typer.echo(f"Config not found: {config}", err=True)
+            raise typer.Exit(1)
+        with open(config) as f:
+            data = yaml.safe_load(f) or {}
+        if char_name is None:
+            char_name = data.get("display_name") or data.get("name")
+        if ckpt is None:
+            ckpt = data.get("checkpoint")
+        if lr is None and lora is None:
+            lr = data.get("lora")
+
+    doc = build_disclosure_document(
+        character_name=char_name,
+        checkpoint=ckpt,
+        lora=lr,
+        live_generated=live_generated,
+    )
+
+    out_path = write
+    if out_path is None and project is not None:
+        project = project.expanduser()
+        if not project.exists():
+            typer.echo(f"Project not found: {project}", err=True)
+            raise typer.Exit(1)
+        out_path = project / "matcha_disclosure.md"
+
+    if out_path is not None:
+        out_path = out_path.expanduser()
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        out_path.write_text(doc)
+        typer.echo(f"Wrote disclosure draft: {out_path}")
+    else:
+        typer.echo(doc)
 
 
 if __name__ == "__main__":

@@ -54,6 +54,24 @@ Model selection lives in the YAML (`checkpoint:`, `lora:`,
 `lora_strength:`) and can be overridden per-run with `--checkpoint` /
 `--lora` (`--lora none` disables the LoRA).
 
+`matcha character` prints a short **model license status** for the
+checkpoint/LoRA (not legal advice — verify on Civitai/Hugging Face). Quick
+lookup without generating:
+
+```bash
+.venv/bin/matcha licenses --checkpoint anythingV5PrtRE.safetensors
+.venv/bin/matcha licenses configs/example_character.yaml
+```
+
+For Steam / itch.io AI disclosure drafts (Content Survey text + itch tag
+reminder):
+
+```bash
+.venv/bin/matcha disclose configs/example_character.yaml
+.venv/bin/matcha disclose --name sakura -c anythingV5PrtRE.safetensors \
+  --project /path/to/renpy   # writes matcha_disclosure.md
+```
+
 Generated Ren'Py definitions go to `game/matcha_characters.rpy` — a
 dedicated file that re-runs update idempotently, never touching your
 hand-written script files. Only poses that actually generated get
