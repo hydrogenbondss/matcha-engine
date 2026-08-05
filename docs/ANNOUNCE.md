@@ -164,14 +164,23 @@ Replace `<GITHUB_URL>` with the public repo URL before posting.
 
 ## 3. Post checklist
 
-1. [ ] ComfyUI running; clean quit if a previous IPA run wedged MPS
-2. [ ] Generate + deploy into `examples/sample-vn` (layered; optional side-image for one still)
+1. [x] ComfyUI running; clean quit if a previous IPA run wedged MPS
+2. [x] Generate + deploy into `examples/sample-vn` (layered; optional side-image for one still) — **done locally 2026-08-05** (`last` LoRA + `anythingV5PrtRE`, `--layered`; side-image **not** run). Sprites at `examples/sample-vn/game/images/characters/sakura_{idle,happy,sad,surprised}.png` (gitignored). Ren'Py lint clean.
 3. [ ] Click through `script.rpy` — confirm four poses look like one character
-4. [ ] Capture shot list #1–#6 (+ optional #7); build GIF
+4. [ ] Capture shot list #1–#6 (+ optional #7); build GIF — **human capture still required** (open Ren'Py GUI; no programmatic stills this pass)
 5. [ ] Paste copy drafts; fill `<GITHUB_URL>`; skim for leftover “Match Engine”
 6. [ ] Post order (same day or close): **Civitai** (asset/home base) → **r/comfyui** → **Ren'Py Discord** → **Lemma Soft**
 7. [ ] Tick Phase 2 announce boxes in [TIMELINE.md](../TIMELINE.md) when posts are live
 8. [ ] Do **not** deploy announce characters into live LOVE32
+
+### Capture now (after local generate)
+
+```bash
+# From repo root — project already has layered defs + PNGs from 2026-08-05 deploy
+~/Desktop/renpy-8.5.2-sdk/renpy.sh examples/sample-vn
+```
+
+Then shoot §1 rows **#1–#6** into `~/Desktop/matcha-announce/` and run the ImageMagick GIF command above. Optional #7 only after a `--side-image` redeploy.
 
 Screenshots / GIF stay on your machine (or a private folder) until you attach
 them to posts — they are not required in git.

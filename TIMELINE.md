@@ -7,7 +7,7 @@ of STRATEGY.md §6.
 
 Status legend: `[x]` done · `[~]` in progress · `[ ]` not started · `[!]` blocked
 
-_Last updated: 2026-08-04 (Phase 2 announce prep — sample-vn polish + docs/ANNOUNCE.md)_
+_Last updated: 2026-08-05 (local sample-vn generate+deploy; announce screenshots still pending)_
 
 ---
 
@@ -41,8 +41,11 @@ Do **not** deploy into live LOVE32 while that game is being polished — use
   black-PNG guard; shared seed + locked prompts; LoRA `strength_clip=0`;
   layered/side-image scaffolding; sandbox dogfood; IP-Adapter path (default off).
 - **In flight:** Phase 2 announce (#6) — copy drafts + shot list in
-  [`docs/ANNOUNCE.md`](docs/ANNOUNCE.md); screenshots/GIF still need a local
-  generate (ComfyUI). README cold-start (#5) done.
+  [`docs/ANNOUNCE.md`](docs/ANNOUNCE.md). **Local generate+deploy done
+  2026-08-05** (`matcha character … --deploy --layered` into
+  `examples/sample-vn/`; four Sakura PNGs present, not near-black; Ren'Py
+  lint OK). Screenshots/GIF still need human capture from the shot list.
+  README cold-start (#5) done.
 - **Mac / MPS limits (document in README, do not hide):** img2img and
   IP-Adapter corrupt — leave off locally (`consistency_denoise: 1.0`,
   `ip_adapter_weight: 0`). Consistency = prompt + shared seed. CUDA IPA is
@@ -58,7 +61,8 @@ Do **not** deploy into live LOVE32 while that game is being polished — use
    (`matcha licenses`, `matcha disclose`, printed on `character` runs)
 4. ~~Finish outsider install/README cold-start polish.~~ **done**
 5. Announce: Lemma Soft, Ren'Py Discord, r/comfyui, Civitai —
-   copy/shot plan in `docs/ANNOUNCE.md`; posts + screenshots still pending.
+   copy/shot plan in `docs/ANNOUNCE.md`; local sprites ready (2026-08-05);
+   posts + screenshots still pending.
 
 ---
 
@@ -119,7 +123,7 @@ Mac/MPS limits are written in README (not hidden).
 - [x] Product name consistency everywhere (**Matcha Engine** / `matcha` — STRATEGY leftovers fixed)
 - [x] README voice: clear, honest (Mac MPS limits), outsider-friendly tone
 - [ ] Wordmark / simple logo if announce posts need one (skip if text-only is enough)
-- [ ] Announce screenshots + short GIF (config → sprites → Ren'Py) — shot list in `docs/ANNOUNCE.md`; capture pending local generate
+- [ ] Announce screenshots + short GIF (config → sprites → Ren'Py) — shot list in `docs/ANNOUNCE.md`; sprites generated locally 2026-08-05, human capture still pending
 - [x] Announce copy drafts for Lemma Soft, Ren'Py Discord, r/comfyui, Civitai — `docs/ANNOUNCE.md`
 
 **Already shipped toward Phase 2**
