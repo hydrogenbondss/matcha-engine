@@ -21,13 +21,23 @@ Use `.venv/bin/matcha` (or `source .venv/bin/activate` first).
 
 ## ComfyUI requirement
 
-`matcha character` (without `--dry-run`) needs a ComfyUI server at
-`127.0.0.1:8188` (HTTP + WebSocket) with the checkpoint named in your YAML
-under `models/checkpoints/` and any LoRA under `models/loras/`. Checkpoint and
+Matcha does **not** bundle ComfyUI. Install it separately
+([ComfyUI](https://github.com/comfyanonymous/ComfyUI)), put your checkpoint under
+`models/checkpoints/` and any LoRA under `models/loras/`, then start the
+server on `127.0.0.1:8188` (HTTP + WebSocket).
+
+`matcha character` (without `--dry-run`) talks to that server. Checkpoint and
 LoRA must share a base model family — an SD1.5 LoRA on an SDXL checkpoint
 fails or silently degrades.
 
 `--dry-run` only checks that those models exist on the server (no generation).
+
+Verify the server is up before the sample recipe:
+
+```bash
+curl -s -o /dev/null -w "%{http_code}\n" http://127.0.0.1:8188/
+# expect 200 — if connection refused, start ComfyUI first
+```
 
 ### Mac MPS (Apple Silicon) — read this
 
@@ -41,8 +51,8 @@ output. Matcha defaults keep you safe; do not turn them on locally:
 | `ip_adapter_weight` | `0` (off) | IPA → noise/corruption on MPS |
 | LoRA clip strength | forced `0` by Matcha | Non-zero clip → half-static PNGs |
 
-Start ComfyUI with these flags. **Do not** pass `--force-fp16` — it produces
-solid black PNGs:
+Start ComfyUI with these flags (adjust the path if your install is not
+`~/ComfyUI`). **Do not** pass `--force-fp16` — it produces solid black PNGs:
 
 ```bash
 export PYTORCH_MPS_HIGH_WATERMARK_RATIO=0.0
@@ -51,22 +61,31 @@ cd ~/ComfyUI && ./venv/bin/python main.py \
   --fp32-vae --cpu-vae --lowvram --use-split-cross-attention
 ```
 
-Consistency on MPS is **prompt + shared seed** for now. After a heavy
-IP-Adapter experiment, fully quit ComfyUI (or reboot) before the next clean
-run — a soft restart is not enough.
+Consistency on MPS is **prompt + shared seed** for now. Expect **several
+minutes per pose** on Mac MPS (four poses can take ~15–25+ minutes) — the CLI
+prints each pose name as it starts; it is not hung. After a heavy IP-Adapter
+experiment, fully quit ComfyUI (or reboot) before the next clean run — a soft
+restart is not enough.
 
 ## Quick start (stranger path)
 
 Checked-in sample Ren'Py project: [`examples/sample-vn/`](examples/sample-vn/).
 Sprites are not committed — starter `Placeholder` art keeps it playable until
-you generate.
+you generate. You can open it in the Ren'Py SDK before ComfyUI is ready.
+
+The sample YAML names `anythingV5PrtRE.safetensors` and `last.safetensors`.
+Those files must exist in your ComfyUI `models/` folders, **or** override on
+the CLI (`--checkpoint your.safetensors --lora none`).
 
 ```bash
+# 0. ComfyUI running? (see section above; Mac MPS start flags if needed)
+curl -s -o /dev/null -w "%{http_code}\n" http://127.0.0.1:8188/
+
 # 1. Validate config + models (ComfyUI must be running; no GPU work)
 .venv/bin/matcha character examples/sample-vn/configs/example_character.yaml \
   --dry-run
 
-# 2. Generate + deploy into the sample project
+# 2. Generate + deploy into the sample project (slow on Mac MPS — wait)
 .venv/bin/matcha character examples/sample-vn/configs/example_character.yaml \
   --deploy --project examples/sample-vn --layered
 
@@ -74,9 +93,8 @@ you generate.
 ~/Desktop/renpy-8.5.2-sdk/renpy.sh examples/sample-vn
 ```
 
-Click through the pose lineup in `script.rpy`. Edit the YAML’s `checkpoint:` /
-`lora:` to match what you installed in ComfyUI (`--checkpoint` / `--lora` also
-override; `--lora none` disables the LoRA).
+Click through the pose lineup in `script.rpy`. Lint without launching the UI:
+`~/Desktop/renpy-8.5.2-sdk/renpy.sh examples/sample-vn lint`.
 
 Or scaffold your own tree: `.venv/bin/matcha init myproject`, then point
 `--project` at any Ren'Py game directory.

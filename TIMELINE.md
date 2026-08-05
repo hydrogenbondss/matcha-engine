@@ -7,7 +7,7 @@ of STRATEGY.md §6.
 
 Status legend: `[x]` done · `[~]` in progress · `[ ]` not started · `[!]` blocked
 
-_Last updated: 2026-08-05 (local sample-vn generate+deploy; announce screenshots still pending)_
+_Last updated: 2026-08-05 (Phase 2 cold stranger walkthrough; README friction fixed; announce still pending)_
 
 ---
 
@@ -41,11 +41,15 @@ Do **not** deploy into live LOVE32 while that game is being polished — use
   black-PNG guard; shared seed + locked prompts; LoRA `strength_clip=0`;
   layered/side-image scaffolding; sandbox dogfood; IP-Adapter path (default off).
 - **In flight:** Phase 2 announce (#6) — copy drafts + shot list in
-  [`docs/ANNOUNCE.md`](docs/ANNOUNCE.md). **Local generate+deploy done
-  2026-08-05** (`matcha character … --deploy --layered` into
-  `examples/sample-vn/`; four Sakura PNGs present, not near-black; Ren'Py
-  lint OK). Screenshots/GIF still need human capture from the shot list.
-  README cold-start (#5) done.
+  [`docs/ANNOUNCE.md`](docs/ANNOUNCE.md). **Cold stranger walkthrough
+  2026-08-05:** fresh `/tmp` clone → venv install → start ComfyUI (Mac MPS
+  flags) → dry-run → generate+deploy 4/4 poses → Ren'Py lint OK;
+  `licenses` / `disclose` OK; 49 tests pass. README tightened for missing
+  ComfyUI-install callout, `curl` health check, sample model-name overrides,
+  MPS timing, sample-vn section cross-link. Screenshots/GIF still need human
+  capture. **Do not announce yet** — ComfyUI/GPU + model install remain the
+  real stranger blockers (Matcha assumes a working local ComfyUI + matching
+  checkpoint/LoRA).
 - **Mac / MPS limits (document in README, do not hide):** img2img and
   IP-Adapter corrupt — leave off locally (`consistency_denoise: 1.0`,
   `ip_adapter_weight: 0`). Consistency = prompt + shared seed. CUDA IPA is
@@ -59,10 +63,13 @@ Do **not** deploy into live LOVE32 while that game is being polished — use
 2. ~~Example / sample Ren'Py project strangers can clone.~~ **done** (`examples/sample-vn/`)
 3. ~~Per-model license surfacing + Steam/itch disclosure helpers.~~ **done**
    (`matcha licenses`, `matcha disclose`, printed on `character` runs)
-4. ~~Finish outsider install/README cold-start polish.~~ **done**
+4. ~~Finish outsider install/README cold-start polish.~~ **done** (re-verified
+   2026-08-05 cold clone walkthrough; remaining stranger gaps are ComfyUI/GPU
+   + obtaining the sample checkpoint/LoRA, not Matcha install)
 5. Announce: Lemma Soft, Ren'Py Discord, r/comfyui, Civitai —
    copy/shot plan in `docs/ANNOUNCE.md`; local sprites ready (2026-08-05);
-   posts + screenshots still pending.
+   posts + screenshots still pending — **hold announce until walkthrough
+   notes feel acceptable for strangers who must install ComfyUI themselves**
 
 ---
 
@@ -114,9 +121,9 @@ Mac/MPS limits are written in README (not hidden).
 2. [x] Example / sample Ren'Py project strangers can clone — `examples/sample-vn/`
 3. [x] Per-model license surfacing (§4.6) — `matcha/licenses.py`, `matcha licenses`, echoed on `character`
 4. [x] Disclosure helper: Steam AI survey + itch.io tag reminder (§4.7) — `matcha/disclosure.py`, `matcha disclose`
-5. [x] Install/README cold-start for outsiders (venv + ComfyUI + Mac MPS limits + sample-vn recipe + licenses/disclose)
+5. [x] Install/README cold-start for outsiders (venv + ComfyUI + Mac MPS limits + sample-vn recipe + licenses/disclose) — cold clone re-walk 2026-08-05; README friction fixed same day
 6. [~] Announce: Lemma Soft, Ren'Py Discord, r/comfyui, Civitai — **not** artist-heavy general VN forums
-   (prep: [`docs/ANNOUNCE.md`](docs/ANNOUNCE.md); posts not live yet)
+   (prep: [`docs/ANNOUNCE.md`](docs/ANNOUNCE.md); posts not live yet — hold until stranger ComfyUI/model path feels honest enough)
 
 **Branding / marketing / design (same phase — not a 5th phase)**
 
@@ -133,7 +140,7 @@ Mac/MPS limits are written in README (not hidden).
 - [x] Cropped portrait side images (`<name>_<pose>_side.png`, `side_image_height_ratio`)
 - [x] Checked-in example Ren'Py project (`examples/sample-vn/`) + README recipe
 - [x] Per-model license surfacing + Steam/itch disclosure helpers (`licenses` / `disclose`)
-- [x] Outsider README cold-start (install → ComfyUI/Mac MPS → sample-vn → licenses/disclose)
+- [x] Outsider README cold-start (install → ComfyUI/Mac MPS → sample-vn → licenses/disclose) — cold `/tmp` clone walkthrough 2026-08-05 (generate+deploy+lint+helpers); friction fixes landed; announce still held
 
 **Stretch (not an exit gate)**
 

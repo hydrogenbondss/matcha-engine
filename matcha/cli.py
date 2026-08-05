@@ -348,8 +348,11 @@ def init(
     example.write_text(_EXAMPLE_YAML)
 
     typer.echo(f"Created project: {name}")
-    typer.echo(f"Edit {example} and run:")
-    typer.echo(f"  matcha character {example} --deploy --project /path/to/renpy")
+    typer.echo(f"Edit {example} and run (from your Matcha venv):")
+    typer.echo(
+        f"  .venv/bin/matcha character {example} "
+        f"--deploy --project /path/to/renpy"
+    )
 
 
 @app.command("licenses")
