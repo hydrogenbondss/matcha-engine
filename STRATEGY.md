@@ -18,6 +18,26 @@ your Ren'Py project — correct folders, correct naming, and the `image` /
 The moat is **orchestration + the last mile**, not generation. Generation is
 already free (see VNCCS below).
 
+### North star
+
+The opportunity is an AI-native *creation* engine — not another Unity. The
+question worth answering: **what happens when making games no longer begins
+with code?**
+
+Direction: the creator describes intent; Matcha helps generate systems,
+scenes, assets, dialogue, and logic over time; the creator edits. A full
+"mystery game from a sentence" is that north star — **not** v0.1 scope.
+
+**Near-term wedge (honest):** one magical workflow people finish and think
+"wait… it actually works?" Today that path is YAML → consistent sprites →
+Ren'Py. Deepen that magic before expanding scope.
+
+**Mistake to avoid:** building a full engine / "AI GAME ENGINE 5000." Right
+approach: wedge first, then widen.
+
+**Brand:** Matcha = craft, balance, simplicity, calm, elegant, creator-focused
+studio feel — Japanese minimalism vibe. Keep the name.
+
 ## 2. Who it's for, and the priced pain
 
 The zero-to-low-budget VN / indie 2D dev who cannot afford commissioned art.
@@ -59,7 +79,7 @@ project → generated engine code. Every competitor's "Ren'Py-ready" means
 "transparent PNG." (**Likely** — searched, not exhaustively provable.)
 
 **Strategic call:** don't compete with VNCCS on generation — evaluate building
-*on* it (MIT license permits). Match's value over raw VNCCS is declarative
+*on* it (MIT license permits). Matcha's value over raw VNCCS is declarative
 config, reproducibility, batch runs, and the deploy step.
 
 ## 4. v1 feature set
@@ -135,7 +155,7 @@ Phase 2/3, not a fifth phase and not a free-release gate.
    platform damage.
 2. **VNCCS undercuts generation at $0.** Mitigation: orchestrate it, don't
    fight it; the config-reproducibility + Ren'Py last mile is what it lacks.
-3. **Founder attention** (five projects, ≤25 hrs/wk). Mitigation: Match gets a
+3. **Founder attention** (five projects, ≤25 hrs/wk). Mitigation: Matcha gets a
    minority share until Spector/ECHO ship; month-1 scope is "make the demo
    work," not "build the business."
 4. **Legal residue:** purely AI-generated sprites are likely uncopyrightable in

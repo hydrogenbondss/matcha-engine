@@ -7,7 +7,7 @@ of STRATEGY.md §6.
 
 Status legend: `[x]` done · `[~]` in progress · `[ ]` not started · `[!]` blocked
 
-_Last updated: 2026-08-06 (v0.1.0 quiet tag; ComfyUI+models onboarding in README; announce still held)_
+_Last updated: 2026-08-06 (north star in STRATEGY §1; v0.1.0 quiet tag; announce still held)_
 
 ---
 
@@ -36,6 +36,8 @@ Do **not** deploy into live LOVE32 while that game is being polished — use
 
 ## Where we are right now
 
+- **North star:** documented in [STRATEGY.md](STRATEGY.md) §1 (wedge-first
+  AI-native creation; not a full engine) — 2026-08-06.
 - **Current phase:** Phase 2 — Free release.
 - **Shipped (Phase 1):** v0.2 pipeline on live ComfyUI (Mac MPS); preflight;
   black-PNG guard; shared seed + locked prompts; LoRA `strength_clip=0`;
