@@ -75,9 +75,11 @@ class TestConfig:
         cfg = CharacterConfig(name="s", description="d", poses=["idle"])
         assert cfg.checkpoint.endswith(".safetensors")
         assert cfg.lora_strength == 0.7
-        assert cfg.lora == "last.safetensors"
+        assert cfg.lora is None
         assert cfg.height == 512
         assert cfg.width == 512
+        assert cfg.ip_adapter_weight == 0.0
+        assert cfg.consistency_denoise == 1.0
 
 class TestGeneratorErrorSurfacing:
     def test_execution_error_raises_with_server_message(self):
@@ -384,7 +386,7 @@ class TestImageSanity:
 
         buf = BytesIO()
         Image.new("RGB", (512, 512), (0, 0, 0)).save(buf, format="PNG")
-        with pytest.raises(GenerationError, match="solid black"):
+        with pytest.raises(GenerationError, match="--lora none"):
             assert_usable_image(buf.getvalue(), label="idle")
 
     def test_tiny_image_rejected(self):
@@ -404,3 +406,102 @@ class TestImageSanity:
         # Non-trivial colors so it isn't flagged as black.
         Image.new("RGB", (512, 512), (180, 120, 160)).save(buf, format="PNG")
         assert_usable_image(buf.getvalue(), label="idle")
+
+    def test_empty_bytes_rejected(self):
+        from matcha.images import assert_usable_image
+
+        with pytest.raises(GenerationError, match="empty image"):
+            assert_usable_image(b"", label="idle")
+
+
+class TestCliFirstRun:
+    def test_init_writes_lora_null_and_tips_lora_none(self, tmp_path, monkeypatch):
+        from typer.testing import CliRunner
+
+        from matcha.cli import app
+
+        monkeypatch.chdir(tmp_path)
+        runner = CliRunner()
+        result = runner.invoke(app, ["init", "demo"])
+        assert result.exit_code == 0
+        yaml_text = (tmp_path / "demo" / "configs" / "example_character.yaml").read_text()
+        assert "lora: null" in yaml_text
+        assert "--lora none" in result.stdout
+
+    def test_lora_override_none_and_tip_when_yaml_has_lora(self, tmp_path):
+        from typer.testing import CliRunner
+
+        from matcha import preflight
+        from matcha.cli import app
+
+        cfg = tmp_path / "char.yaml"
+        cfg.write_text(
+            "name: s\ndescription: d\nposes: [idle]\n"
+            "checkpoint: good_model.safetensors\nlora: style.safetensors\n"
+        )
+        runner = CliRunner()
+        with mock.patch.object(preflight, "_object_info", fake_object_info):
+            result = runner.invoke(
+                app,
+                ["character", str(cfg), "--dry-run", "--lora", "none"],
+            )
+        assert result.exit_code == 0
+        assert "LoRA: (none)" in result.stdout
+        assert "trusted first-success" in result.stdout.lower() or "Trusted" in result.stdout or "no LoRA" in result.stdout
+
+    def test_tip_when_lora_set_on_dry_run(self, tmp_path):
+        from typer.testing import CliRunner
+
+        from matcha import preflight
+        from matcha.cli import app
+
+        cfg = tmp_path / "char.yaml"
+        cfg.write_text(
+            "name: s\ndescription: d\nposes: [idle]\n"
+            "checkpoint: good_model.safetensors\nlora: style.safetensors\n"
+        )
+        runner = CliRunner()
+        with mock.patch.object(preflight, "_object_info", fake_object_info):
+            result = runner.invoke(app, ["character", str(cfg), "--dry-run"])
+        assert result.exit_code == 0
+        assert "--lora none" in result.stdout
+        assert "Next: generate with --lora none" in result.stdout
+
+    def test_warns_when_ipa_enabled(self, tmp_path):
+        from typer.testing import CliRunner
+
+        from matcha import preflight
+        from matcha.cli import app
+
+        cfg = tmp_path / "char.yaml"
+        cfg.write_text(
+            "name: s\ndescription: d\nposes: [idle]\n"
+            "checkpoint: good_model.safetensors\nlora: null\n"
+            "ip_adapter_weight: 0.5\n"
+        )
+        runner = CliRunner()
+        with mock.patch.object(preflight, "_object_info", fake_object_info):
+            # IPA preflight needs IPAdapterModelLoader — patch validate to skip IPA
+            with mock.patch.object(preflight, "validate_models"):
+                result = runner.invoke(app, ["character", str(cfg), "--dry-run"])
+        assert result.exit_code == 0
+        assert "WARNING" in result.output
+        assert "IP-Adapter" in result.output
+
+    def test_preflight_unreachable_mentions_health_check(self):
+        with mock.patch.object(
+            preflight.urllib.request,
+            "urlopen",
+            side_effect=OSError("Connection refused"),
+        ):
+            with pytest.raises(PreflightError, match="Health-check"):
+                preflight.validate_models("127.0.0.1:8188", "good_model.safetensors")
+
+    def test_queue_prompt_unreachable_is_generation_error(self):
+        gen = ComfyUIGenerator("127.0.0.1:1")
+        with mock.patch(
+            "urllib.request.urlopen",
+            side_effect=OSError("Connection refused"),
+        ):
+            with pytest.raises(GenerationError, match="Cannot reach ComfyUI"):
+                gen.queue_prompt({"1": {}})

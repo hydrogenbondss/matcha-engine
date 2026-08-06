@@ -40,6 +40,7 @@ def assert_usable_image(data: bytes, *, label: str = "image") -> None:
         raise GenerationError(
             f"{label}: image is nearly solid black "
             f"(mean luma {mean_luma:.1f}) — likely a NaN/VAE failure. "
-            f"On Mac MPS avoid --force-fp16; try --fp32-vae --cpu-vae, "
-            f"or a different LoRA."
+            f"On Mac MPS avoid --force-fp16; start ComfyUI with "
+            f"--fp32-vae --cpu-vae; retry with --lora none (base checkpoint), "
+            f"then try a different LoRA if needed."
         )

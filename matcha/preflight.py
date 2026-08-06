@@ -25,7 +25,10 @@ def _object_info(server_address: str, node: str) -> dict:
     except (urllib.error.URLError, OSError) as e:
         raise PreflightError(
             f"Cannot reach ComfyUI at {server_address}: {e}. "
-            "Is the server running?"
+            "Is the server running? Health-check first:\n"
+            f"  curl -s -o /dev/null -w '%{{http_code}}\\n' "
+            f"http://{server_address}/\n"
+            "(expect 200 — connection refused means ComfyUI is not up)"
         ) from e
 
 

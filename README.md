@@ -2,8 +2,8 @@
 
 Define a character once in YAML, generate a consistent sprite set on your own
 GPU ([ComfyUI](https://github.com/comfyanonymous/ComfyUI) + Stable Diffusion /
-LoRA), and deploy it into a Ren'Py project — images in the right folder,
-`.rpy` definitions written for you.
+optional LoRA), and deploy it into a Ren'Py project — images in the right
+folder, `.rpy` definitions written for you.
 
 Positioning and roadmap: [STRATEGY.md](STRATEGY.md) · progress:
 [TIMELINE.md](TIMELINE.md).
@@ -27,7 +27,7 @@ ComfyUI, download checkpoints, or ship GPU runtimes.
 **Without ComfyUI:** you can still open
 [`examples/sample-vn/`](examples/sample-vn/) in the Ren'Py SDK — starter
 `Placeholder` art keeps it playable. **Generation** needs a live server +
-matching models.
+a matching checkpoint.
 
 ### 1. Install ComfyUI
 
@@ -43,16 +43,17 @@ Follow their install docs for your OS / GPU. Typical local path: `~/ComfyUI`.
 | LoRA (optional) | `models/loras/` |
 
 Checkpoint and LoRA must share a base family — an SD1.5 LoRA on an SDXL
-checkpoint fails or silently degrades.
+checkpoint fails or silently degrades. **First success needs only a
+checkpoint** — leave LoRA off until base generate works.
 
 ### 3. Match names (or override)
 
-The sample YAML expects filenames on disk:
+The sample YAML expects a checkpoint filename on disk:
 
 - `anythingV5PrtRE.safetensors` (checkpoint)
-- `last.safetensors` (LoRA)
+- LoRA defaults to off (`lora: null`); add one only after a clean base run
 
-If yours differ, override on the CLI:
+If your checkpoint name differs, override on the CLI:
 
 ```bash
 .venv/bin/matcha character examples/sample-vn/configs/example_character.yaml \
@@ -76,13 +77,14 @@ work). Real generation needs the same server still running.
 ### Mac MPS (Apple Silicon) — read this
 
 On Apple Silicon, several “nice” consistency features currently **corrupt**
-output. Matcha defaults keep you safe; do not turn them on locally:
+output. Matcha defaults keep you safe; **do not turn them on** locally:
 
 | Setting | Safe on MPS | Notes |
 |---|---|---|
 | Resolution | `512×512` | Prefer over `512×768` (OOM risk) |
-| `consistency_denoise` | `1.0` (off) | Below `1.0` → glitched frames |
-| `ip_adapter_weight` | `0` (off) | IPA → noise/corruption on MPS |
+| LoRA | off (`--lora none` / `lora: null`) | First-success path; some LoRAs black/NaN on MPS |
+| `consistency_denoise` | `1.0` (off) | Below `1.0` → glitched frames — leave off |
+| `ip_adapter_weight` | `0` (off) | IPA → noise/corruption on MPS — leave off |
 | LoRA clip strength | forced `0` by Matcha | Non-zero clip → half-static PNGs |
 
 Start ComfyUI with these flags (adjust the path if your install is not
@@ -101,11 +103,14 @@ prints each pose name as it starts; it is not hung. After a heavy IP-Adapter
 experiment, fully quit ComfyUI (or reboot) before the next clean run — a soft
 restart is not enough.
 
-## Quick start (stranger path)
+## Trusted first success
 
 Checked-in sample Ren'Py project: [`examples/sample-vn/`](examples/sample-vn/).
 Sprites are not committed — Placeholders until you generate. Open it in Ren'Py
-anytime; generate only after ComfyUI + models (section above) are ready.
+anytime; generate only after ComfyUI + a checkpoint (section above) are ready.
+
+Goal: one clean base-checkpoint generate into the sample project — not a
+perfect style LoRA on day one.
 
 ```bash
 # 0. Server up? Expect 200 — skip this cliff and dry-run fails immediately
@@ -115,9 +120,9 @@ curl -s -o /dev/null -w "%{http_code}\n" http://127.0.0.1:8188/
 .venv/bin/matcha character examples/sample-vn/configs/example_character.yaml \
   --dry-run
 
-# 2. Generate + deploy into the sample project (slow on Mac MPS — wait)
+# 2. Generate with LoRA off (safest first path) + deploy into sample-vn
 .venv/bin/matcha character examples/sample-vn/configs/example_character.yaml \
-  --deploy --project examples/sample-vn --layered
+  --lora none --deploy --project examples/sample-vn --layered
 
 # 3. Open with the Ren'Py SDK (adjust path)
 ~/Desktop/renpy-8.5.2-sdk/renpy.sh examples/sample-vn
@@ -125,6 +130,9 @@ curl -s -o /dev/null -w "%{http_code}\n" http://127.0.0.1:8188/
 
 Click through the pose lineup in `script.rpy`. Lint without launching the UI:
 `~/Desktop/renpy-8.5.2-sdk/renpy.sh examples/sample-vn lint`.
+
+After that works, optionally set a LoRA in the YAML (machine-specific; e.g.
+`last.safetensors` @ 0.7 on some Macs) or pass `--lora your_lora.safetensors`.
 
 Or scaffold your own tree: `.venv/bin/matcha init myproject`, then point
 `--project` at any Ren'Py game directory.
@@ -137,7 +145,7 @@ Or scaffold your own tree: `.venv/bin/matcha init myproject`, then point
 
 | Command | What it does |
 |---|---|
-| `matcha character <config.yaml>` | Generate sprites; optional `--deploy` / `--dry-run` |
+| `matcha character <config.yaml>` | Generate sprites; optional `--deploy` / `--dry-run` / `--lora none` |
 | `matcha licenses …` | Commercial-use status for checkpoint/LoRA (**not legal advice**) |
 | `matcha disclose …` | Draft Steam AI survey + itch.io AI-tag text |
 | `matcha init <name>` | Scaffold a project + example character YAML |
@@ -170,7 +178,7 @@ Default: flat `image <char> <pose>` per pose. Opt in for a richer setup:
 
 ```bash
 .venv/bin/matcha character examples/sample-vn/configs/example_character.yaml \
-  --deploy --project examples/sample-vn --layered --side-image
+  --lora none --deploy --project examples/sample-vn --layered --side-image
 ```
 
 ## Development

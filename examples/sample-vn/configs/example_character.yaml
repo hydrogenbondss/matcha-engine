@@ -14,10 +14,12 @@ poses:
   - surprised
 
 # Model selection — checkpoint and LoRA must share a base model family.
-# small_hours_style_v1 is SD1.5 but currently NaNs/blacks on Mac MPS;
-# last.safetensors is the working interim on that stack.
+# Trusted first success: base checkpoint only (lora: null). Override with
+# --lora none even if a LoRA is set. Optional LoRAs are machine-specific
+# (e.g. last.safetensors @ 0.7 on some Macs); small_hours_style_v1 NaNs on MPS.
 checkpoint: anythingV5PrtRE.safetensors
-lora: last.safetensors
+lora: null
+# lora: last.safetensors   # optional, after a clean base-checkpoint run
 lora_strength: 0.7
 
 # 512×512 is safer on Mac MPS; use 512×768 when VRAM allows.
@@ -26,10 +28,10 @@ height: 512
 steps: 20
 seed: 42
 # Later poses img2img from the first sprite (identity lock). 1.0 = off.
-# On Mac MPS, values < 1.0 currently produce glitched frames — keep off.
+# DO NOT enable on Mac MPS — values < 1.0 currently produce glitched frames.
 consistency_denoise: 1.0
 # IP-Adapter identity lock (later poses condition on first sprite).
-# 0.0 = off. Works on CUDA; currently corrupts on Mac MPS — leave off here.
+# DO NOT enable on Mac MPS — corrupts output. Leave weight at 0 / commented.
 # ip_adapter_weight: 0.65
 # ip_adapter_file: ip-adapter_sd15.safetensors
 # clip_vision: CLIP-ViT-H-14-laion2B-s32B-b79K.safetensors

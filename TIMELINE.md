@@ -7,7 +7,8 @@ of STRATEGY.md §6.
 
 Status legend: `[x]` done · `[~]` in progress · `[ ]` not started · `[!]` blocked
 
-_Last updated: 2026-08-06 (north star in STRATEGY §1; v0.1.0 quiet tag; announce still held)_
+_Last updated: 2026-08-06 (wedge deepen: --lora none first-success path; public
+outreach deferred indefinitely — not the goal)_
 
 ---
 
@@ -20,17 +21,19 @@ Mac MPS.
 | # | Phase | Goal | Exit criteria |
 |---|--------|------|----------------|
 | **1** | Pipeline demo | Config → sprites → Ren'Py deploy works on a real GPU *for you* | 4 usable poses in **sandbox**; play-tested; consistency path decided |
-| **2** | Free release | A stranger can install, generate, and deploy without us | Example project; cropped side images; license/disclosure helpers; README limits honest; public announce |
-| **3** | First dollar | Money changes hands | Pro pack on itch/Gumroad; ≥1 paid sale; acquisition LoRA(s) on Civitai |
+| **2** | Free release | A stranger can install, generate, and deploy without us | Example project; cropped side images; license/disclosure helpers; README limits honest; trustworthy cold-run path |
+| **3** | First dollar | Money changes hands | Pro pack on itch/Gumroad; ≥1 paid sale; acquisition LoRA(s) |
 | **4** | Hosted (conditional) | Cloud generate | Only if ≥~100 Pro sales — Replicate/fal + auth/billing |
 
 ```
 Phase1 → Phase2 → Phase3 ──(if ~100 Pro sales)──► Phase4
 ```
 
-**You are here:** **Phase 2 — Free release.** Phase 1 is closed (2026-07-27).
-Do **not** deploy into live LOVE32 while that game is being polished — use
-`examples/sample-vn/` (checked in) or gitignored `sandbox-renpy/`.
+**You are here:** **Phase 2 — Free release** (wedge deepen: reliability +
+time-to-wow). Phase 1 is closed (2026-07-27). Public outreach stays deferred
+indefinitely — not the current goal. Do **not** deploy into live LOVE32 while
+that game is being polished — use `examples/sample-vn/` (checked in) or
+gitignored `sandbox-renpy/`.
 
 ---
 
@@ -38,6 +41,9 @@ Do **not** deploy into live LOVE32 while that game is being polished — use
 
 - **North star:** documented in [STRATEGY.md](STRATEGY.md) §1 (wedge-first
   AI-native creation; not a full engine) — 2026-08-06.
+- **Current focus:** deepen the wedge — reliable first generate (especially
+  Mac MPS) via `--lora none` / `lora: null`, clearer failure modes, trusted
+  first-success recipe in README. Public outreach is deferred indefinitely.
 - **Current phase:** Phase 2 — Free release.
 - **Shipped (Phase 1):** v0.2 pipeline on live ComfyUI (Mac MPS); preflight;
   black-PNG guard; shared seed + locked prompts; LoRA `strength_clip=0`;
@@ -45,14 +51,15 @@ Do **not** deploy into live LOVE32 while that game is being polished — use
 - **Shipped (Phase 2 preview):** quiet **v0.1.0** tag (2026-08-06) — free CLI
   preview; README ComfyUI + models onboarding (install, paths, name match /
   `--checkpoint` / `--lora none`, `curl` health-check cliff, Mac MPS limits,
-  Placeholders without generation). No forum announce.
-- **In flight:** Phase 2 announce (#6) — copy drafts + shot list in
-  [`docs/ANNOUNCE.md`](docs/ANNOUNCE.md). **Cold stranger walkthrough
-  2026-08-05:** fresh `/tmp` clone → venv install → start ComfyUI (Mac MPS
-  flags) → dry-run → generate+deploy 4/4 poses → Ren'Py lint OK;
-  `licenses` / `disclose` OK; 49 tests pass. Screenshots/GIF still need human
-  capture. **Do not announce yet** — ComfyUI/GPU + obtaining models remain the
-  real stranger blockers.
+  Placeholders without generation).
+- **Shipped (wedge deepen 2026-08-06):** sample/init YAML default `lora: null`;
+  CLI tip + dry-run next-step when a LoRA is set; louder MPS warnings for
+  img2img/IPA; clearer ComfyUI-down / black-PNG / WebSocket errors; README
+  **Trusted first success** recipe (health-check → dry-run → `--lora none` →
+  sample-vn).
+- **Earlier walkthrough (2026-08-05):** fresh `/tmp` clone → venv install →
+  start ComfyUI (Mac MPS flags) → dry-run → generate+deploy 4/4 poses → Ren'Py
+  lint OK; `licenses` / `disclose` OK.
 - **Mac / MPS limits (document in README, do not hide):** img2img and
   IP-Adapter corrupt — leave off locally (`consistency_denoise: 1.0`,
   `ip_adapter_weight: 0`). Consistency = prompt + shared seed. CUDA IPA is
@@ -68,15 +75,14 @@ Do **not** deploy into live LOVE32 while that game is being polished — use
    (`matcha licenses`, `matcha disclose`, printed on `character` runs)
 4. ~~Finish outsider install/README cold-start polish.~~ **done** (re-verified
    2026-08-05 cold clone walkthrough; ComfyUI+models onboarding expanded +
-   quiet v0.1.0 tag 2026-08-06; remaining stranger gaps are obtaining
-   ComfyUI/GPU + checkpoint/LoRA, not Matcha install)
-5. Announce: Lemma Soft, Ren'Py Discord, r/comfyui, Civitai —
-   copy/shot plan in `docs/ANNOUNCE.md`; local sprites ready (2026-08-05);
-   posts + screenshots still pending — **hold announce** (v0.1.0 is tag-only;
-   no forum posts required for this ship)
+   quiet v0.1.0 tag 2026-08-06; remaining gaps are obtaining ComfyUI/GPU +
+   checkpoint, not Matcha install)
+5. ~~Trusted first-success path (`--lora none` / `lora: null`, failure-mode
+   clarity, README recipe).~~ **done** 2026-08-06
+6. Public outreach — **deferred indefinitely** (not the goal; prep may exist
+   in-repo but do not treat as active work)
 
 ---
-
 ## Phase 1 — Pipeline demo (Month 1) — CLOSED 2026-07-27
 
 **Goal:** Config → sprites → Ren'Py deploy works on a real GPU for *you*.
@@ -114,8 +120,10 @@ path decided (prompt+seed on MPS; IP-Adapter/img2img default off).
 **Goal:** A stranger can install, generate, and deploy without us sitting next
 to them.
 
-**Exit:** stranger walkthrough succeeds once; announce posts go out; known
-Mac/MPS limits are written in README (not hidden).
+**Exit:** stranger walkthrough succeeds once (trusted first success:
+health-check → dry-run → `--lora none` → sample-vn); known Mac/MPS limits are
+written in README (not hidden). Public outreach is deferred indefinitely —
+not an exit criterion.
 
 **Out of scope:** Pro installer, Gumroad listing, hosted API.
 
@@ -125,17 +133,16 @@ Mac/MPS limits are written in README (not hidden).
 2. [x] Example / sample Ren'Py project strangers can clone — `examples/sample-vn/`
 3. [x] Per-model license surfacing (§4.6) — `matcha/licenses.py`, `matcha licenses`, echoed on `character`
 4. [x] Disclosure helper: Steam AI survey + itch.io tag reminder (§4.7) — `matcha/disclosure.py`, `matcha disclose`
-5. [x] Install/README cold-start for outsiders (venv + ComfyUI + Mac MPS limits + sample-vn recipe + licenses/disclose) — cold clone re-walk 2026-08-05; ComfyUI+models onboarding section expanded 2026-08-06; quiet **v0.1.0** tag (no forum announce)
-6. [~] Announce: Lemma Soft, Ren'Py Discord, r/comfyui, Civitai — **not** artist-heavy general VN forums
-   (prep: [`docs/ANNOUNCE.md`](docs/ANNOUNCE.md); posts not live yet — hold; v0.1.0 is tag-only)
+5. [x] Install/README cold-start for outsiders (venv + ComfyUI + Mac MPS limits + sample-vn recipe + licenses/disclose) — cold clone re-walk 2026-08-05; ComfyUI+models onboarding section expanded 2026-08-06; quiet **v0.1.0** tag
+6. [x] Trusted first-success path — `lora: null` / `--lora none` defaults + tips; clearer ComfyUI-down / black-PNG / WS errors; README recipe (2026-08-06)
+7. [ ] Public outreach — **deferred indefinitely** (not the goal)
 
 **Branding / marketing / design (same phase — not a 5th phase)**
 
 - [x] Product name consistency everywhere (**Matcha Engine** / `matcha` — STRATEGY leftovers fixed)
-- [x] README voice: clear, honest (Mac MPS limits), outsider-friendly tone
-- [ ] Wordmark / simple logo if announce posts need one (skip if text-only is enough)
-- [ ] Announce screenshots + short GIF (config → sprites → Ren'Py) — shot list in `docs/ANNOUNCE.md`; sprites generated locally 2026-08-05, human capture still pending
-- [x] Announce copy drafts for Lemma Soft, Ren'Py Discord, r/comfyui, Civitai — `docs/ANNOUNCE.md`
+- [x] README voice: clear, honest (Mac MPS limits), outsider-friendly tone; trusted first-success recipe
+- [ ] Wordmark / simple logo if needed later (skip if text-only is enough)
+- [ ] Optional screenshots / GIF for docs (not a gate)
 
 **Already shipped toward Phase 2**
 
@@ -144,7 +151,8 @@ Mac/MPS limits are written in README (not hidden).
 - [x] Cropped portrait side images (`<name>_<pose>_side.png`, `side_image_height_ratio`)
 - [x] Checked-in example Ren'Py project (`examples/sample-vn/`) + README recipe
 - [x] Per-model license surfacing + Steam/itch disclosure helpers (`licenses` / `disclose`)
-- [x] Outsider README cold-start (install → ComfyUI/Mac MPS → sample-vn → licenses/disclose) — cold `/tmp` clone walkthrough 2026-08-05; ComfyUI+models onboarding + quiet v0.1.0 tag 2026-08-06; forum announce still held
+- [x] Outsider README cold-start (install → ComfyUI/Mac MPS → sample-vn → licenses/disclose) — cold `/tmp` clone walkthrough 2026-08-05; ComfyUI+models onboarding + quiet v0.1.0 tag 2026-08-06
+- [x] Wedge deepen: `--lora none` first-success path + failure-mode clarity (2026-08-06)
 
 **Stretch (not an exit gate)**
 
@@ -163,13 +171,12 @@ Mac/MPS limits are written in README (not hidden).
 
 - [ ] Pro package (installer, presets, one-command deploy) ~$19–29
 - [ ] List on itch.io + Gumroad
-- [ ] Free VN-style LoRA(s) on Civitai (acquisition loop)
+- [ ] Free VN-style LoRA(s) (acquisition loop)
 
 **Branding / marketing / design**
 
 - [ ] itch.io + Gumroad listing visuals (cover, gallery, short trailer/GIF)
 - [ ] Package naming clarity (Free CLI vs Pro pack)
-- [ ] Civitai LoRA card branding (“made for Matcha Engine”)
 - [ ] Pricing clarity on listings (~$19–29 one-time; what’s in Free vs Pro)
 
 ---

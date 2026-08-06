@@ -25,9 +25,10 @@ class CharacterConfig(BaseModel):
     # ~0.45 ≈ head/shoulders on typical waist-up VN sprites.
     side_image_height_ratio: float = Field(default=0.45, gt=0.0, le=1.0)
     checkpoint: str = "anythingV5PrtRE.safetensors"
-    # Prefer small_hours_style_v1 when it works; on Mac MPS it currently
-    # NaNs — example configs use last.safetensors as the interim.
-    lora: Optional[str] = "last.safetensors"
+    # Default None = base checkpoint only (trusted first success).
+    # Optional LoRAs are machine-specific; on Mac MPS prefer --lora none
+    # first, then try a known-good LoRA (e.g. last.safetensors @ 0.7).
+    lora: Optional[str] = None
     lora_strength: float = 0.7
     negative_prompt: str = (
         "low quality, blurry, worst quality, deformed, bad anatomy, "

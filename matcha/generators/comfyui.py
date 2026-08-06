@@ -1,6 +1,7 @@
 import json
 import random
 import uuid
+import urllib.error
 import urllib.parse
 import urllib.request
 from typing import Optional
@@ -23,7 +24,14 @@ class ComfyUIGenerator:
             data=data,
             headers={"Content-Type": "application/json"},
         )
-        return json.loads(urllib.request.urlopen(req).read())
+        try:
+            with urllib.request.urlopen(req, timeout=30) as resp:
+                return json.loads(resp.read())
+        except (urllib.error.URLError, OSError) as e:
+            raise GenerationError(
+                f"Cannot reach ComfyUI at {self.server_address}: {e}. "
+                "Is the server still running?"
+            ) from e
 
     def upload_image(self, data: bytes, filename: str = "matcha_ref.png") -> str:
         """Upload PNG bytes to ComfyUI's input folder; return the server filename."""
@@ -234,9 +242,15 @@ class ComfyUIGenerator:
         to silently swallow corrupt-checkpoint and bad-node failures.
         """
         ws = websocket.WebSocket()
-        ws.connect(
-            f"ws://{self.server_address}/ws?clientId={self.client_id}"
-        )
+        try:
+            ws.connect(
+                f"ws://{self.server_address}/ws?clientId={self.client_id}"
+            )
+        except Exception as e:
+            raise GenerationError(
+                f"Cannot open ComfyUI WebSocket at {self.server_address}: {e}. "
+                "HTTP may be up while WebSocket is not — restart ComfyUI."
+            ) from e
         try:
             while True:
                 msg = ws.recv()

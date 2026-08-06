@@ -37,10 +37,12 @@ poses:
   - surprised
 
 # Model selection — checkpoint and LoRA must share a base model family.
-# small_hours_style_v1 is SD1.5 but currently NaNs/blacks on Mac MPS;
-# last.safetensors is the working interim on that stack.
+# Trusted first success: base checkpoint only (lora: null). Override with
+# --lora none even if a LoRA is set. Optional LoRAs are machine-specific
+# (e.g. last.safetensors @ 0.7 on some Macs); small_hours_style_v1 NaNs on MPS.
 checkpoint: anythingV5PrtRE.safetensors
-lora: last.safetensors
+lora: null
+# lora: last.safetensors   # optional, after a clean base-checkpoint run
 lora_strength: 0.7
 
 # 512×512 is safer on Mac MPS; use 512×768 when VRAM allows.
@@ -49,10 +51,10 @@ height: 512
 steps: 20
 seed: 42
 # Later poses img2img from the first sprite (identity lock). 1.0 = off.
-# On Mac MPS, values < 1.0 currently produce glitched frames — keep off.
+# DO NOT enable on Mac MPS — values < 1.0 currently produce glitched frames.
 consistency_denoise: 1.0
 # IP-Adapter identity lock (later poses condition on first sprite).
-# 0.0 = off. Works on CUDA; currently corrupts on Mac MPS — leave off here.
+# DO NOT enable on Mac MPS — corrupts output. Leave weight at 0 / commented.
 # ip_adapter_weight: 0.65
 # ip_adapter_file: ip-adapter_sd15.safetensors
 # clip_vision: CLIP-ViT-H-14-laion2B-s32B-b79K.safetensors
@@ -84,7 +86,12 @@ def character(
         None, "--checkpoint", "-c", help="Override the checkpoint from the YAML config"
     ),
     lora: Optional[str] = typer.Option(
-        None, "--lora", help="Override the LoRA from the YAML config ('none' to disable)"
+        None,
+        "--lora",
+        help=(
+            "Override YAML LoRA ('none' = base checkpoint only — "
+            "trusted first-success path)"
+        ),
     ),
     layered: Optional[bool] = typer.Option(
         None, "--layered/--no-layered",
@@ -130,15 +137,24 @@ def character(
     typer.echo(f"LoRA: {char_config.lora or '(none)'}")
     typer.echo(f"Seed: {run_seed} (shared across poses)")
     typer.echo(format_license_report(char_config.checkpoint, char_config.lora))
+    if char_config.lora:
+        typer.echo(
+            "Tip: for a trusted first success, re-run with --lora none "
+            "(base checkpoint only), then add a LoRA once that works."
+        )
     if char_config.consistency_denoise < 1.0:
         typer.echo(
-            f"Consistency: later poses img2img from first "
-            f"(denoise={char_config.consistency_denoise})"
+            "WARNING: consistency_denoise < 1.0 (img2img) corrupts on Mac MPS "
+            f"(denoise={char_config.consistency_denoise}). Keep 1.0 for "
+            "reliable runs.",
+            err=True,
         )
     if char_config.ip_adapter_weight > 0:
         typer.echo(
-            f"IP-Adapter: later poses lock to first "
-            f"(weight={char_config.ip_adapter_weight})"
+            "WARNING: IP-Adapter corrupts on Mac MPS "
+            f"(weight={char_config.ip_adapter_weight}). Leave "
+            "ip_adapter_weight: 0 for reliable runs.",
+            err=True,
         )
 
     # Preflight: verify the server knows these models before queueing
@@ -168,6 +184,15 @@ def character(
 
     if dry_run:
         typer.echo("Dry run — config and models validated, no generation")
+        if char_config.lora:
+            typer.echo(
+                "Next: generate with --lora none for the safest first run, "
+                "or omit the flag to use the YAML LoRA."
+            )
+        else:
+            typer.echo(
+                "Next: generate (no LoRA) — trusted first-success path is ready."
+            )
         return
 
     generator = ComfyUIGenerator(server_address=comfyui)
@@ -230,7 +255,9 @@ def character(
 
     if not generated:
         typer.echo(
-            "No images were generated — skipping deploy and script update.",
+            "No images were generated — skipping deploy and script update.\n"
+            "If ComfyUI was unreachable or returned black/corrupt PNGs, fix "
+            "the server (health-check curl), then retry with --lora none.",
             err=True,
         )
         raise typer.Exit(1)
@@ -348,9 +375,9 @@ def init(
     example.write_text(_EXAMPLE_YAML)
 
     typer.echo(f"Created project: {name}")
-    typer.echo(f"Edit {example} and run (from your Matcha venv):")
+    typer.echo(f"Edit {example}, then trusted first success (from your Matcha venv):")
     typer.echo(
-        f"  .venv/bin/matcha character {example} "
+        f"  .venv/bin/matcha character {example} --lora none "
         f"--deploy --project /path/to/renpy"
     )
 
