@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "matcha-engine"
-version = "0.2.0"
+version = "0.1.0"
 description = "Matcha Engine — AI game asset pipeline: YAML character configs to consistent sprite sets deployed into Ren'Py projects"
 requires-python = ">=3.10"
 dependencies = [

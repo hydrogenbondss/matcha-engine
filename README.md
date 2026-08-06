@@ -19,25 +19,59 @@ python3.12 -m venv .venv
 
 Use `.venv/bin/matcha` (or `source .venv/bin/activate` first).
 
-## ComfyUI requirement
+## ComfyUI + models (required for generation)
 
-Matcha does **not** bundle ComfyUI. Install it separately
-([ComfyUI](https://github.com/comfyanonymous/ComfyUI)), put your checkpoint under
-`models/checkpoints/` and any LoRA under `models/loras/`, then start the
-server on `127.0.0.1:8188` (HTTP + WebSocket).
+Matcha is a thin CLI around **your** local ComfyUI. It does **not** install
+ComfyUI, download checkpoints, or ship GPU runtimes.
 
-`matcha character` (without `--dry-run`) talks to that server. Checkpoint and
-LoRA must share a base model family — an SD1.5 LoRA on an SDXL checkpoint
-fails or silently degrades.
+**Without ComfyUI:** you can still open
+[`examples/sample-vn/`](examples/sample-vn/) in the Ren'Py SDK — starter
+`Placeholder` art keeps it playable. **Generation** needs a live server +
+matching models.
 
-`--dry-run` only checks that those models exist on the server (no generation).
+### 1. Install ComfyUI
 
-Verify the server is up before the sample recipe:
+Clone and set up from the official repo:
+[github.com/comfyanonymous/ComfyUI](https://github.com/comfyanonymous/ComfyUI).
+Follow their install docs for your OS / GPU. Typical local path: `~/ComfyUI`.
+
+### 2. Drop in models
+
+| Asset | Put it here (under your ComfyUI root) |
+|---|---|
+| Checkpoint (required) | `models/checkpoints/` |
+| LoRA (optional) | `models/loras/` |
+
+Checkpoint and LoRA must share a base family — an SD1.5 LoRA on an SDXL
+checkpoint fails or silently degrades.
+
+### 3. Match names (or override)
+
+The sample YAML expects filenames on disk:
+
+- `anythingV5PrtRE.safetensors` (checkpoint)
+- `last.safetensors` (LoRA)
+
+If yours differ, override on the CLI:
+
+```bash
+.venv/bin/matcha character examples/sample-vn/configs/example_character.yaml \
+  --checkpoint your_checkpoint.safetensors --lora none
+```
+
+### 4. Start the server, then health-check
+
+ComfyUI must speak HTTP **and** WebSocket on `127.0.0.1:8188`. **Do this
+before** any `--dry-run` or generate — connection refused means the server
+is not up.
 
 ```bash
 curl -s -o /dev/null -w "%{http_code}\n" http://127.0.0.1:8188/
 # expect 200 — if connection refused, start ComfyUI first
 ```
+
+`--dry-run` only checks that the named models exist on that server (no GPU
+work). Real generation needs the same server still running.
 
 ### Mac MPS (Apple Silicon) — read this
 
@@ -70,15 +104,11 @@ restart is not enough.
 ## Quick start (stranger path)
 
 Checked-in sample Ren'Py project: [`examples/sample-vn/`](examples/sample-vn/).
-Sprites are not committed — starter `Placeholder` art keeps it playable until
-you generate. You can open it in the Ren'Py SDK before ComfyUI is ready.
-
-The sample YAML names `anythingV5PrtRE.safetensors` and `last.safetensors`.
-Those files must exist in your ComfyUI `models/` folders, **or** override on
-the CLI (`--checkpoint your.safetensors --lora none`).
+Sprites are not committed — Placeholders until you generate. Open it in Ren'Py
+anytime; generate only after ComfyUI + models (section above) are ready.
 
 ```bash
-# 0. ComfyUI running? (see section above; Mac MPS start flags if needed)
+# 0. Server up? Expect 200 — skip this cliff and dry-run fails immediately
 curl -s -o /dev/null -w "%{http_code}\n" http://127.0.0.1:8188/
 
 # 1. Validate config + models (ComfyUI must be running; no GPU work)
