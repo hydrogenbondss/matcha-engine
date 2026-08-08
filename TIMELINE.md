@@ -7,8 +7,8 @@ of STRATEGY.md §6.
 
 Status legend: `[x]` done · `[~]` in progress · `[ ]` not started · `[!]` blocked
 
-_Last updated: 2026-08-06 (wedge deepen: --lora none first-success path; public
-outreach deferred indefinitely — not the goal)_
+_Last updated: 2026-08-08 (local 3× `--lora none` reliability smoke passed on
+Mac MPS; public outreach deferred indefinitely — not the goal)_
 
 ---
 
@@ -57,6 +57,10 @@ gitignored `sandbox-renpy/`.
   img2img/IPA; clearer ComfyUI-down / black-PNG / WebSocket errors; README
   **Trusted first success** recipe (health-check → dry-run → `--lora none` →
   sample-vn).
+- **Reliability smoke (2026-08-08, Mac MPS):** **3 consecutive**
+  `--lora none` character runs (4/4 poses each), PNGs not near-black;
+  ~15–16 min/run. ComfyUI can still die mid-job if the process is torn down —
+  keep the server in a durable Terminal session for long batches.
 - **Earlier walkthrough (2026-08-05):** fresh `/tmp` clone → venv install →
   start ComfyUI (Mac MPS flags) → dry-run → generate+deploy 4/4 poses → Ren'Py
   lint OK; `licenses` / `disclose` OK.
@@ -79,7 +83,9 @@ gitignored `sandbox-renpy/`.
    checkpoint, not Matcha install)
 5. ~~Trusted first-success path (`--lora none` / `lora: null`, failure-mode
    clarity, README recipe).~~ **done** 2026-08-06
-6. Public outreach — **deferred indefinitely** (not the goal; prep may exist
+6. ~~Local 3× consecutive `--lora none` reliability smoke (Mac MPS).~~ **done**
+   2026-08-08 (~15–16 min/run; 4 usable poses × 3)
+7. Public outreach — **deferred indefinitely** (not the goal; prep may exist
    in-repo but do not treat as active work)
 
 ---
