@@ -327,6 +327,31 @@ class ComfyUIGenerator:
 
         self._wait_for_completion(prompt_id)
 
+        return self._images_from_history(prompt_id, prefer_node="14")
+
+    def generate_workflow(
+        self,
+        workflow: dict,
+        *,
+        prefer_node: str = "14",
+    ) -> list[bytes]:
+        """Queue an already-built ComfyUI API prompt graph and collect PNGs.
+
+        Used by the VNCCS backend (real VNCCS node types, not a renamed
+        KSampler txt2img graph). ``workflow`` is the ``/prompt`` ``prompt``
+        object: ``{node_id: {class_type, inputs}}``.
+        """
+        queued = self.queue_prompt(workflow)
+        prompt_id = queued["prompt_id"]
+        self._wait_for_completion(prompt_id)
+        return self._images_from_history(prompt_id, prefer_node=prefer_node)
+
+    def _images_from_history(
+        self,
+        prompt_id: str,
+        *,
+        prefer_node: str = "14",
+    ) -> list[bytes]:
         history = self.get_history(prompt_id)
         if prompt_id not in history:
             raise GenerationError(
@@ -335,10 +360,8 @@ class ComfyUIGenerator:
             )
         outputs = history[prompt_id]["outputs"]
 
-        # The workflow's SaveImage node is stable: "14".
-        # History includes other nodes with "images", and relying on dict
-        # iteration order can occasionally pick the wrong one.
-        save_node = outputs.get("14") or {}
+        # Prefer a stable SaveImage node id when the graph defines one.
+        save_node = outputs.get(prefer_node) or {}
         save_images = save_node.get("images", [])
 
         images: list[bytes] = []
@@ -351,7 +374,6 @@ class ComfyUIGenerator:
                 )
             )
 
-        # Fallback: older / alternate workflows might not use node id "14".
         if not images:
             for node_output in outputs.values():
                 for image in node_output.get("images", []):

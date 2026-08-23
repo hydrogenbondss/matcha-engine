@@ -273,6 +273,9 @@ class TestLookSheet:
         assert cfg.lora is None
         assert cfg.ip_adapter_weight == 0
         assert cfg.consistency_denoise == 1.0
+        assert cfg.reference == Path("./refs/kite_male_neutral.png")
+        # Never a LOVE32 path — Echo hand-copies into sandbox refs/.
+        assert "love32" not in str(cfg.reference).lower()
 
 
 class TestCliHelpers:
@@ -352,6 +355,10 @@ class TestCliGenerateLoop:
             "--retries",
             "--knockout-black",
             "--canvas",
+            "--backend",
+            "--reference",
+            "--vnccs-ref",
+            "--vnccs-allow-mps",
         ):
             assert flag in result.stdout
 

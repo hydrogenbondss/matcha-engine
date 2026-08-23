@@ -7,4 +7,6 @@ output/
 .venv/
 sandbox-renpy/
 sandbox-kite/
+# Echo hand-copies the approved live sprite here. Never commit it.
+refs/*.png
 .DS_Store

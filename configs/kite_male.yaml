@@ -2,6 +2,7 @@
 # Ground truth: live LOVE32 disk names + three outfit families.
 # Never --deploy / --project into LOVE32. Live already owns Character,
 # layeredimage, and _kite_sprite. Copy-only or hand-copy PNGs only.
+# Never point reference: at the live game tree.
 #
 # Disk: kite_male <pose>.png (space). Ren'Py tag: kite_male <pose>.
 # crossed_arms is APRON/bar (not withdrawn). Live game scales it 1.39 because
@@ -76,6 +77,15 @@ pose_overrides:
 checkpoint: anythingV5PrtRE.safetensors
 lora: null
 lora_strength: 0.7
+# Same-face lock (--backend vnccs): Character Cloner from this sandbox
+# copy. Echo hand-copies the approved live PNG into refs/ (gitignored):
+#   /Users/jeffreytse/Desktop/LOVE32/LOVE32/game/images/kite_male\ neutral.png
+#   (1200×992, transparent, apron/bar). Never --project LOVE32.
+#   mkdir -p refs
+#   cp "<hand-copied kite_male neutral.png>" refs/kite_male_neutral.png
+# Text-only Character Creator is fallback. prompt+seed is not a lock.
+# Do not enable IPA on MPS.
+reference: ./refs/kite_male_neutral.png
 # Trusted first success on Mac MPS: 512×512, --lora none.
 # Echo-sized output is opt-in later (--canvas), not a new default.
 width: 512
