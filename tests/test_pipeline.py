@@ -375,6 +375,12 @@ class TestPrompts:
         assert "reference sheet" in neg
         assert "multiple views" in neg
 
+    def test_unknown_pose_is_plain_wording(self):
+        from matcha.prompts import pose_expression
+
+        assert pose_expression("fidget") == "fidget"
+        assert "fidget expression, fidget pose" not in pose_expression("fidget")
+
 
 class TestImageSanity:
     def test_black_image_rejected(self):

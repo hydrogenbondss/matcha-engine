@@ -1,7 +1,20 @@
 from pathlib import Path
-from typing import Optional
+from typing import Any, Optional, Union
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator, model_validator
+
+
+class PoseOverride(BaseModel):
+    """Per-pose look-sheet extras. Outfit families live here, not in the
+    shared description, so an apron on the bar set does not paint onto
+    ``smoking``.
+    """
+
+    prompt: Optional[str] = None
+    outfit: Optional[str] = None
+    # Key into CharacterConfig.outfit_families. Used when outfit is unset.
+    family: Optional[str] = None
+    extra_negative: Optional[str] = None
 
 
 class CharacterConfig(BaseModel):
@@ -16,6 +29,20 @@ class CharacterConfig(BaseModel):
     name: str
     description: str
     poses: list[str]
+    # Look-sheet extras keyed by pose name. Also accepted inline on each
+    # poses: entry as a mapping with a name: key (normalized below).
+    pose_overrides: dict[str, PoseOverride] = Field(default_factory=dict)
+    # Named outfit families (apron_bar / home_henley / withdrawn_dark).
+    # Poses reference these via pose_overrides.family so one description
+    # cannot paint a single outfit onto every pose.
+    outfit_families: dict[str, str] = Field(default_factory=dict)
+    # Display-only aliases that must not become their own files.
+    # Echo: angry → stressed (kite_male stressed.png).
+    pose_aliases: dict[str, str] = Field(default_factory=dict)
+    # Dest / sandbox filename. Echo live: "{name} {pose}.png" (space).
+    # Underscore "{name}_{pose}.png" will not drop into Echo.
+    # None: local output uses underscore; --copy-only uses the space template.
+    filename_template: Optional[str] = None
     # Ren'Py scaffolding options (the deploy "last mile").
     display_name: Optional[str] = None  # Character() display name; defaults to name.title()
     color: Optional[str] = None  # dialogue name color, e.g. "#ffcc00"
@@ -52,7 +79,76 @@ class CharacterConfig(BaseModel):
     ip_adapter_weight: float = Field(default=0.0, ge=0.0, le=2.0)
     ip_adapter_file: str = "ip-adapter_sd15.safetensors"
     clip_vision: str = "CLIP-ViT-H-14-laion2B-s32B-b79K.safetensors"
+    # Extra quality-guard attempts after the first failure (new seed each time).
+    quality_retries: int = Field(default=2, ge=0, le=8)
     output_dir: Path = Path("./output")
+
+    @model_validator(mode="before")
+    @classmethod
+    def _normalize_poses(cls, data: Any) -> Any:
+        """Allow poses as a list of strings *or* mappings with look-sheet keys.
+
+        Example::
+
+            poses:
+              - idle
+              - name: smoking
+                outfit: dark henley, no apron
+                prompt: holding a small flame
+        """
+        if not isinstance(data, dict):
+            return data
+        poses = data.get("poses") or []
+        overrides: dict[str, Any] = dict(data.get("pose_overrides") or {})
+        names: list[str] = []
+        for item in poses:
+            if isinstance(item, str):
+                names.append(item)
+                continue
+            if isinstance(item, dict):
+                name = item.get("name") or item.get("pose")
+                if not name:
+                    raise ValueError(
+                        "pose mapping must include a 'name' (or 'pose') key"
+                    )
+                names.append(str(name))
+                extra = {
+                    k: item[k]
+                    for k in ("prompt", "outfit", "family", "extra_negative")
+                    if k in item and item[k] is not None
+                }
+                if extra:
+                    existing = overrides.get(str(name)) or {}
+                    if isinstance(existing, PoseOverride):
+                        existing = existing.model_dump()
+                    overrides[str(name)] = {**existing, **extra}
+                continue
+            raise ValueError(f"pose entry must be a string or mapping, got {item!r}")
+        data["poses"] = names
+        data["pose_overrides"] = overrides
+        return data
+
+    @field_validator("pose_overrides", mode="before")
+    @classmethod
+    def _coerce_overrides(
+        cls, value: Any
+    ) -> dict[str, Union[PoseOverride, dict[str, Any]]]:
+        if value is None:
+            return {}
+        return value
+
+    def outfit_for(self, pose: str) -> Optional[str]:
+        """Resolved clothing string for a pose (explicit outfit, else family)."""
+        ov = self.pose_overrides.get(pose)
+        if ov is None:
+            return None
+        if ov.outfit and ov.outfit.strip():
+            return ov.outfit.strip()
+        if ov.family:
+            family = self.outfit_families.get(ov.family)
+            if family:
+                return family.strip()
+        return None
 
 
 class MatchaConfig(BaseModel):

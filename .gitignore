@@ -6,4 +6,5 @@ dist/
 output/
 .venv/
 sandbox-renpy/
+sandbox-kite/
 .DS_Store

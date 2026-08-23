@@ -1,0 +1,88 @@
+# Kite look sheet — sandbox generate only.
+# Ground truth: live LOVE32 disk names + three outfit families.
+# Never --deploy / --project into LOVE32. Live already owns Character,
+# layeredimage, and _kite_sprite. Copy-only or hand-copy PNGs only.
+#
+# Disk: kite_male <pose>.png (space). Ren'Py tag: kite_male <pose>.
+# crossed_arms is APRON/bar (not withdrawn). Live game scales it 1.39 because
+# that file is 880×1184 vs other kite_male 1200×992 — display, not generate.
+# Still emit kite_male crossed_arms.png. Later copy-out should use one
+# uniform canvas (--canvas) so the live game can drop the 1.39 special case.
+# angry is not a file; it aliases kite_male stressed.png.
+name: kite_male
+display_name: Kite
+filename_template: "{name} {pose}.png"
+# Shared identity only. Outfit families below — one description cannot
+# cover apron-bar vs home henley vs withdrawn dark shirt.
+description: >-
+  1boy, young man, tan skin, very short dark olive-grey buzz cut, no spikes,
+  no fade, reddish-orange eyes, small silver hoop earrings,
+  chest-up visual novel sprite, solid black background, inked cel-shaded,
+  strong dark linework, dramatic lighting
+poses:
+  - neutral
+  - gentle
+  - relaxed
+  - smoking
+  - soft
+  - stressed
+  - tired
+  - warm
+  - withdrawn
+  - crossed_arms
+pose_aliases:
+  angry: stressed
+outfit_families:
+  apron_bar: >-
+    charcoal long-sleeve button shirt buttoned to the collar,
+    dark matching bartender apron with metal buckles and a chest pocket,
+    empty hands, standing square facing camera, no henley, no polo
+  home_henley: >-
+    olive or charcoal henley or polo shirt, no apron, no bartender outfit,
+    no buckle apron
+  withdrawn_dark: >-
+    oversized dark long-sleeve button shirt, no apron, no bartender outfit,
+    no henley, no polo
+pose_overrides:
+  # 1. Apron / bar — Male New Game bar family
+  neutral:
+    family: apron_bar
+  warm:
+    family: apron_bar
+  soft:
+    family: apron_bar
+  stressed:
+    family: apron_bar
+  tired:
+    family: apron_bar
+  gentle:
+    family: apron_bar
+  crossed_arms:
+    family: apron_bar
+    prompt: arms crossed over chest, reserved, standing at the bar
+  # 2. Home henley — no apron. Smoking is seated on a ledge with a cigarette.
+  relaxed:
+    family: home_henley
+  smoking:
+    family: home_henley
+    prompt: seated on a ledge, holding a cigarette, chest-up, relaxed jaw
+    extra_negative: bartender apron, buckle apron, bar counter, standing behind a bar
+  # 3. Withdrawn dark shirt, no apron — withdrawn only.
+  withdrawn:
+    family: withdrawn_dark
+    prompt: withdrawn, looking aside, closed-off, distant
+    extra_negative: bartender apron, buckle apron, henley, polo
+
+checkpoint: anythingV5PrtRE.safetensors
+lora: null
+lora_strength: 0.7
+# Trusted first success on Mac MPS: 512×512, --lora none.
+# Echo-sized output is opt-in later (--canvas), not a new default.
+width: 512
+height: 512
+steps: 20
+seed: 42
+consistency_denoise: 1.0
+ip_adapter_weight: 0
+quality_retries: 2
+output_dir: ./sandbox-kite

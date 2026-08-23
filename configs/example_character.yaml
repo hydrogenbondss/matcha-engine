@@ -1,17 +1,26 @@
 name: sakura
 display_name: Sakura
 color: "#ff69b4"
-# Lock identity here: outfit, hair, eyes. Pose prompts only vary expression.
+# Shared identity: face, hair, eyes, style. Per-pose outfits go under
+# pose_overrides (or inline `- name: idle` mappings) so one description
+# cannot paint a single outfit onto every pose.
 description: >-
   sh_style, 1girl, long straight pink hair down past shoulders with bangs,
-  not in a ponytail, purple eyes, white collared shirt, pink bow tie,
-  black school sweater with pink trim at the neckline, no chest emblem,
-  visual novel style
+  not in a ponytail, purple eyes, visual novel style, cel shaded
 poses:
   - idle
   - happy
   - sad
   - surprised
+pose_overrides:
+  idle:
+    outfit: white collared shirt, pink bow tie, black school sweater with pink trim
+  happy:
+    outfit: white collared shirt, pink bow tie, black school sweater with pink trim
+  sad:
+    outfit: white collared shirt, pink bow tie, black school sweater with pink trim
+  surprised:
+    outfit: white collared shirt, pink bow tie, black school sweater with pink trim
 
 # Model selection — checkpoint and LoRA must share a base model family.
 # Trusted first success: base checkpoint only (lora: null). Override with
