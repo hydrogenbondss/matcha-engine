@@ -236,9 +236,10 @@ class TestLookSheet:
             "stressed",
             "tired",
             "gentle",
+            "crossed_arms",
         }
         henley = {"relaxed", "smoking"}
-        withdrawn = {"withdrawn", "crossed_arms"}
+        withdrawn = {"withdrawn"}
         assert bar | henley | withdrawn == set(cfg.poses)
         for pose in bar:
             assert cfg.pose_overrides[pose].family == "apron_bar"
@@ -253,6 +254,7 @@ class TestLookSheet:
             assert cfg.pose_overrides[pose].family == "withdrawn_dark"
             outfit = cfg.outfit_for(pose) or ""
             assert "oversized" in outfit and "no apron" in outfit
+        assert cfg.pose_overrides["crossed_arms"].family != "withdrawn_dark"
         smoking = build_pose_prompt(
             cfg.description, "smoking", cfg.pose_overrides["smoking"],
             outfit=cfg.outfit_for("smoking"),

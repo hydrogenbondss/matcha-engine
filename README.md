@@ -205,13 +205,16 @@ Echo disk spec (live LOVE32 filenames — do **not** `--project` LOVE32) is
 
 | Family | Outfit | Poses |
 |---|---|---|
-| Apron / bar | charcoal long-sleeve button shirt + dark buckle apron | neutral, warm, soft, stressed, tired, gentle |
+| Apron / bar | charcoal long-sleeve button shirt + dark buckle apron | warm, soft, neutral, stressed, tired, gentle, **crossed_arms** |
 | Home henley | olive/charcoal henley or polo, no apron | relaxed, smoking (seated on a ledge with a cigarette) |
-| Withdrawn dark shirt | oversized dark long-sleeve button shirt, no apron, arms crossed | withdrawn, crossed_arms |
+| Withdrawn dark shirt | oversized dark long-sleeve button shirt, no apron | withdrawn only |
 
 Ten files on disk: `kite_male <pose>.png` (space) for those names.
 `angry` is **not** a file — it aliases `stressed`. `crossed_arms` is still
-emitted; live Echo scales it 1.39 in-script (display, not generate).
+emitted as `kite_male crossed_arms.png` (apron family). Live Echo scales it
+1.39 because that file is 880×1184 vs other kite_male 1200×992 — display,
+not generate. Later `--canvas` copy-out should be one uniform size so Echo
+can drop that special case. Never `--project` LOVE32.
 
 ### Partial runs, `--poses`, rejects
 
@@ -251,13 +254,18 @@ instead.
 
 `configs/kite_male.yaml` sets `filename_template: "{name} {pose}.png"`.
 `--filename-template` overrides if needed. `--images-subdir characters` puts
-files under `game/images/characters/` instead. Never `--project` LOVE32.
+files under `game/images/characters/` instead. Later, one `--canvas` size
+for every kite_male pose lets Echo drop the live 1.39 `crossed_arms` scale.
+Never `--project` LOVE32.
 
 Optional extras (Pillow only, no rembg / GPU): `--knockout-black` turns
 near-black pixels transparent (grey/white studio cards stay opaque — a
 subject matte would need rembg, which we skipped). `--canvas 768x1024` pads
 an accepted 512×512 onto a larger canvas; it does **not** change generation
-resolution. **512×512 `--lora none` remains the trusted first-success default.**
+resolution. Later Echo copy-out should use **one** canvas for every
+`kite_male` pose so live can drop the 1.39 `crossed_arms` scale (that file
+is 880×1184 vs 1200×992). **512×512 `--lora none` remains the trusted
+first-success default.** Never `--project` LOVE32.
 
 ## Development
 

@@ -4,8 +4,10 @@
 # layeredimage, and _kite_sprite. Copy-only or hand-copy PNGs only.
 #
 # Disk: kite_male <pose>.png (space). Ren'Py tag: kite_male <pose>.
-# crossed_arms is scaled 1.39 in the live script — Echo's display problem,
-# not a Matcha generate concern. Still emit kite_male crossed_arms.png.
+# crossed_arms is APRON/bar (not withdrawn). Live Echo scales it 1.39 because
+# that file is 880×1184 vs other kite_male 1200×992 — display, not generate.
+# Still emit kite_male crossed_arms.png. Later copy-out should use one
+# uniform canvas (--canvas) so Echo can drop the 1.39 special case.
 # angry is not a file; it aliases kite_male stressed.png.
 name: kite_male
 display_name: Echo
@@ -52,6 +54,9 @@ pose_overrides:
     family: apron_bar
   gentle:
     family: apron_bar
+  crossed_arms:
+    family: apron_bar
+    prompt: arms crossed over chest, reserved, standing at the bar
   # 2. Home henley — no apron. Smoking is seated on a ledge with a cigarette.
   relaxed:
     family: home_henley
@@ -59,14 +64,10 @@ pose_overrides:
     family: home_henley
     prompt: seated on a ledge, holding a cigarette, chest-up, relaxed jaw
     extra_negative: bartender apron, buckle apron, bar counter, standing behind a bar
-  # 3. Withdrawn dark shirt — crossed_arms is this family, not a fourth.
+  # 3. Withdrawn dark shirt, no apron — withdrawn only.
   withdrawn:
     family: withdrawn_dark
-    prompt: withdrawn, looking aside, arms crossed, closed-off, distant
-    extra_negative: bartender apron, buckle apron, henley, polo
-  crossed_arms:
-    family: withdrawn_dark
-    prompt: arms crossed over chest, reserved, closed-off
+    prompt: withdrawn, looking aside, closed-off, distant
     extra_negative: bartender apron, buckle apron, henley, polo
 
 checkpoint: anythingV5PrtRE.safetensors
