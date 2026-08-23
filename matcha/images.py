@@ -25,9 +25,9 @@ from matcha.errors import GenerationError
 
 _BLACK_LUMA = 12  # mean / max channel threshold for "solid black"
 
-# Sample size for neighbor/edge stats. 128 is enough to see a 20% static
-# stripe without spending seconds on a 512×512 decode path.
-_SAMPLE = 128
+# Sample size for neighbor/edge stats. NEAREST keeps a thin static stripe
+# crunchy; bilinear would average it into the smear and hide the failure.
+_SAMPLE = 256
 
 # Right/left strip width as a fraction of the (sampled) frame.
 _STRIP_FRAC = 0.22
@@ -36,18 +36,20 @@ _STRIP_FRAC = 0.22
 _HIGH_FREQ_DELTA = 40
 
 # Static-band: an edge strip that is both noisy and much noisier than the
-# interior. Tuned so smear+static fixtures fail and a cel-like drawing
-# (sharp outlines, flat fills, clean margins) passes.
-_STATIC_STRIP_ADJ = 18.0
-_STATIC_RATIO = 1.55
-_STATIC_HIGH_FREQ = 0.10
-_STATIC_STRIP_EDGE = 55.0
+# interior. Downsampling lowers absolute adj/edge, so a strong strip/interior
+# *ratio* is enough on its own. Tuned so smear+static fixtures fail and a
+# cel-like drawing (sharp outlines, flat fills, clean margins) passes.
+_STATIC_STRIP_ADJ = 10.0
+_STATIC_RATIO = 1.8
+_STATIC_RATIO_STRONG = 3.0
+_STATIC_HIGH_FREQ = 0.04
+_STATIC_STRIP_EDGE = 28.0
 
 # Smear: interior has color variation but almost no structure. Solid-color
 # cards (stddev ≈ 0) are not smears — they fail the black check or pass.
 _SMEAR_INTERIOR_EDGE = 16.0
 _SMEAR_INTERIOR_ADJ = 14.0
-_SMEAR_LUMA_STD = 12.0
+_SMEAR_LUMA_STD = 8.0
 
 
 class ImageQualityError(GenerationError):
@@ -94,10 +96,19 @@ class ImageMetrics:
         return asdict(self)
 
 
+def _pixel_list(im: Image.Image) -> list[int]:
+    # Pillow 12 deprecates getdata(); 10.x in older envs may not have
+    # get_flattened_data yet.
+    getter = getattr(im, "get_flattened_data", None)
+    if getter is not None:
+        return list(getter())
+    return list(im.getdata())
+
+
 def _luma_bytes(im: Image.Image) -> tuple[list[int], int, int]:
     gray = im.convert("L")
     w, h = gray.size
-    return list(gray.getdata()), w, h
+    return _pixel_list(gray), w, h
 
 
 def _region_stats(
@@ -169,7 +180,7 @@ def measure_image(data: bytes) -> tuple[Image.Image, ImageMetrics]:
         ) from e
 
     w0, h0 = rgb.size
-    sample = rgb.resize((_SAMPLE, _SAMPLE), Image.Resampling.BILINEAR) if max(
+    sample = rgb.resize((_SAMPLE, _SAMPLE), Image.Resampling.NEAREST) if max(
         rgb.size
     ) > _SAMPLE else rgb
     pixels, w, h = _luma_bytes(sample)
@@ -235,7 +246,8 @@ def evaluate_image(data: bytes, *, label: str = "image") -> ImageMetrics:
         edge_strip_adj >= _STATIC_STRIP_ADJ
         and metrics.static_band_ratio >= _STATIC_RATIO
         and (
-            edge_hf >= _STATIC_HIGH_FREQ
+            metrics.static_band_ratio >= _STATIC_RATIO_STRONG
+            or edge_hf >= _STATIC_HIGH_FREQ
             or edge_strip_edge >= _STATIC_STRIP_EDGE
         )
     )
@@ -319,7 +331,7 @@ def knockout_near_black(
     out of scope (new GPU/MPS stack, would break the mocked test suite).
     """
     im = Image.open(io.BytesIO(data)).convert("RGBA")
-    pixels = list(im.getdata())
+    pixels = _pixel_list(im)
     out = []
     for r, g, b, a in pixels:
         if r <= threshold and g <= threshold and b <= threshold:

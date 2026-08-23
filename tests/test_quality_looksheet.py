@@ -239,8 +239,10 @@ class TestCliHelpers:
     def test_love32_paths_detected(self, tmp_path):
         assert is_love32_project(Path("/Users/me/Desktop/LOVE32/LOVE32"))
         assert is_love32_project(tmp_path / "love32-backup")
+        # tmp_path itself may contain the test name; use a sibling sandbox.
         assert not is_love32_project(tmp_path / "sandbox-kite")
         assert not is_love32_project(Path("examples/sample-vn"))
+        assert not is_love32_project(Path("/tmp/sandbox-kite"))
 
 
 def _write_char_yaml(path: Path, poses=None, extra=""):

@@ -136,8 +136,9 @@ def is_love32_project(project: Path) -> bool:
         parts = [p.lower() for p in Path(project).expanduser().resolve().parts]
     except OSError:
         parts = [p.lower() for p in Path(project).parts]
-    needle = str(project).lower()
-    return any("love32" in p for p in parts) or "love32" in needle
+    # Match a path component named LOVE32 (or love32-*), not a substring
+    # hiding inside pytest tmp dirs / unrelated folder names.
+    return any(p == "love32" or p.startswith("love32") for p in parts)
 
 
 def accepted_png_path(out_dir: Path, name: str, pose: str) -> Path:
