@@ -14,8 +14,11 @@ from matcha.errors import PreflightError
 from matcha.vnccs import (
     CLONER_NODES,
     CLOTHES_NODES,
+    CORE_VNCCS_NODES,
+    CREATOR_NODES,
+    CUDA_ORIENTED_COMPANIONS,
     INSTALL_HINT,
-    REQUIRED_VNCCS_NODES,
+    MPS_VNCCS_HINT,
     REQUIRED_VNCCS_UTILS_NODES,
     VNCCSStatus,
 )
@@ -54,6 +57,41 @@ def node_registered(server_address: str, node: str) -> bool:
     """True if ``/object_info/{node}`` lists that class_type."""
     info = _object_info(server_address, node)
     return bool(info.get(node))
+
+
+def fetch_system_stats(server_address: str) -> dict:
+    """``GET /system_stats`` — used to detect MPS vs CUDA. Empty on failure."""
+    url = f"http://{server_address}/system_stats"
+    try:
+        with urllib.request.urlopen(url, timeout=10) as resp:
+            return json.loads(resp.read())
+    except (urllib.error.URLError, OSError, json.JSONDecodeError):
+        return {}
+
+
+def device_kind(stats: dict) -> str:
+    """Return ``mps``, ``cuda``, ``cpu``, or ``unknown`` from system_stats."""
+    devices = stats.get("devices") if isinstance(stats, dict) else None
+    if not isinstance(devices, list):
+        return "unknown"
+    kinds: list[str] = []
+    for dev in devices:
+        if not isinstance(dev, dict):
+            continue
+        raw = str(dev.get("type") or dev.get("name") or "").lower()
+        if "mps" in raw or "metal" in raw:
+            kinds.append("mps")
+        elif "cuda" in raw or "nvidia" in raw:
+            kinds.append("cuda")
+        elif raw == "cpu" or raw.endswith("cpu"):
+            kinds.append("cpu")
+    if "mps" in kinds:
+        return "mps"
+    if "cuda" in kinds:
+        return "cuda"
+    if "cpu" in kinds:
+        return "cpu"
+    return "unknown"
 
 
 def _available(info: dict, node: str, field: str) -> list[str]:
@@ -132,14 +170,28 @@ def validate_vnccs(
     server_address: str,
     *,
     require_cloner: bool = False,
+    allow_mps: bool = False,
 ) -> VNCCSStatus:
-    """Raise PreflightError unless VNCCS + Utils nodes are on the server.
+    """Raise PreflightError unless the VNCCS path can actually be queued.
 
-    Does not fall back to prompt+seed. Missing nodes get the install hint.
-    Clothes / cloner are optional extras reported on the status object.
+    Same-face lock is Character Cloner (require_cloner=True). Text-only
+    Character Creator is fallback. Does not fall back to prompt+seed.
+    On MPS, fail clearly unless allow_mps — VNCCS 3.0's GGUF / Impact /
+    SAM stack is CUDA-oriented. That failure is still VNCCS, not txt2img.
     """
+    stats = fetch_system_stats(server_address)
+    kind = device_kind(stats)
+    if kind == "mps" and not allow_mps:
+        raise PreflightError(MPS_VNCCS_HINT)
+
+    path_nodes = CORE_VNCCS_NODES + REQUIRED_VNCCS_UTILS_NODES
+    if require_cloner:
+        path_nodes = path_nodes + CLONER_NODES
+    else:
+        path_nodes = path_nodes + CREATOR_NODES
+
     missing_required: list[str] = []
-    for node in REQUIRED_VNCCS_NODES + REQUIRED_VNCCS_UTILS_NODES:
+    for node in path_nodes:
         if not node_registered(server_address, node):
             missing_required.append(node)
 
@@ -153,18 +205,28 @@ def validate_vnccs(
     for node in CLONER_NODES:
         if not node_registered(server_address, node):
             cloner_ok = False
-            missing_optional.append(node)
+            if node not in missing_required:
+                missing_optional.append(node)
+    creator_ok = True
+    for node in CREATOR_NODES:
+        if not node_registered(server_address, node):
+            creator_ok = False
+            if node not in missing_required:
+                missing_optional.append(node)
+
+    companions = [n for n in CUDA_ORIENTED_COMPANIONS if node_registered(server_address, n)]
 
     if missing_required:
         listed = ", ".join(missing_required)
+        extra = ""
+        if require_cloner:
+            extra = (
+                "Same-face lock needs CharacterCloner + "
+                "VNCCS_CharacterCloneGenerator (not Character Creator).\n"
+            )
         raise PreflightError(
             f"VNCCS backend requested but these nodes are missing: {listed}.\n"
-            + INSTALL_HINT
-        )
-    if require_cloner and not cloner_ok:
-        listed = ", ".join(n for n in CLONER_NODES if n in missing_optional)
-        raise PreflightError(
-            f"--vnccs-ref needs Character Cloner nodes: {listed}.\n"
+            + extra
             + INSTALL_HINT
         )
     return VNCCSStatus(
@@ -172,7 +234,11 @@ def validate_vnccs(
         missing_required=[],
         clothes_ok=clothes_ok,
         cloner_ok=cloner_ok,
+        creator_ok=creator_ok,
+        device=kind,
+        cuda_companions=companions,
         missing_optional=missing_optional,
+        used_cloner=require_cloner,
     )
 
 

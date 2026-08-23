@@ -9,8 +9,8 @@ Verified node types (upstream repo + wiki Technical-Workflow-Node-Map,
 2026-06-28):
 
 * ``VNCCS_ControlCenter`` — shared ``VNCCS_PIPE``
-* ``CharacterCreatorV2`` — text/tag identity (hidden ``widget_data``)
-* ``CharacterCloner`` — reference-image collage (optional; not IP-Adapter)
+* ``CharacterCloner`` — **same-face lock**: collage from an approved sprite
+* ``CharacterCreatorV2`` — text/tag identity (**fallback**, not the lock)
 * ``VNCCS_PoseStudio`` — VNCCS Utils; pose plates + lighting prompt
 * ``VNCCS_CharacterGenerator`` / ``VNCCS_CharacterCloneGenerator``
 * ``ClothesDesigner`` / ``VNCCS_ClothesGenerator`` — outfit families
@@ -73,14 +73,56 @@ ID_CLOTHES_DESIGNER = "753"
 ID_CLOTHES_POSE = "728"
 ID_CLOTHES_GENERATOR = "751"
 
-REQUIRED_VNCCS_NODES = (
-    NODE_CONTROL_CENTER,
-    NODE_CHARACTER_CREATOR,
-    NODE_CHARACTER_GENERATOR,
-)
+# Always required for any VNCCS queue.
+CORE_VNCCS_NODES = (NODE_CONTROL_CENTER,)
 REQUIRED_VNCCS_UTILS_NODES = (NODE_POSE_STUDIO,)
-CLOTHES_NODES = (NODE_CLOTHES_DESIGNER, NODE_CLOTHES_GENERATOR)
+# Same-face lock (primary).
 CLONER_NODES = (NODE_CHARACTER_CLONER, NODE_CHARACTER_CLONE_GENERATOR)
+# Text-only fallback — not a lock.
+CREATOR_NODES = (NODE_CHARACTER_CREATOR, NODE_CHARACTER_GENERATOR)
+# Backward-compatible alias used by older tests / preflight imports.
+REQUIRED_VNCCS_NODES = CORE_VNCCS_NODES + CREATOR_NODES
+CLOTHES_NODES = (NODE_CLOTHES_DESIGNER, NODE_CLOTHES_GENERATOR)
+
+# Control Center companions (wiki Technical-Reference). CUDA-oriented;
+# commonly fail or are unusable on Apple Silicon MPS.
+CUDA_ORIENTED_COMPANIONS = (
+    "UnetLoaderGGUF",
+    "UnetLoaderGGUFAdvanced",
+    "FaceDetailer",
+    "UltralyticsDetectorProvider",
+    "SAMLoader",
+)
+
+REFERENCE_COPY_HINT = """\
+Same-face lock is Character Cloner from a sandbox copy of an approved
+sprite — not Character Creator from text, and not prompt+seed.
+
+Echo: hand-copy the live PNG into the Matcha refs folder. Never point
+reference: or --reference at LOVE32 (Matcha refuses to read that tree).
+
+  mkdir -p refs
+  # On Jeffrey's Mac the approved identity is:
+  #   /Users/jeffreytse/Desktop/LOVE32/LOVE32/game/images/kite_male\\ neutral.png
+  # (1200×992, transparent, apron/bar). Copy it; do not --project LOVE32.
+  cp "/path/to/hand-copied/kite_male neutral.png" refs/kite_male_neutral.png
+
+Then: reference: ./refs/kite_male_neutral.png
+  matcha character configs/kite_male.yaml --backend vnccs --poses neutral
+"""
+
+MPS_VNCCS_HINT = """\
+This ComfyUI device is Apple Silicon MPS. VNCCS 3.0's Control Center
+stack is CUDA-oriented (Qwen-Image-Edit GGUF, Impact Pack / FaceDetailer,
+SAM). Those companions commonly fail on MPS.
+
+Matcha will not silently fall back to --backend txt2img / prompt+seed
+and call that VNCCS. prompt+seed is not a lock. IP-Adapter stays off.
+
+Use a CUDA ComfyUI for --backend vnccs, or pass --vnccs-allow-mps to
+queue the real VNCCS nodes anyway (still Character Cloner / Creator —
+still not txt2img; still may fail at runtime).
+"""
 
 CONTROL_CENTER_REPO = "MIUProject/VNCCS_v3.0"
 
@@ -137,7 +179,11 @@ class VNCCSStatus:
     missing_required: list[str] = field(default_factory=list)
     clothes_ok: bool = False
     cloner_ok: bool = False
+    creator_ok: bool = False
+    device: str = "unknown"
+    cuda_companions: list[str] = field(default_factory=list)
     missing_optional: list[str] = field(default_factory=list)
+    used_cloner: bool = False
 
 
 def split_tags(description: str) -> list[str]:

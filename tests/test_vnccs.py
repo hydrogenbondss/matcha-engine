@@ -14,6 +14,7 @@ from matcha.config import CharacterConfig
 from matcha.errors import PreflightError
 from matcha.vnccs import (
     INSTALL_HINT,
+    MPS_VNCCS_HINT,
     NODE_CHARACTER_CLONE_GENERATOR,
     NODE_CHARACTER_CLONER,
     NODE_CHARACTER_CREATOR,
@@ -22,6 +23,7 @@ from matcha.vnccs import (
     NODE_CLOTHES_GENERATOR,
     NODE_CONTROL_CENTER,
     NODE_POSE_STUDIO,
+    REFERENCE_COPY_HINT,
     build_step1_cloner_prompt,
     build_step1_creator_prompt,
     build_step2_clothes_prompt,
@@ -89,7 +91,9 @@ def _kite_cfg(**kwargs) -> CharacterConfig:
 
 class TestVNCCSPreflight:
     def test_missing_nodes_are_an_error_with_install_hint(self):
-        with mock.patch.object(preflight, "_object_info", txt2img_only_object_info):
+        with mock.patch.object(preflight, "_object_info", txt2img_only_object_info), mock.patch.object(
+            preflight, "fetch_system_stats", return_value={}
+        ):
             with pytest.raises(PreflightError, match="VNCCS") as exc:
                 preflight.validate_vnccs("127.0.0.1:8188")
         text = str(exc.value)
@@ -101,11 +105,30 @@ class TestVNCCSPreflight:
         assert INSTALL_HINT.splitlines()[0] in text
 
     def test_present_nodes_pass(self):
-        with mock.patch.object(preflight, "_object_info", vnccs_object_info):
+        with mock.patch.object(preflight, "_object_info", vnccs_object_info), mock.patch.object(
+            preflight, "fetch_system_stats", return_value={"devices": [{"type": "cpu"}]}
+        ):
             status = preflight.validate_vnccs("x")
         assert status.required_ok
         assert status.clothes_ok
         assert status.cloner_ok
+        assert status.creator_ok
+        assert status.device == "cpu"
+        assert status.used_cloner is False
+
+    def test_mps_fails_preflight_unless_allow_mps(self):
+        mps_stats = {"devices": [{"type": "mps", "name": "mps"}]}
+        with mock.patch.object(preflight, "_object_info", vnccs_object_info), mock.patch.object(
+            preflight, "fetch_system_stats", return_value=mps_stats
+        ):
+            with pytest.raises(PreflightError, match="Apple Silicon MPS") as exc:
+                preflight.validate_vnccs("x")
+            assert "will not silently fall back" in str(exc.value)
+            assert "txt2img" in str(exc.value)
+            assert MPS_VNCCS_HINT.splitlines()[0] in str(exc.value)
+            status = preflight.validate_vnccs("x", allow_mps=True)
+        assert status.required_ok
+        assert status.device == "mps"
 
     def test_cloner_flag_requires_cloner_nodes(self):
         def no_cloner(server, node):
@@ -113,9 +136,21 @@ class TestVNCCSPreflight:
                 return {}
             return vnccs_object_info(server, node)
 
-        with mock.patch.object(preflight, "_object_info", no_cloner):
+        with mock.patch.object(preflight, "_object_info", no_cloner), mock.patch.object(
+            preflight, "fetch_system_stats", return_value={}
+        ):
             with pytest.raises(PreflightError, match="Character Cloner"):
                 preflight.validate_vnccs("x", require_cloner=True)
+
+    def test_yaml_reference_field_is_optional_path(self):
+        cfg = _kite_cfg(reference=Path("./refs/kite_male_neutral.png"))
+        assert cfg.reference == Path("./refs/kite_male_neutral.png")
+
+    def test_device_kind_mps_from_name_or_type(self):
+        assert preflight.device_kind({"devices": [{"type": "mps"}]}) == "mps"
+        assert preflight.device_kind({"devices": [{"name": "Metal"}]}) == "mps"
+        assert preflight.device_kind({"devices": [{"type": "cuda"}]}) == "cuda"
+        assert preflight.device_kind({}) == "unknown"
 
     def test_404_counts_as_missing_not_unreachable(self):
         import urllib.error
@@ -226,14 +261,207 @@ class TestVNCCSBackendFlag:
 
     def test_vnccs_dry_run_ok_when_nodes_present(self, tmp_path):
         cfg = _write_char_yaml(tmp_path / "char.yaml", ["idle"])
-        with mock.patch.object(preflight, "_object_info", vnccs_object_info):
+        with mock.patch.object(preflight, "_object_info", vnccs_object_info), mock.patch.object(
+            preflight, "fetch_system_stats", return_value={"devices": [{"type": "cpu"}]}
+        ):
             result = CliRunner().invoke(
                 app, ["character", str(cfg), "--dry-run", "--backend", "vnccs"]
             )
         assert result.exit_code == 0, result.output
         assert "Backend: vnccs" in result.stdout
-        assert "same-face lock" in result.stdout
+        assert "fallback" in result.stdout
+        assert "not a same-face lock" in result.stdout
+        assert "Using Character Creator" in result.stdout
         assert "Preflight OK: VNCCS nodes" in result.stdout
+
+    def test_txt2img_mentions_unused_yaml_reference(self, tmp_path):
+        cfg = _write_char_yaml(
+            tmp_path / "char.yaml",
+            ["idle"],
+            extra="reference: ./refs/kite_male_neutral.png\n",
+        )
+        with mock.patch.object(preflight, "_object_info", fake_object_info):
+            result = CliRunner().invoke(
+                app, ["character", str(cfg), "--dry-run", "--backend", "txt2img"]
+            )
+        assert result.exit_code == 0, result.output
+        assert "unused on --backend txt2img" in result.stdout
+        assert "Character Cloner" in result.stdout
+        assert "Preflight OK: VNCCS" not in result.stdout
+
+    def test_yaml_reference_plus_backend_vnccs_uses_cloner(self, tmp_path):
+        ref = tmp_path / "refs" / "kite_male_neutral.png"
+        ref.parent.mkdir()
+        ref.write_bytes(make_cel_sprite())
+        cfg = _write_char_yaml(
+            tmp_path / "char.yaml",
+            ["idle"],
+            extra="reference: ./refs/kite_male_neutral.png\n",
+        )
+        queued = []
+
+        def fake_workflow(self, workflow, prefer_node="14"):
+            queued.append(workflow)
+            return [make_cel_sprite()]
+
+        with mock.patch.object(preflight, "_object_info", vnccs_object_info), mock.patch.object(
+            preflight, "fetch_system_stats", return_value={"devices": [{"type": "cpu"}]}
+        ), mock.patch(
+            "matcha.generators.comfyui.ComfyUIGenerator.generate_workflow",
+            fake_workflow,
+        ), mock.patch(
+            "matcha.generators.comfyui.ComfyUIGenerator.upload_image",
+            return_value="uploaded_ref.png",
+        ), mock.patch(
+            "matcha.generators.comfyui.ComfyUIGenerator.generate",
+            side_effect=AssertionError("txt2img generate must not run"),
+        ):
+            result = CliRunner().invoke(
+                app,
+                [
+                    "character",
+                    str(cfg),
+                    "--backend",
+                    "vnccs",
+                    "--poses",
+                    "idle",
+                ],
+            )
+        assert result.exit_code == 0, result.output
+        assert "Character Cloner" in result.stdout
+        types = workflow_class_types(queued[0])
+        assert NODE_CHARACTER_CLONER in types
+        assert NODE_CHARACTER_CREATOR not in types
+
+    def test_cli_reference_uses_cloner_graph(self, tmp_path):
+        ref = tmp_path / "refs" / "kite_male_neutral.png"
+        ref.parent.mkdir()
+        ref.write_bytes(make_cel_sprite())
+        cfg = _write_char_yaml(tmp_path / "char.yaml", ["idle"])
+        queued = []
+
+        def fake_workflow(self, workflow, prefer_node="14"):
+            queued.append(workflow)
+            return [make_cel_sprite()]
+
+        with mock.patch.object(preflight, "_object_info", vnccs_object_info), mock.patch.object(
+            preflight, "fetch_system_stats", return_value={"devices": [{"type": "cpu"}]}
+        ), mock.patch(
+            "matcha.generators.comfyui.ComfyUIGenerator.generate_workflow",
+            fake_workflow,
+        ), mock.patch(
+            "matcha.generators.comfyui.ComfyUIGenerator.upload_image",
+            return_value="uploaded_ref.png",
+        ), mock.patch(
+            "matcha.generators.comfyui.ComfyUIGenerator.generate",
+            side_effect=AssertionError("txt2img generate must not run"),
+        ):
+            result = CliRunner().invoke(
+                app,
+                [
+                    "character",
+                    str(cfg),
+                    "--reference",
+                    str(ref),
+                    "--poses",
+                    "idle",
+                ],
+            )
+        assert result.exit_code == 0, result.output
+        assert "Character Cloner" in result.stdout
+        assert queued
+        types = workflow_class_types(queued[0])
+        assert NODE_CHARACTER_CLONER in types
+        assert NODE_CHARACTER_CLONE_GENERATOR in types
+        assert NODE_CHARACTER_CREATOR not in types
+        assert "IPAdapterAdvanced" not in types
+
+    def test_love32_reference_path_refused_without_read(self, tmp_path):
+        live = (
+            tmp_path
+            / "LOVE32"
+            / "LOVE32"
+            / "game"
+            / "images"
+            / "kite_male neutral.png"
+        )
+        live.parent.mkdir(parents=True)
+        live.write_bytes(b"should-not-be-read")
+        cfg = _write_char_yaml(tmp_path / "char.yaml", ["idle"])
+        with mock.patch.object(preflight, "_object_info", vnccs_object_info), mock.patch(
+            "pathlib.Path.read_bytes",
+            side_effect=AssertionError("must not read LOVE32"),
+        ):
+            result = CliRunner().invoke(
+                app,
+                [
+                    "character",
+                    str(cfg),
+                    "--dry-run",
+                    "--reference",
+                    str(live),
+                ],
+            )
+        assert result.exit_code == 1
+        assert "Refusing to read a LOVE32 path" in result.output
+        assert "sandbox refs" in result.output
+
+    def test_mac_love32_path_string_refused_even_if_missing(self, tmp_path):
+        cfg = _write_char_yaml(tmp_path / "char.yaml", ["idle"])
+        live = Path(
+            "/Users/jeffreytse/Desktop/LOVE32/LOVE32/game/images/"
+            "kite_male neutral.png"
+        )
+        result = CliRunner().invoke(
+            app,
+            ["character", str(cfg), "--dry-run", "--reference", str(live)],
+        )
+        assert result.exit_code == 1
+        assert "LOVE32" in result.output
+        assert "not found" not in result.output.lower() or "Refusing" in result.output
+
+    def test_missing_sandbox_ref_prints_copy_hint(self, tmp_path):
+        cfg = _write_char_yaml(
+            tmp_path / "char.yaml",
+            ["idle"],
+            extra="reference: ./refs/kite_male_neutral.png\n",
+        )
+        with mock.patch.object(preflight, "_object_info", vnccs_object_info):
+            result = CliRunner().invoke(
+                app,
+                ["character", str(cfg), "--dry-run", "--backend", "vnccs"],
+            )
+        assert result.exit_code == 1
+        assert "Character Cloner reference not found" in result.output
+        assert "hand-copy" in result.output
+        assert REFERENCE_COPY_HINT.splitlines()[0] in result.output
+
+    def test_mps_cli_fails_unless_allow_flag(self, tmp_path):
+        cfg = _write_char_yaml(tmp_path / "char.yaml", ["idle"])
+        mps_stats = {"devices": [{"type": "mps", "name": "Apple M-series"}]}
+        with mock.patch.object(preflight, "_object_info", vnccs_object_info), mock.patch.object(
+            preflight, "fetch_system_stats", return_value=mps_stats
+        ):
+            blocked = CliRunner().invoke(
+                app, ["character", str(cfg), "--dry-run", "--backend", "vnccs"]
+            )
+            allowed = CliRunner().invoke(
+                app,
+                [
+                    "character",
+                    str(cfg),
+                    "--dry-run",
+                    "--backend",
+                    "vnccs",
+                    "--vnccs-allow-mps",
+                ],
+            )
+        assert blocked.exit_code == 1
+        assert "Apple Silicon MPS" in blocked.output
+        assert "will not silently fall back" in blocked.output
+        assert allowed.exit_code == 0, allowed.output
+        assert "fallback" in allowed.stdout
+        assert "WARNING: Apple Silicon MPS" in allowed.output
 
     def test_unknown_backend_rejected(self, tmp_path):
         cfg = _write_char_yaml(tmp_path / "char.yaml", ["idle"])
@@ -247,7 +475,9 @@ class TestVNCCSBackendFlag:
         cfg = _write_char_yaml(tmp_path / "char.yaml", ["idle"])
         project = tmp_path / "LOVE32" / "LOVE32"
         (project / "game").mkdir(parents=True)
-        with mock.patch.object(preflight, "_object_info", vnccs_object_info):
+        with mock.patch.object(preflight, "_object_info", vnccs_object_info), mock.patch.object(
+            preflight, "fetch_system_stats", return_value={}
+        ):
             result = CliRunner().invoke(
                 app,
                 [
@@ -273,7 +503,9 @@ class TestVNCCSBackendFlag:
             queued.append(workflow)
             return [make_cel_sprite()]
 
-        with mock.patch.object(preflight, "_object_info", vnccs_object_info), mock.patch(
+        with mock.patch.object(preflight, "_object_info", vnccs_object_info), mock.patch.object(
+            preflight, "fetch_system_stats", return_value={}
+        ), mock.patch(
             "matcha.generators.comfyui.ComfyUIGenerator.generate_workflow",
             fake_workflow,
         ), mock.patch(
@@ -285,9 +517,11 @@ class TestVNCCSBackendFlag:
                 ["character", str(cfg), "--backend", "vnccs", "--poses", "idle"],
             )
         assert result.exit_code == 0, result.output
+        assert "fallback" in result.stdout
         assert queued
         types = workflow_class_types(queued[0])
         assert NODE_CHARACTER_CREATOR in types
         assert NODE_CHARACTER_GENERATOR in types
         assert NODE_POSE_STUDIO in types
+        assert NODE_CHARACTER_CLONER not in types
         assert (tmp_path / "out" / "kite_male_idle.png").exists()

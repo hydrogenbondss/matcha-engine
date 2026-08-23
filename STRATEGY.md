@@ -90,6 +90,8 @@ The paid wedge. Everything here exists because of a verified pain or risk:
    Checkpoint + LoRA are **config fields, not hardcoded** (lesson from the
    2026-07-15 debugging session).
 2. **Consistency pipeline** — wrap VNCCS (MIT), do not reimplement.
+   Same-face lock is Character Cloner from a sandbox `reference:`
+   (approved sprite). Character Creator from text is fallback.
    `--backend vnccs` queues their 3.0 nodes. prompt+seed is not a lock.
 3. **Ren'Py deploy** — correct folders/naming + generated `layeredimage`,
    side-image, and `Character` scaffolding. The differentiator; over-invest here.

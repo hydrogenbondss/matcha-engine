@@ -81,6 +81,11 @@ class CharacterConfig(BaseModel):
     clip_vision: str = "CLIP-ViT-H-14-laion2B-s32B-b79K.safetensors"
     # Extra quality-guard attempts after the first failure (new seed each time).
     quality_retries: int = Field(default=2, ge=0, le=8)
+    # Same-face lock for --backend vnccs: Character Cloner source PNG.
+    # Sandbox copy only (e.g. ./refs/kite_male_neutral.png). Never a LOVE32
+    # path — Echo hand-copies the approved live sprite into refs/.
+    # None: text-only CharacterCreatorV2 fallback (not the lock).
+    reference: Optional[Path] = None
     output_dir: Path = Path("./output")
 
     @model_validator(mode="before")

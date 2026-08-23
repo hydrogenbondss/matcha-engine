@@ -88,6 +88,11 @@ consistency_denoise: 1.0
 # side_image: true
 # side_image_height_ratio: 0.45
 
+# Same-face lock (--backend vnccs): Character Cloner from a sandbox copy
+# of an approved sprite. Echo hand-copies the live PNG into refs/.
+# Never a LOVE32 path. Text-only Character Creator is fallback.
+# reference: ./refs/your_character_neutral.png
+
 output_dir: ./output
 """
 
@@ -170,6 +175,8 @@ def is_love32_project(project: Path) -> bool:
 
     Matcha must never write into that game — Ren'Py auto-loads every
     ``game/*.rpy`` and Echo already owns the Character / layeredimage defs.
+    Also used to refuse LOVE32 paths as Character Cloner references
+    (never read the live sprite tree).
     """
     try:
         parts = [p.lower() for p in Path(project).expanduser().resolve().parts]
@@ -178,6 +185,61 @@ def is_love32_project(project: Path) -> bool:
     # Match a path component named LOVE32 (or love32-*), not a substring
     # hiding inside pytest tmp dirs / unrelated folder names.
     return any(p == "love32" or p.startswith("love32") for p in parts)
+
+
+def refuse_love32_reference(path: Path, label: str) -> None:
+    """Raise PreflightError if *path* is under a LOVE32 tree. Does not read."""
+    if is_love32_project(path):
+        raise PreflightError(
+            f"Refusing to read a LOVE32 path as {label} {path}. "
+            "Echo hand-copies the approved live PNG into the Matcha "
+            "sandbox refs/ folder. Never --project LOVE32.\n"
+            f"{vnccs.REFERENCE_COPY_HINT}"
+        )
+
+
+def resolve_clone_reference(
+    *,
+    cli_reference: Optional[Path],
+    cli_vnccs_ref: Optional[Path],
+    yaml_reference: Optional[Path],
+    yaml_path: Path,
+) -> Optional[Path]:
+    """CLI ``--reference`` > ``--vnccs-ref`` > YAML ``reference:``.
+
+    Refuses LOVE32 on every provided source before any read. Relative
+    paths try CWD first, then the YAML's parent.
+    """
+    for candidate, label in (
+        (cli_reference, "--reference"),
+        (cli_vnccs_ref, "--vnccs-ref"),
+        (yaml_reference, "YAML reference:"),
+    ):
+        if candidate is None:
+            continue
+        refuse_love32_reference(Path(candidate), label)
+
+    chosen: Optional[Path] = None
+    if cli_reference is not None:
+        chosen = Path(cli_reference)
+    elif cli_vnccs_ref is not None:
+        chosen = Path(cli_vnccs_ref)
+    elif yaml_reference is not None:
+        chosen = Path(yaml_reference)
+    if chosen is None:
+        return None
+
+    refuse_love32_reference(chosen, "reference")
+    expanded = chosen.expanduser()
+    if expanded.exists():
+        refuse_love32_reference(expanded, "reference")
+        return expanded
+    if not expanded.is_absolute():
+        alt = (Path(yaml_path).expanduser().resolve().parent / expanded)
+        refuse_love32_reference(alt, "reference")
+        if alt.exists():
+            return alt
+    return expanded
 
 
 def accepted_png_path(
@@ -289,17 +351,34 @@ def character(
         "--backend",
         help=(
             "txt2img = trusted first-success KSampler path (prompt+seed, "
-            "not a same-face lock). vnccs = queue real VNCCS 3.0 nodes "
-            "(CharacterCreatorV2 + Pose Studio + Character Generator). "
-            "Missing VNCCS nodes are an error — no silent fallback."
+            "not a same-face lock). vnccs = queue real VNCCS 3.0 nodes. "
+            "Same-face lock is Character Cloner from --reference / YAML "
+            "reference:. Character Creator from text is fallback. "
+            "Missing VNCCS nodes are an error — no silent txt2img fallback."
+        ),
+    ),
+    reference: Optional[Path] = typer.Option(
+        None,
+        "--reference",
+        help=(
+            "Character Cloner source PNG (sandbox copy of an approved "
+            "sprite, e.g. ./refs/kite_male_neutral.png). Implies "
+            "--backend vnccs. Never a LOVE32 path — Echo hand-copies "
+            "the live PNG into refs/. Not IP-Adapter."
         ),
     ),
     vnccs_ref: Optional[Path] = typer.Option(
         None,
         "--vnccs-ref",
+        help="Alias for --reference (Character Cloner, not IP-Adapter).",
+    ),
+    vnccs_allow_mps: bool = typer.Option(
+        False,
+        "--vnccs-allow-mps",
         help=(
-            "Optional Character Cloner reference image (not IP-Adapter). "
-            "Implies --backend vnccs. Requires CharacterCloner nodes."
+            "Queue real VNCCS nodes on Apple Silicon MPS anyway. "
+            "Does not fall back to txt2img. GGUF / Impact / SAM may "
+            "still fail at runtime."
         ),
     ),
 ):
@@ -346,11 +425,36 @@ def character(
     if backend_key not in {"txt2img", "vnccs"}:
         typer.echo("--backend must be txt2img or vnccs", err=True)
         raise typer.Exit(1)
-    if vnccs_ref is not None:
+
+    try:
+        clone_ref = resolve_clone_reference(
+            cli_reference=reference,
+            cli_vnccs_ref=vnccs_ref,
+            yaml_reference=char_config.reference,
+            yaml_path=config,
+        )
+    except PreflightError as e:
+        typer.echo(str(e), err=True)
+        raise typer.Exit(1)
+
+    cli_wants_cloner = reference is not None or vnccs_ref is not None
+    if cli_wants_cloner:
         backend_key = "vnccs"
-        if not vnccs_ref.expanduser().exists():
-            typer.echo(f"VNCCS reference image not found: {vnccs_ref}", err=True)
+
+    if backend_key == "vnccs" and clone_ref is not None:
+        if not clone_ref.exists() or not clone_ref.is_file():
+            typer.echo(
+                f"Character Cloner reference not found: {clone_ref}\n"
+                f"{vnccs.REFERENCE_COPY_HINT}",
+                err=True,
+            )
             raise typer.Exit(1)
+    elif backend_key == "txt2img" and char_config.reference is not None:
+        typer.echo(
+            "YAML has reference: — unused on --backend txt2img. "
+            "Same-face lock is --backend vnccs (Character Cloner). "
+            "prompt+seed is not a lock."
+        )
 
     if (deploy or copy_only) and project is not None:
         if is_love32_project(project):
@@ -379,13 +483,20 @@ def character(
     typer.echo(f"LoRA: {char_config.lora or '(none)'}")
     typer.echo(f"Seed: {run_seed} (shared across poses; retries offset)")
     if backend_key == "vnccs":
-        typer.echo(
-            "Backend: vnccs — same-face lock via VNCCS "
-            "(CharacterCreatorV2 + VNCCS_PoseStudio + "
-            "VNCCS_CharacterGenerator). prompt+seed is not a lock."
-        )
-        if vnccs_ref is not None:
-            typer.echo(f"VNCCS Character Cloner ref: {vnccs_ref}")
+        if clone_ref is not None:
+            typer.echo(
+                "Backend: vnccs — same-face lock is Character Cloner "
+                f"from {clone_ref}. prompt+seed is not a lock. "
+                "IP-Adapter stays off."
+            )
+        else:
+            typer.echo(
+                "Backend: vnccs — Character Creator from text "
+                "(fallback, not a same-face lock). Pass --reference "
+                "or YAML reference: to a sandbox copy of an approved "
+                "sprite for Character Cloner. prompt+seed is not a lock. "
+                "IP-Adapter stays off."
+            )
         typer.echo(
             "VNCCS Control Center uses its own Qwen-Image-Edit models "
             "(download in the VNCCS UI). YAML checkpoint is for the "
@@ -396,7 +507,8 @@ def character(
         typer.echo(
             "Backend: txt2img — trusted first-success path "
             "(--lora none). prompt+seed is not a same-face lock; "
-            "use --backend vnccs after installing VNCCS + VNCCS Utils."
+            "use --backend vnccs with a sandbox --reference after "
+            "installing VNCCS + VNCCS Utils."
         )
     typer.echo(format_license_report(char_config.checkpoint, char_config.lora))
     if char_config.lora:
@@ -442,7 +554,9 @@ def character(
         )
         if backend_key == "vnccs":
             vnccs_status = preflight.validate_vnccs(
-                comfyui, require_cloner=vnccs_ref is not None
+                comfyui,
+                require_cloner=clone_ref is not None,
+                allow_mps=vnccs_allow_mps,
             )
     except PreflightError as e:
         typer.echo(f"Preflight failed: {e}", err=True)
@@ -451,14 +565,29 @@ def character(
     if backend_key == "vnccs" and vnccs_status is not None:
         typer.echo(
             "Preflight OK: VNCCS nodes "
-            f"(clothes={'yes' if vnccs_status.clothes_ok else 'no'}, "
-            f"cloner={'yes' if vnccs_status.cloner_ok else 'no'})"
+            f"(device={vnccs_status.device}, "
+            f"cloner={'yes' if vnccs_status.cloner_ok else 'no'}, "
+            f"creator={'yes' if vnccs_status.creator_ok else 'no'}, "
+            f"clothes={'yes' if vnccs_status.clothes_ok else 'no'})"
         )
+        if vnccs_status.used_cloner:
+            typer.echo("Using Character Cloner (same-face lock).")
+        else:
+            typer.echo(
+                "Using Character Creator (text fallback, not the lock)."
+            )
+        if vnccs_status.device == "mps":
+            typer.echo(
+                "WARNING: Apple Silicon MPS — VNCCS 3.0 GGUF / Impact / "
+                "SAM are CUDA-oriented and may fail at runtime. This is "
+                "still the VNCCS graph, not txt2img.",
+                err=True,
+            )
         if not vnccs_status.clothes_ok:
             typer.echo(
                 "ClothesDesigner / VNCCS_ClothesGenerator not installed — "
-                "outfit families go into CharacterCreatorV2 additional_details "
-                "only (Step 2 clothes graph skipped)."
+                "outfit families go into Character Creator / Cloner "
+                "additional_details only (Step 2 clothes graph skipped)."
             )
 
     if dry_run:
@@ -473,11 +602,20 @@ def character(
                 "Next: generate (no LoRA) — trusted first-success path is ready."
             )
         if backend_key == "vnccs":
-            typer.echo(
-                "Next (same-face): generate with --backend vnccs. "
-                "Keep the ComfyUI tab open if you want Pose Studio's "
-                "WebGL captures; otherwise Matcha injects headless pose plates."
-            )
+            if clone_ref is not None:
+                typer.echo(
+                    "Next (same-face): generate with --backend vnccs "
+                    "and this sandbox reference (Character Cloner). "
+                    "Keep the ComfyUI tab open if you want Pose Studio's "
+                    "WebGL captures; otherwise Matcha injects headless "
+                    "pose plates."
+                )
+            else:
+                typer.echo(
+                    "Next: this dry-run is Character Creator (text "
+                    "fallback, not the lock). Same-face needs a sandbox "
+                    "refs/ PNG plus --reference or YAML reference:."
+                )
         return
 
     out_dir = Path(char_config.output_dir).expanduser()
@@ -485,10 +623,11 @@ def character(
 
     generator = ComfyUIGenerator(server_address=comfyui)
     clone_filename = None
-    if backend_key == "vnccs" and vnccs_ref is not None:
+    if backend_key == "vnccs" and clone_ref is not None:
+        refuse_love32_reference(clone_ref, "reference")
         clone_filename = generator.upload_image(
-            vnccs_ref.expanduser().read_bytes(),
-            filename=f"matcha_vnccs_ref_{vnccs_ref.name}",
+            clone_ref.read_bytes(),
+            filename=f"matcha_vnccs_ref_{clone_ref.name}",
         )
     base_negative = char_config.negative_prompt
 
