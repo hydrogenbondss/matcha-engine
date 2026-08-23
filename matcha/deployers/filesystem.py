@@ -16,7 +16,7 @@ class FilesystemDeployer:
         formatted: list[tuple[Path, str]],
         subfolder: str = "characters",
     ) -> list[Path]:
-        target_dir = self.images_dir / subfolder
+        target_dir = self.images_dir / subfolder if subfolder else self.images_dir
         target_dir.mkdir(parents=True, exist_ok=True)
         deployed = []
         for src, filename in formatted:

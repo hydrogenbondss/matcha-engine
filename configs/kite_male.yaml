@@ -1,0 +1,64 @@
+# Echo / kite look sheet — sandbox generate only.
+# Dogfood: .venv/bin/matcha character configs/kite_male.yaml --lora none
+# Hand-copy chosen PNGs. Never --deploy / --project into LOVE32.
+name: kite_male
+display_name: Echo
+# Shared identity only. Outfit families are per-pose so an apron on the
+# bar set does not paint onto smoking / withdrawn.
+description: >-
+  1boy, adult man, short buzz-cut brown hair, warm amber eyes, light stubble,
+  sharp jaw, visual novel sprite, cel shaded, clean lineart, same face
+poses:
+  - idle
+  - warm
+  - withdrawn
+  - smoking
+  - relaxed
+  - soft
+  - tired
+  - stressed
+  - gentle
+  - crossed_arms
+  - neutral
+pose_overrides:
+  idle:
+    outfit: white bartender shirt, black apron, sleeves rolled
+    prompt: standing still behind a bar, hands resting, calm
+  warm:
+    outfit: white bartender shirt, black apron, sleeves rolled
+    prompt: warm smile, open posture, leaning on the bar
+  withdrawn:
+    outfit: dark henley shirt, no apron, no bartender outfit
+    prompt: looking aside, closed-off, distant
+  smoking:
+    outfit: dark henley shirt, no apron, no bartender outfit
+    prompt: chest-up, holding a small flame, relaxed jaw
+    extra_negative: bartender apron, bar counter
+  relaxed:
+    outfit: white bartender shirt, black apron
+  soft:
+    outfit: white bartender shirt, black apron
+  tired:
+    outfit: white bartender shirt, black apron, slightly rumpled
+  stressed:
+    outfit: white bartender shirt, black apron
+  gentle:
+    outfit: white bartender shirt, black apron
+  crossed_arms:
+    outfit: dark henley shirt, no apron
+  neutral:
+    outfit: white bartender shirt, black apron
+
+checkpoint: anythingV5PrtRE.safetensors
+lora: null
+lora_strength: 0.7
+# Trusted first success on Mac MPS: 512×512, --lora none.
+# Echo-sized output is opt-in later (--canvas), not a new default.
+width: 512
+height: 512
+steps: 20
+seed: 42
+consistency_denoise: 1.0
+ip_adapter_weight: 0
+quality_retries: 2
+output_dir: ./sandbox-kite

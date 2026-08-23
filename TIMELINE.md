@@ -7,8 +7,8 @@ of STRATEGY.md §6.
 
 Status legend: `[x]` done · `[~]` in progress · `[ ]` not started · `[!]` blocked
 
-_Last updated: 2026-08-08 (local 3× `--lora none` reliability smoke passed on
-Mac MPS; public outreach deferred indefinitely — not the goal)_
+_Last updated: 2026-08-23 (look-sheet + smear/static-band guard + incremental
+writes + `--poses` / `--copy-only`; public outreach still deferred)_
 
 ---
 
@@ -159,6 +159,10 @@ not an exit criterion.
 - [x] Per-model license surfacing + Steam/itch disclosure helpers (`licenses` / `disclose`)
 - [x] Outsider README cold-start (install → ComfyUI/Mac MPS → sample-vn → licenses/disclose) — cold `/tmp` clone walkthrough 2026-08-05; ComfyUI+models onboarding + quiet v0.1.0 tag 2026-08-06
 - [x] Wedge deepen: `--lora none` first-success path + failure-mode clarity (2026-08-06)
+- [x] Wedge deepen (2026-08-23): smear/static-band quality guard + reject dump;
+  seed retry; look-sheet `pose_overrides`; `--poses` + incremental writes +
+  resume; `--copy-only` filename template (no Character/layeredimage); LOVE32
+  path refused. rembg knockout skipped (grey-card mattes). IPA/img2img still off.
 
 **Stretch (not an exit gate)**
 

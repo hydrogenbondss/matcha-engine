@@ -7,34 +7,52 @@ from typing import Optional
 import typer
 import yaml
 
-from matcha.config import CharacterConfig
+from matcha.config import CharacterConfig, PoseOverride
 from matcha.disclosure import build_disclosure_document
 from matcha.errors import GenerationError, PreflightError
 from matcha.formatters.renpy import RenPyFormatter
 from matcha.deployers.filesystem import FilesystemDeployer
 from matcha.generators.comfyui import ComfyUIGenerator
-from matcha.images import assert_usable_image
+from matcha.images import (
+    ImageQualityError,
+    assert_usable_image,
+    knockout_near_black,
+    pad_to_canvas,
+    parse_canvas,
+    persist_rejection,
+)
 from matcha.licenses import format_license_report
 from matcha.prompts import build_negative_prompt, build_pose_prompt
 from matcha import preflight
 
 app = typer.Typer(help="Matcha Engine — AI game asset pipeline")
 
+DEFAULT_FILENAME_TEMPLATE = "{name}_{pose}.png"
+# Echo live convention: space, not underscore. Copy-only only — never
+# used as the generate output name (underscores stay inspectable locally).
+ECHO_FILENAME_TEMPLATE = "{name} {pose}.png"
+SEED_RETRY_STRIDE = 10007
+
 _EXAMPLE_YAML = """\
 name: sakura
 display_name: Sakura
 color: "#ff69b4"
-# Lock identity here: outfit, hair, eyes. Pose prompts only vary expression.
+# Shared identity only: face, hair, eyes, style. Outfit families belong
+# under pose_overrides so one description cannot paint an apron onto every pose.
 description: >-
   sh_style, 1girl, long straight pink hair down past shoulders with bangs,
-  not in a ponytail, purple eyes, white collared shirt, pink bow tie,
-  black school sweater with pink trim at the neckline, no chest emblem,
-  visual novel style
+  not in a ponytail, purple eyes, visual novel style, cel shaded
 poses:
   - idle
   - happy
   - sad
   - surprised
+# Optional look-sheet extras (also accepted inline: `- name: idle` + keys).
+# pose_overrides:
+#   idle:
+#     outfit: white collared shirt, pink bow tie, black school sweater
+#   happy:
+#     outfit: white collared shirt, pink bow tie, black school sweater
 
 # Model selection — checkpoint and LoRA must share a base model family.
 # Trusted first success: base checkpoint only (lora: null). Override with
@@ -73,13 +91,128 @@ output_dir: ./output
 """
 
 
+def parse_poses_flag(raw: Optional[str], available: list[str]) -> list[str]:
+    """Resolve ``--poses idle,smoking`` against the YAML list.
+
+    Order follows the flag (so a single named pose can run first). Unknown
+    names are an error rather than a silent no-op.
+    """
+    if raw is None or not str(raw).strip():
+        return list(available)
+    wanted = [p.strip() for p in str(raw).split(",") if p.strip()]
+    if not wanted:
+        return list(available)
+    unknown = [p for p in wanted if p not in available]
+    if unknown:
+        raise ValueError(
+            "unknown pose(s) "
+            + ", ".join(unknown)
+            + " — YAML has: "
+            + ", ".join(available)
+        )
+    return wanted
+
+
+def render_filename(template: str, name: str, pose: str) -> str:
+    try:
+        out = template.format(name=name, pose=pose)
+    except KeyError as e:
+        raise ValueError(
+            f"filename template {template!r} has unknown placeholder {e}; "
+            "use {name} and/or {pose}"
+        ) from e
+    if not out.lower().endswith(".png"):
+        out += ".png"
+    return out
+
+
+def is_love32_project(project: Path) -> bool:
+    """True if *project* looks like the live LOVE32 tree.
+
+    Matcha must never write into that game — Ren'Py auto-loads every
+    ``game/*.rpy`` and Echo already owns the Character / layeredimage defs.
+    """
+    try:
+        parts = [p.lower() for p in Path(project).expanduser().resolve().parts]
+    except OSError:
+        parts = [p.lower() for p in Path(project).parts]
+    needle = str(project).lower()
+    return any("love32" in p for p in parts) or "love32" in needle
+
+
+def accepted_png_path(out_dir: Path, name: str, pose: str) -> Path:
+    return Path(out_dir) / f"{name}_{pose}.png"
+
+
+def reject_png_path(out_dir: Path, name: str, pose: str, seed: int) -> Path:
+    return Path(out_dir) / "rejected" / f"{name}_{pose}_seed{seed}.png"
+
+
 @app.command()
 def character(
     config: Path = typer.Argument(..., help="Path to character YAML config"),
     project: Optional[Path] = typer.Option(
         None, "--project", "-p", help="Path to Ren'Py project"
     ),
-    deploy: bool = typer.Option(False, "--deploy", help="Deploy to Ren'Py project"),
+    deploy: bool = typer.Option(
+        False,
+        "--deploy",
+        help=(
+            "Deploy images AND write game/matcha_characters.rpy "
+            "(dangerous in a live game — prefer sample-vn / sandbox, "
+            "or --copy-only for Echo-style filename copies)"
+        ),
+    ),
+    copy_only: bool = typer.Option(
+        False,
+        "--copy-only",
+        help=(
+            "Copy accepted PNGs into the project's images folder using "
+            "--filename-template. Does NOT write Character() or layeredimage."
+        ),
+    ),
+    filename_template: Optional[str] = typer.Option(
+        None,
+        "--filename-template",
+        help=(
+            "Copy-only dest name. Placeholders: {name} {pose}. "
+            f"Default {DEFAULT_FILENAME_TEMPLATE!r}; Echo live uses "
+            f"{ECHO_FILENAME_TEMPLATE!r} (space)."
+        ),
+    ),
+    images_subdir: Optional[str] = typer.Option(
+        None,
+        "--images-subdir",
+        help=(
+            "Under game/images/. Default 'characters' for --deploy, "
+            "empty (game/images/) for --copy-only."
+        ),
+    ),
+    poses: Optional[str] = typer.Option(
+        None,
+        "--poses",
+        help="Generate only these YAML poses (comma-separated), e.g. smoking or idle,warm",
+    ),
+    force: bool = typer.Option(
+        False,
+        "--force",
+        help="Regenerate even when an accepted PNG already exists in output_dir",
+    ),
+    retries: Optional[int] = typer.Option(
+        None,
+        "--retries",
+        help="Extra seed attempts after a quality/generate failure (default: YAML quality_retries, 2)",
+    ),
+    knockout_black: bool = typer.Option(
+        False,
+        "--knockout-black",
+        help="Best-effort: near-black pixels → transparent. Grey/white cards stay opaque.",
+    ),
+    canvas: Optional[str] = typer.Option(
+        None,
+        "--canvas",
+        help="Pad accepted sprites onto a larger canvas (e.g. 768x1024). Does not change generation res.",
+    ),
     dry_run: bool = typer.Option(False, "--dry-run", help="Validate config and models without generating"),
     comfyui: str = typer.Option("127.0.0.1:8188", "--comfyui", help="ComfyUI server address"),
     checkpoint: Optional[str] = typer.Option(
@@ -123,6 +256,36 @@ def character(
     if side_image is not None:
         char_config.side_image = side_image
 
+    try:
+        run_poses = parse_poses_flag(poses, char_config.poses)
+    except ValueError as e:
+        typer.echo(str(e), err=True)
+        raise typer.Exit(1)
+
+    retry_budget = char_config.quality_retries if retries is None else retries
+    if retry_budget < 0:
+        typer.echo("--retries must be >= 0", err=True)
+        raise typer.Exit(1)
+
+    canvas_size = None
+    if canvas:
+        try:
+            canvas_size = parse_canvas(canvas)
+        except ValueError as e:
+            typer.echo(str(e), err=True)
+            raise typer.Exit(1)
+
+    if (deploy or copy_only) and project is not None:
+        if is_love32_project(project):
+            typer.echo(
+                "Refusing to write into a LOVE32 project. Echo already owns "
+                "those Character / layeredimage defs. Generate into a sandbox "
+                "(output_dir / sandbox-kite) and hand-copy PNGs, or use "
+                "--copy-only against examples/sample-vn or sandbox-renpy.",
+                err=True,
+            )
+            raise typer.Exit(1)
+
     # One seed for the whole set — identity consistency across poses.
     run_seed = (
         char_config.seed
@@ -131,11 +294,13 @@ def character(
     )
 
     typer.echo(f"Character: {char_config.name}")
-    typer.echo(f"Poses: {', '.join(char_config.poses)}")
+    typer.echo(f"Poses: {', '.join(run_poses)}")
+    if run_poses != char_config.poses:
+        typer.echo(f"  (YAML list: {', '.join(char_config.poses)})")
     typer.echo(f"Description: {char_config.description}")
     typer.echo(f"Checkpoint: {char_config.checkpoint}")
     typer.echo(f"LoRA: {char_config.lora or '(none)'}")
-    typer.echo(f"Seed: {run_seed} (shared across poses)")
+    typer.echo(f"Seed: {run_seed} (shared across poses; retries offset)")
     typer.echo(format_license_report(char_config.checkpoint, char_config.lora))
     if char_config.lora:
         typer.echo(
@@ -195,14 +360,41 @@ def character(
             )
         return
 
-    generator = ComfyUIGenerator(server_address=comfyui)
-    negative = build_negative_prompt(char_config.negative_prompt)
+    out_dir = Path(char_config.output_dir).expanduser()
+    out_dir.mkdir(parents=True, exist_ok=True)
 
-    generated: list[tuple[str, bytes]] = []  # (pose, image bytes)
+    generator = ComfyUIGenerator(server_address=comfyui)
+    base_negative = char_config.negative_prompt
+
+    generated: list[tuple[str, bytes, Path]] = []
     failures: list[tuple[str, str]] = []
+    skipped: list[str] = []
     reference_bytes: Optional[bytes] = None
-    for i, pose in enumerate(char_config.poses):
-        prompt = build_pose_prompt(char_config.description, pose)
+
+    # Original YAML index keeps pose_seed stable when --poses subsets.
+    pose_index = {name: i for i, name in enumerate(char_config.poses)}
+
+    for pose in run_poses:
+        dest = accepted_png_path(out_dir, char_config.name, pose)
+        if not force and dest.exists():
+            try:
+                existing = dest.read_bytes()
+                assert_usable_image(existing, label=pose)
+                typer.echo(f"Skipping {pose} (already accepted: {dest})")
+                generated.append((pose, existing, dest))
+                skipped.append(pose)
+                if reference_bytes is None:
+                    reference_bytes = existing
+                continue
+            except GenerationError as e:
+                typer.echo(
+                    f"Existing {dest} failed quality ({e}); regenerating...",
+                    err=True,
+                )
+
+        override: Optional[PoseOverride] = char_config.pose_overrides.get(pose)
+        prompt = build_pose_prompt(char_config.description, pose, override)
+        negative = build_negative_prompt(base_negative, override)
         use_img2img = (
             reference_bytes is not None
             and char_config.consistency_denoise < 1.0
@@ -211,8 +403,6 @@ def character(
             reference_bytes is not None
             and char_config.ip_adapter_weight > 0
         )
-        # Slight seed offset per pose so expression can change under img2img.
-        pose_seed = run_seed + i
         modes = []
         if use_img2img:
             modes.append(f"img2img denoise={char_config.consistency_denoise}")
@@ -220,67 +410,143 @@ def character(
             modes.append(f"ip-adapter w={char_config.ip_adapter_weight}")
         mode = "+".join(modes) if modes else "txt2img"
         typer.echo(f"Generating: {pose} ({mode})...")
-        try:
-            images = generator.generate(
-                prompt=prompt,
-                negative_prompt=negative,
-                checkpoint=char_config.checkpoint,
-                lora=char_config.lora,
-                lora_strength=char_config.lora_strength,
-                width=char_config.width,
-                height=char_config.height,
-                steps=char_config.steps,
-                cfg=char_config.cfg,
-                seed=pose_seed,
-                init_image_bytes=reference_bytes if use_img2img else None,
-                denoise=(
-                    char_config.consistency_denoise if use_img2img else 1.0
-                ),
-                ip_adapter_image_bytes=reference_bytes if use_ipa else None,
-                ip_adapter_weight=(
-                    char_config.ip_adapter_weight if use_ipa else 0.0
-                ),
-                ip_adapter_file=char_config.ip_adapter_file,
-                clip_vision=char_config.clip_vision,
-            )
-            assert_usable_image(images[0], label=pose)
-            generated.append((pose, images[0]))
-            if reference_bytes is None:
-                reference_bytes = images[0]
-        except GenerationError as e:
-            typer.echo(f"  FAILED ({pose}): {e}", err=True)
-            failures.append((pose, str(e)))
 
-    typer.echo(f"Generated {len(generated)}/{len(char_config.poses)} poses")
+        last_err: Optional[Exception] = None
+        accepted = False
+        i = pose_index.get(pose, 0)
+        for attempt in range(1 + retry_budget):
+            pose_seed = run_seed + i + attempt * SEED_RETRY_STRIDE
+            if attempt:
+                typer.echo(f"  retry {attempt}/{retry_budget} (seed {pose_seed})...")
+            try:
+                images = generator.generate(
+                    prompt=prompt,
+                    negative_prompt=negative,
+                    checkpoint=char_config.checkpoint,
+                    lora=char_config.lora,
+                    lora_strength=char_config.lora_strength,
+                    width=char_config.width,
+                    height=char_config.height,
+                    steps=char_config.steps,
+                    cfg=char_config.cfg,
+                    seed=pose_seed,
+                    init_image_bytes=reference_bytes if use_img2img else None,
+                    denoise=(
+                        char_config.consistency_denoise if use_img2img else 1.0
+                    ),
+                    ip_adapter_image_bytes=reference_bytes if use_ipa else None,
+                    ip_adapter_weight=(
+                        char_config.ip_adapter_weight if use_ipa else 0.0
+                    ),
+                    ip_adapter_file=char_config.ip_adapter_file,
+                    clip_vision=char_config.clip_vision,
+                )
+                raw = images[0]
+                try:
+                    assert_usable_image(raw, label=pose)
+                except ImageQualityError as qe:
+                    dump = reject_png_path(
+                        out_dir, char_config.name, pose, pose_seed
+                    )
+                    persist_rejection(
+                        qe.data or raw,
+                        qe.metrics,
+                        dump,
+                        extra={
+                            "character": char_config.name,
+                            "pose": pose,
+                            "seed": pose_seed,
+                            "attempt": attempt + 1,
+                            "reason": str(qe),
+                        },
+                    )
+                    typer.echo(f"  rejected → {dump} (+ .json)", err=True)
+                    raise
+                img_data = raw
+                if knockout_black:
+                    img_data = knockout_near_black(img_data)
+                if canvas_size is not None:
+                    img_data = pad_to_canvas(img_data, *canvas_size)
+                dest.write_bytes(img_data)
+                typer.echo(f"Saved: {dest}")
+                generated.append((pose, img_data, dest))
+                if reference_bytes is None:
+                    reference_bytes = raw
+                accepted = True
+                break
+            except GenerationError as e:
+                last_err = e
+                typer.echo(f"  FAILED ({pose}, attempt {attempt + 1}): {e}", err=True)
+
+        if not accepted:
+            failures.append((pose, str(last_err) if last_err else "unknown"))
+
+    typer.echo(
+        f"Generated {len(generated) - len(skipped)}/{len(run_poses)} poses"
+        + (f" ({len(skipped)} skipped)" if skipped else "")
+        + f" → {out_dir}"
+    )
 
     if not generated:
         typer.echo(
             "No images were generated — skipping deploy and script update.\n"
+            "Rejected frames (if any) are under "
+            f"{out_dir / 'rejected'}. "
             "If ComfyUI was unreachable or returned black/corrupt PNGs, fix "
-            "the server (health-check curl), then retry with --lora none.",
+            "the server (health-check curl), then retry with --lora none.\n"
+            "Keep ComfyUI in one durable session — a second generate that "
+            "issues a global interrupt can kill an in-flight pose.",
             err=True,
         )
         raise typer.Exit(1)
 
-    out_dir = Path(char_config.output_dir).expanduser()
-    out_dir.mkdir(parents=True, exist_ok=True)
-    # Also keep a temp copy so deploy formatting never mutates unexpected paths
-    # if the user points output_dir at something shared — we copy into out_dir
-    # as the canonical local artifacts.
-    image_paths: list[Path] = []
-    poses_done: list[str] = []
-    for pose, img_data in generated:
-        img_path = out_dir / f"{char_config.name}_{pose}.png"
-        img_path.write_bytes(img_data)
-        image_paths.append(img_path)
-        poses_done.append(pose)
-        typer.echo(f"Saved: {img_path}")
+    image_paths = [path for _, _, path in generated]
+    poses_done = [pose for pose, _, _ in generated]
 
-    if deploy and project:
+    if copy_only:
+        if project is None:
+            typer.echo("--copy-only requires --project <renpy-dir>", err=True)
+            raise typer.Exit(1)
         project = project.expanduser()
         if not project.exists():
             typer.echo(f"Project not found: {project}", err=True)
             raise typer.Exit(1)
+        template = filename_template or DEFAULT_FILENAME_TEMPLATE
+        sub = "" if images_subdir is None else images_subdir
+        deployer = FilesystemDeployer(project)
+        formatted: list[tuple[Path, str]] = []
+        for pose, _, path in generated:
+            try:
+                fname = render_filename(template, char_config.name, pose)
+            except ValueError as e:
+                typer.echo(str(e), err=True)
+                raise typer.Exit(1)
+            formatted.append((path, fname))
+        copied = deployer.deploy_images(formatted, subfolder=sub)
+        dest_dir = (
+            deployer.images_dir / sub if sub else deployer.images_dir
+        )
+        typer.echo(
+            f"Copy-only: {len(copied)} PNG(s) → {dest_dir} "
+            f"(template {template!r}). No Character() / layeredimage written."
+        )
+    elif deploy and project:
+        project = project.expanduser()
+        if not project.exists():
+            typer.echo(f"Project not found: {project}", err=True)
+            raise typer.Exit(1)
+        looks_sandbox = any(
+            token in str(project).lower()
+            for token in ("sample-vn", "sandbox")
+        )
+        if not looks_sandbox:
+            typer.echo(
+                "WARNING: --deploy writes game/matcha_characters.rpy. "
+                "That is dangerous in a live game (Ren'Py auto-loads every "
+                "game/*.rpy). Prefer examples/sample-vn, sandbox-renpy, or "
+                "--copy-only with a filename template.",
+                err=True,
+            )
 
         # format_batch may resize in place — work on copies so output_dir
         # keeps the originals.
@@ -294,6 +560,7 @@ def character(
         typer.echo(f"Deploying to {project}...")
         formatter = RenPyFormatter(project)
         deployer = FilesystemDeployer(project)
+        sub = "characters" if images_subdir is None else images_subdir
 
         formatted = formatter.format_batch(
             work_paths,
@@ -302,7 +569,7 @@ def character(
             max_width=char_config.resize_max_width,
             max_height=char_config.resize_max_height,
         )
-        deployed = deployer.deploy_images(formatted, subfolder="characters")
+        deployed = deployer.deploy_images(formatted, subfolder=sub)
 
         if char_config.side_image:
             # Crop from resized work copies so portraits match deployed sprites.
@@ -314,7 +581,7 @@ def character(
                 dest_dir=work_dir,
             )
             side_deployed = deployer.deploy_images(
-                side_formatted, subfolder="characters"
+                side_formatted, subfolder=sub
             )
             deployed.extend(side_deployed)
             # Also keep local copies next to the full sprites.
@@ -349,7 +616,11 @@ def character(
             for _, filename in side_formatted:
                 typer.echo(f"Saved side portrait: {out_dir / filename}")
         typer.echo(f"Images saved to: {out_dir}")
-        typer.echo("Use --deploy --project /path/to/renpy to deploy")
+        typer.echo(
+            "Sandbox deploy: --deploy --project examples/sample-vn. "
+            "Echo-style copy (no script): --copy-only --project <sandbox> "
+            f"--filename-template '{ECHO_FILENAME_TEMPLATE}'."
+        )
 
     if failures:
         typer.echo(

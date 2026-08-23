@@ -97,11 +97,18 @@ cd ~/ComfyUI && ./venv/bin/python main.py \
   --fp32-vae --cpu-vae --lowvram --use-split-cross-attention
 ```
 
-Consistency on MPS is **prompt + shared seed** for now. Expect **several
-minutes per pose** on Mac MPS (four poses can take ~15–25+ minutes) — the CLI
-prints each pose name as it starts; it is not hung. After a heavy IP-Adapter
-experiment, fully quit ComfyUI (or reboot) before the next clean run — a soft
-restart is not enough.
+Consistency on MPS is **prompt + shared seed** for now. Identity lock via
+IP-Adapter or `consistency_denoise < 1.0` is a later CUDA path — do not turn
+those on locally, and do not drop a live Echo PNG in as a reference. Expect
+**several minutes per pose** on Mac MPS (four poses can take ~15–25+ minutes)
+— the CLI prints each pose name as it starts; it is not hung. After a heavy
+IP-Adapter experiment, fully quit ComfyUI (or reboot) before the next clean
+run — a soft restart is not enough.
+
+Keep ComfyUI in **one durable session**. Matcha does not manage that process.
+A second generate (or a UI "interrupt") that issues a global interrupt can
+kill an in-flight pose. If a run dies mid-batch, already-accepted PNGs stay
+on disk (see **Partial runs** below).
 
 ## Trusted first success
 
@@ -138,14 +145,16 @@ Or scaffold your own tree: `.venv/bin/matcha init myproject`, then point
 `--project` at any Ren'Py game directory.
 
 **Do not** deploy into a live game you are polishing — Ren'Py auto-loads every
-`game/*.rpy`. Use `examples/sample-vn/` or a throwaway `sandbox-renpy/`
-(gitignored).
+`game/*.rpy`. Use `examples/sample-vn/` or a throwaway `sandbox-renpy/` /
+`sandbox-kite/` (gitignored). Matcha **refuses** `--project` paths that look
+like LOVE32. Echo already owns those `define` / `layeredimage` lines; hand-copy
+PNGs (or use `--copy-only`) instead of letting Matcha write the live script.
 
 ## CLI overview
 
 | Command | What it does |
 |---|---|
-| `matcha character <config.yaml>` | Generate sprites; optional `--deploy` / `--dry-run` / `--lora none` |
+| `matcha character <config.yaml>` | Generate sprites; `--poses`, `--copy-only`, `--deploy`, `--dry-run`, `--lora none` |
 | `matcha licenses …` | Commercial-use status for checkpoint/LoRA (**not legal advice**) |
 | `matcha disclose …` | Draft Steam AI survey + itch.io AI-tag text |
 | `matcha init <name>` | Scaffold a project + example character YAML |
@@ -162,9 +171,10 @@ Or scaffold your own tree: `.venv/bin/matcha init myproject`, then point
 ```
 
 `matcha character` also prints a short license status before generating.
-Generated definitions go to `game/matcha_characters.rpy` — idempotent on
-re-run, never touches your hand-written scripts. Only poses that actually
-generated get definitions; the CLI exits non-zero if any pose fails.
+`--deploy` writes `game/matcha_characters.rpy` — idempotent on re-run, never
+touches your hand-written scripts, but still dangerous in a live game.
+Only poses that actually generated get definitions; the CLI exits non-zero
+if any pose fails. For Echo last-mile copies, use `--copy-only` (below).
 
 ### Ren'Py scaffolding flags
 
@@ -180,6 +190,62 @@ Default: flat `image <char> <pose>` per pose. Opt in for a richer setup:
 .venv/bin/matcha character examples/sample-vn/configs/example_character.yaml \
   --lora none --deploy --project examples/sample-vn --layered --side-image
 ```
+
+### Look sheet (shared face, per-pose outfit)
+
+Keep hair / eyes / face in `description`. Put **outfit families** and extra
+pose wording in `pose_overrides` (or inline `- name: smoking` mappings) so a
+bartender apron on `idle` cannot paint onto `smoking`.
+
+Unknown pose names stay as plain wording (`crossed_arms` → `crossed arms`).
+They do **not** become `{pose} expression, {pose} pose`. A starting map
+includes idle, neutral, warm, withdrawn, smoking, relaxed, soft, tired,
+stressed, gentle, crossed_arms, plus the older happy/sad/surprised set —
+all overridable in YAML. Echo example: [`configs/kite_male.yaml`](configs/kite_male.yaml).
+
+### Partial runs, `--poses`, rejects
+
+Each accepted pose is written to `output_dir` **as soon as it passes** the
+quality guard (`<name>_<pose>.png`). A 15-minute crash no longer orphans
+finished poses in ComfyUI with zero files on disk.
+
+```bash
+# One pose (or a subset) without rerunning the full YAML list
+.venv/bin/matcha character configs/kite_male.yaml --lora none --poses smoking
+
+# Already-accepted PNGs are skipped; --force regenerates
+.venv/bin/matcha character configs/kite_male.yaml --lora none --poses idle,warm
+```
+
+Smear + right-edge static-band frames (the Mac MPS Anything V5 failure) are
+**rejected**. The PNG and the metrics used (adjacent-luma Δ, edge, strip
+ratio, high-freq fraction) land in `output_dir/rejected/<name>_<pose>_seedN.png`
+(+ `.json`) so a long run stays inspectable. The CLI then retries with a new
+seed (`quality_retries` in YAML, or `--retries`). A global-threshold guard
+that required both adj ≥ 15 **and** edge ≥ 48 is what let those frames
+through locally; this repo measures the **edge strip vs the interior**
+instead.
+
+### Copy-only deploy (no script writes)
+
+`--deploy` into a real game stays dangerous. For Echo, copy chosen PNGs
+with a filename template — live Echo uses a **space**: `kite_male <pose>.png`.
+
+```bash
+.venv/bin/matcha character configs/kite_male.yaml --lora none --poses smoking \
+  --copy-only --project sandbox-renpy \
+  --filename-template '{name} {pose}.png'
+```
+
+That copies into `game/images/` and does **not** write `define kite = Character(...)`
+or a `layeredimage`. `--images-subdir characters` puts files under
+`game/images/characters/` instead.
+
+Optional extras (Pillow only, no rembg / GPU): `--knockout-black` turns
+near-black pixels transparent (grey/white studio cards stay opaque — a
+subject matte would need rembg, which we skipped). `--canvas 768x1024` pads
+an accepted 512×512 onto a larger canvas; it does **not** change generation
+resolution. **512×512 `--lora none` remains the trusted first-success default.**
 
 ## Development
 
