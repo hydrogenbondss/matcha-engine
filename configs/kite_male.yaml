@@ -1,22 +1,24 @@
-# Echo / kite look sheet — sandbox generate only.
+# Kite look sheet — sandbox generate only.
 # Ground truth: live LOVE32 disk names + three outfit families.
 # Never --deploy / --project into LOVE32. Live already owns Character,
 # layeredimage, and _kite_sprite. Copy-only or hand-copy PNGs only.
 #
 # Disk: kite_male <pose>.png (space). Ren'Py tag: kite_male <pose>.
-# crossed_arms is APRON/bar (not withdrawn). Live Echo scales it 1.39 because
+# crossed_arms is APRON/bar (not withdrawn). Live game scales it 1.39 because
 # that file is 880×1184 vs other kite_male 1200×992 — display, not generate.
 # Still emit kite_male crossed_arms.png. Later copy-out should use one
-# uniform canvas (--canvas) so Echo can drop the 1.39 special case.
+# uniform canvas (--canvas) so the live game can drop the 1.39 special case.
 # angry is not a file; it aliases kite_male stressed.png.
 name: kite_male
-display_name: Echo
+display_name: Kite
 filename_template: "{name} {pose}.png"
 # Shared identity only. Outfit families below — one description cannot
 # cover apron-bar vs home henley vs withdrawn dark shirt.
 description: >-
-  1boy, adult man, short buzz-cut brown hair, warm amber eyes, light stubble,
-  sharp jaw, visual novel sprite, cel shaded, clean lineart, same face
+  1boy, young man, tan skin, very short dark olive-grey buzz cut, no spikes,
+  no fade, reddish-orange eyes, small silver hoop earrings,
+  chest-up visual novel sprite, solid black background, inked cel-shaded,
+  strong dark linework, dramatic lighting
 poses:
   - neutral
   - gentle
@@ -32,8 +34,9 @@ pose_aliases:
   angry: stressed
 outfit_families:
   apron_bar: >-
-    charcoal long-sleeve button-up shirt, dark buckle bartender apron,
-    Male New Game bar outfit, no henley, no polo
+    charcoal long-sleeve button shirt buttoned to the collar,
+    dark matching bartender apron with metal buckles and a chest pocket,
+    empty hands, standing square facing camera, no henley, no polo
   home_henley: >-
     olive or charcoal henley or polo shirt, no apron, no bartender outfit,
     no buckle apron
