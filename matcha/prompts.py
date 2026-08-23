@@ -40,7 +40,7 @@ POSE_EXPRESSIONS: dict[str, str] = {
     "embarrassed": "embarrassed expression, blushing, looking aside",
     "warm": "warm soft smile, kind eyes, open posture",
     "withdrawn": "withdrawn expression, looking aside, closed-off posture, distant eyes",
-    "smoking": "holding a small flame or cigarette near the face, relaxed jaw",
+    "smoking": "seated on a ledge, holding a cigarette, relaxed jaw",
     "relaxed": "relaxed expression, loose shoulders, easy stance",
     "soft": "soft gentle expression, quiet eyes, slight smile",
     "tired": "tired expression, heavy eyelids, weary mouth",

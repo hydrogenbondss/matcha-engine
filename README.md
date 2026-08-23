@@ -193,15 +193,25 @@ Default: flat `image <char> <pose>` per pose. Opt in for a richer setup:
 
 ### Look sheet (shared face, per-pose outfit)
 
-Keep hair / eyes / face in `description`. Put **outfit families** and extra
-pose wording in `pose_overrides` (or inline `- name: smoking` mappings) so a
-bartender apron on `idle` cannot paint onto `smoking`.
+Keep hair / eyes / face in `description`. Put **outfit families** in
+`outfit_families` + `pose_overrides.family` (or inline `- name: smoking`
+mappings) so a bartender apron cannot paint onto `smoking`.
 
 Unknown pose names stay as plain wording (`crossed_arms` → `crossed arms`).
-They do **not** become `{pose} expression, {pose} pose`. A starting map
-includes idle, neutral, warm, withdrawn, smoking, relaxed, soft, tired,
-stressed, gentle, crossed_arms, plus the older happy/sad/surprised set —
-all overridable in YAML. Echo example: [`configs/kite_male.yaml`](configs/kite_male.yaml).
+They do **not** become `{pose} expression, {pose} pose`.
+
+Echo disk spec (live LOVE32 filenames — do **not** `--project` LOVE32) is
+[`configs/kite_male.yaml`](configs/kite_male.yaml):
+
+| Family | Outfit | Poses |
+|---|---|---|
+| Apron / bar | charcoal long-sleeve button shirt + dark buckle apron | neutral, warm, soft, stressed, tired, gentle |
+| Home henley | olive/charcoal henley or polo, no apron | relaxed, smoking (seated on a ledge with a cigarette) |
+| Withdrawn dark shirt | oversized dark long-sleeve button shirt, no apron, arms crossed | withdrawn, crossed_arms |
+
+Ten files on disk: `kite_male <pose>.png` (space) for those names.
+`angry` is **not** a file — it aliases `stressed`. `crossed_arms` is still
+emitted; live Echo scales it 1.39 in-script (display, not generate).
 
 ### Partial runs, `--poses`, rejects
 
@@ -214,7 +224,7 @@ finished poses in ComfyUI with zero files on disk.
 .venv/bin/matcha character configs/kite_male.yaml --lora none --poses smoking
 
 # Already-accepted PNGs are skipped; --force regenerates
-.venv/bin/matcha character configs/kite_male.yaml --lora none --poses idle,warm
+.venv/bin/matcha character configs/kite_male.yaml --lora none --poses warm,soft
 ```
 
 Smear + right-edge static-band frames (the Mac MPS Anything V5 failure) are
@@ -228,18 +238,20 @@ instead.
 
 ### Copy-only deploy (no script writes)
 
-`--deploy` into a real game stays dangerous. For Echo, copy chosen PNGs
-with a filename template — live Echo uses a **space**: `kite_male <pose>.png`.
+`--deploy` into a real game stays dangerous. For Echo, `--copy-only` writes
+`kite_male <pose>.png` (space) into `game/images/` and does **not** write
+`Character()`, `layeredimage`, or `_kite_sprite`. Underscore names
+(`kite_male_smoking.png`, `kite_<pose>.png`) will not drop into live Echo.
 
 ```bash
 .venv/bin/matcha character configs/kite_male.yaml --lora none --poses smoking \
-  --copy-only --project sandbox-renpy \
-  --filename-template '{name} {pose}.png'
+  --copy-only --project sandbox-renpy
+# dest: game/images/kite_male smoking.png
 ```
 
-That copies into `game/images/` and does **not** write `define kite = Character(...)`
-or a `layeredimage`. `--images-subdir characters` puts files under
-`game/images/characters/` instead.
+`configs/kite_male.yaml` sets `filename_template: "{name} {pose}.png"`.
+`--filename-template` overrides if needed. `--images-subdir characters` puts
+files under `game/images/characters/` instead. Never `--project` LOVE32.
 
 Optional extras (Pillow only, no rembg / GPU): `--knockout-black` turns
 near-black pixels transparent (grey/white studio cards stay opaque — a

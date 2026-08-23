@@ -7,8 +7,8 @@ of STRATEGY.md §6.
 
 Status legend: `[x]` done · `[~]` in progress · `[ ]` not started · `[!]` blocked
 
-_Last updated: 2026-08-23 (look-sheet + smear/static-band guard + incremental
-writes + `--poses` / `--copy-only`; public outreach still deferred)_
+_Last updated: 2026-08-23 (Echo disk spec: 10 poses, 3 outfit families,
+`kite_male <pose>.png` copy-only; public outreach still deferred)_
 
 ---
 

@@ -91,26 +91,64 @@ output_dir: ./output
 """
 
 
-def parse_poses_flag(raw: Optional[str], available: list[str]) -> list[str]:
-    """Resolve ``--poses idle,smoking`` against the YAML list.
+def parse_poses_flag(
+    raw: Optional[str],
+    available: list[str],
+    aliases: Optional[dict[str, str]] = None,
+) -> list[str]:
+    """Resolve ``--poses smoking`` against the YAML list and aliases.
 
-    Order follows the flag (so a single named pose can run first). Unknown
-    names are an error rather than a silent no-op.
+    Order follows the flag (so a single named pose can run first). Aliases
+    (Echo: ``angry`` → ``stressed``) resolve to the real disk pose and are
+    de-duplicated. Unknown names are an error rather than a silent no-op.
     """
+    aliases = aliases or {}
     if raw is None or not str(raw).strip():
         return list(available)
     wanted = [p.strip() for p in str(raw).split(",") if p.strip()]
     if not wanted:
         return list(available)
-    unknown = [p for p in wanted if p not in available]
+    resolved: list[str] = []
+    seen: set[str] = set()
+    unknown: list[str] = []
+    for pose in wanted:
+        target = pose if pose in available else aliases.get(pose)
+        if target not in available:
+            unknown.append(pose)
+            continue
+        if target not in seen:
+            resolved.append(target)
+            seen.add(target)
     if unknown:
+        alias_note = ""
+        if aliases:
+            alias_note = " (aliases: " + ", ".join(
+                f"{k}→{v}" for k, v in aliases.items()
+            ) + ")"
         raise ValueError(
             "unknown pose(s) "
             + ", ".join(unknown)
             + " — YAML has: "
             + ", ".join(available)
+            + alias_note
         )
-    return wanted
+    return resolved
+
+
+def copy_only_template(
+    cli_template: Optional[str],
+    yaml_template: Optional[str] = None,
+) -> str:
+    """Filename for copy-only dest. Echo disk is ``kite_male <pose>.png``.
+
+    CLI flag wins, then YAML ``filename_template``, then the space template.
+    The underscore default used for local sakura output will not drop into Echo.
+    """
+    if cli_template and cli_template.strip():
+        return cli_template
+    if yaml_template and yaml_template.strip():
+        return yaml_template
+    return ECHO_FILENAME_TEMPLATE
 
 
 def render_filename(template: str, name: str, pose: str) -> str:
@@ -141,11 +179,17 @@ def is_love32_project(project: Path) -> bool:
     return any(p == "love32" or p.startswith("love32") for p in parts)
 
 
-def accepted_png_path(out_dir: Path, name: str, pose: str) -> Path:
-    return Path(out_dir) / f"{name}_{pose}.png"
+def accepted_png_path(
+    out_dir: Path,
+    name: str,
+    pose: str,
+    template: str = DEFAULT_FILENAME_TEMPLATE,
+) -> Path:
+    return Path(out_dir) / render_filename(template, name, pose)
 
 
 def reject_png_path(out_dir: Path, name: str, pose: str, seed: int) -> Path:
+    # Underscore keeps reject dumps easy to glob; these are not Echo drop-ins.
     return Path(out_dir) / "rejected" / f"{name}_{pose}_seed{seed}.png"
 
 
@@ -169,7 +213,8 @@ def character(
         "--copy-only",
         help=(
             "Copy accepted PNGs into the project's images folder using "
-            "--filename-template. Does NOT write Character() or layeredimage."
+            "--filename-template. Does NOT write Character(), layeredimage, "
+            "or _kite_sprite."
         ),
     ),
     filename_template: Optional[str] = typer.Option(
@@ -258,7 +303,9 @@ def character(
         char_config.side_image = side_image
 
     try:
-        run_poses = parse_poses_flag(poses, char_config.poses)
+        run_poses = parse_poses_flag(
+            poses, char_config.poses, char_config.pose_aliases
+        )
     except ValueError as e:
         typer.echo(str(e), err=True)
         raise typer.Exit(1)
@@ -280,9 +327,9 @@ def character(
         if is_love32_project(project):
             typer.echo(
                 "Refusing to write into a LOVE32 project. Echo already owns "
-                "those Character / layeredimage defs. Generate into a sandbox "
-                "(output_dir / sandbox-kite) and hand-copy PNGs, or use "
-                "--copy-only against examples/sample-vn or sandbox-renpy.",
+                "Character / layeredimage / _kite_sprite. Generate into "
+                "sandbox-kite and hand-copy PNGs, or --copy-only against "
+                "examples/sample-vn or sandbox-renpy.",
                 err=True,
             )
             raise typer.Exit(1)
@@ -376,7 +423,14 @@ def character(
     pose_index = {name: i for i, name in enumerate(char_config.poses)}
 
     for pose in run_poses:
-        dest = accepted_png_path(out_dir, char_config.name, pose)
+        dest = accepted_png_path(
+            out_dir,
+            char_config.name,
+            pose,
+            filename_template
+            or char_config.filename_template
+            or DEFAULT_FILENAME_TEMPLATE,
+        )
         if not force and dest.exists():
             try:
                 existing = dest.read_bytes()
@@ -394,7 +448,12 @@ def character(
                 )
 
         override: Optional[PoseOverride] = char_config.pose_overrides.get(pose)
-        prompt = build_pose_prompt(char_config.description, pose, override)
+        prompt = build_pose_prompt(
+            char_config.description,
+            pose,
+            override,
+            outfit=char_config.outfit_for(pose),
+        )
         negative = build_negative_prompt(base_negative, override)
         use_img2img = (
             reference_bytes is not None
@@ -512,7 +571,9 @@ def character(
         if not project.exists():
             typer.echo(f"Project not found: {project}", err=True)
             raise typer.Exit(1)
-        template = filename_template or DEFAULT_FILENAME_TEMPLATE
+        template = copy_only_template(
+            filename_template, char_config.filename_template
+        )
         sub = "" if images_subdir is None else images_subdir
         deployer = FilesystemDeployer(project)
         formatted: list[tuple[Path, str]] = []
@@ -529,7 +590,8 @@ def character(
         )
         typer.echo(
             f"Copy-only: {len(copied)} PNG(s) → {dest_dir} "
-            f"(template {template!r}). No Character() / layeredimage written."
+            f"(template {template!r}). No Character() / layeredimage / "
+            "_kite_sprite written."
         )
     elif deploy and project:
         project = project.expanduser()
@@ -620,7 +682,7 @@ def character(
         typer.echo(
             "Sandbox deploy: --deploy --project examples/sample-vn. "
             "Echo-style copy (no script): --copy-only --project <sandbox> "
-            f"--filename-template '{ECHO_FILENAME_TEMPLATE}'."
+            f"(writes '{ECHO_FILENAME_TEMPLATE}'; never Character/_kite_sprite)."
         )
 
     if failures:

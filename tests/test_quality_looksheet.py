@@ -15,6 +15,7 @@ from PIL import Image, ImageDraw, ImageFilter
 from matcha.cli import (
     ECHO_FILENAME_TEMPLATE,
     app,
+    copy_only_template,
     is_love32_project,
     parse_poses_flag,
     render_filename,
@@ -200,17 +201,72 @@ class TestLookSheet:
         assert cfg.pose_overrides["smoking"].outfit == "dark henley"
         assert cfg.pose_overrides["smoking"].prompt == "holding a flame"
 
-    def test_kite_yaml_loads(self):
+    def test_kite_yaml_matches_live_echo_disk_spec(self):
         import yaml
 
         path = Path(__file__).resolve().parents[1] / "configs" / "kite_male.yaml"
         data = yaml.safe_load(path.read_text())
         cfg = CharacterConfig(**data)
         assert cfg.name == "kite_male"
-        assert "smoking" in cfg.poses
-        assert cfg.pose_overrides["smoking"].outfit
-        assert "apron" in (cfg.pose_overrides["idle"].outfit or "")
-        assert "no apron" in (cfg.pose_overrides["smoking"].outfit or "")
+        assert cfg.filename_template == "{name} {pose}.png"
+        assert cfg.poses == [
+            "neutral",
+            "gentle",
+            "relaxed",
+            "smoking",
+            "soft",
+            "stressed",
+            "tired",
+            "warm",
+            "withdrawn",
+            "crossed_arms",
+        ]
+        assert "idle" not in cfg.poses
+        assert "angry" not in cfg.poses
+        assert cfg.pose_aliases.get("angry") == "stressed"
+        assert set(cfg.outfit_families) == {
+            "apron_bar",
+            "home_henley",
+            "withdrawn_dark",
+        }
+        bar = {
+            "neutral",
+            "warm",
+            "soft",
+            "stressed",
+            "tired",
+            "gentle",
+        }
+        henley = {"relaxed", "smoking"}
+        withdrawn = {"withdrawn", "crossed_arms"}
+        assert bar | henley | withdrawn == set(cfg.poses)
+        for pose in bar:
+            assert cfg.pose_overrides[pose].family == "apron_bar"
+            assert "apron" in (cfg.outfit_for(pose) or "")
+            assert "charcoal" in (cfg.outfit_for(pose) or "")
+        for pose in henley:
+            assert cfg.pose_overrides[pose].family == "home_henley"
+            outfit = cfg.outfit_for(pose) or ""
+            assert "henley" in outfit or "polo" in outfit
+            assert "no apron" in outfit
+        for pose in withdrawn:
+            assert cfg.pose_overrides[pose].family == "withdrawn_dark"
+            outfit = cfg.outfit_for(pose) or ""
+            assert "oversized" in outfit and "no apron" in outfit
+        smoking = build_pose_prompt(
+            cfg.description, "smoking", cfg.pose_overrides["smoking"],
+            outfit=cfg.outfit_for("smoking"),
+        )
+        assert "cigarette" in smoking
+        assert "ledge" in smoking
+        assert "apron" not in smoking or "no apron" in smoking
+        assert "same outfit" not in smoking
+        assert render_filename(cfg.filename_template, cfg.name, "neutral") == (
+            "kite_male neutral.png"
+        )
+        assert render_filename(cfg.filename_template, cfg.name, "crossed_arms") == (
+            "kite_male crossed_arms.png"
+        )
         assert cfg.width == 512 and cfg.height == 512
         assert cfg.lora is None
         assert cfg.ip_adapter_weight == 0
@@ -226,14 +282,29 @@ class TestCliHelpers:
         with pytest.raises(ValueError, match="unknown pose"):
             parse_poses_flag("dance", available)
 
+    def test_parse_poses_flag_aliases_angry_to_stressed(self):
+        available = [
+            "neutral",
+            "stressed",
+            "smoking",
+        ]
+        aliases = {"angry": "stressed"}
+        assert parse_poses_flag("angry", available, aliases) == ["stressed"]
+        assert parse_poses_flag("angry,stressed", available, aliases) == ["stressed"]
+        assert parse_poses_flag("smoking", available, aliases) == ["smoking"]
+
     def test_render_filename_echo_space_template(self):
         assert (
-            render_filename(ECHO_FILENAME_TEMPLATE, "kite_male", "idle")
-            == "kite_male idle.png"
+            render_filename(ECHO_FILENAME_TEMPLATE, "kite_male", "neutral")
+            == "kite_male neutral.png"
         )
         assert (
             render_filename("{name}_{pose}.png", "kite_male", "warm")
             == "kite_male_warm.png"
+        )
+        assert copy_only_template(None, None) == ECHO_FILENAME_TEMPLATE
+        assert (
+            copy_only_template(None, "{name} {pose}.png") == "{name} {pose}.png"
         )
 
     def test_love32_paths_detected(self, tmp_path):
@@ -393,6 +464,88 @@ class TestCliGenerateLoop:
         assert copied.read_bytes() == clean
         assert not (project / "game" / "matcha_characters.rpy").exists()
         assert "No Character()" in result.stdout
+        assert "_kite_sprite" in result.stdout
+        assert "kite_male_idle.png" not in result.stdout
+
+    def test_copy_only_default_is_echo_space_name(self, tmp_path):
+        from typer.testing import CliRunner
+
+        cfg = _write_char_yaml(tmp_path / "char.yaml", ["smoking"])
+        project = tmp_path / "sandbox-vn"
+        (project / "game").mkdir(parents=True)
+        clean = make_cel_sprite()
+        with _patch_preflight(), mock.patch(
+            "matcha.cli.ComfyUIGenerator.generate", return_value=[clean]
+        ):
+            result = CliRunner().invoke(
+                app,
+                [
+                    "character",
+                    str(cfg),
+                    "--lora",
+                    "none",
+                    "--copy-only",
+                    "--project",
+                    str(project),
+                ],
+            )
+        assert result.exit_code == 0, result.output
+        assert (project / "game" / "images" / "kite_male smoking.png").exists()
+        assert not (project / "game" / "images" / "kite_male_smoking.png").exists()
+        assert not (project / "game" / "images" / "kite_smoking.png").exists()
+        assert not (project / "game" / "matcha_characters.rpy").exists()
+        text = result.stdout + result.output
+        assert "Character(" not in text or "No Character()" in text
+        assert "_kite_sprite" in result.stdout
+
+    def test_copy_only_kite_yaml_template_and_angry_alias(self, tmp_path):
+        from typer.testing import CliRunner
+
+        cfg = tmp_path / "kite_male.yaml"
+        cfg.write_text(
+            "name: kite_male\n"
+            "description: 1boy, buzz cut\n"
+            "filename_template: \"{name} {pose}.png\"\n"
+            "poses: [neutral, stressed, smoking, crossed_arms]\n"
+            "pose_aliases:\n  angry: stressed\n"
+            "outfit_families:\n"
+            "  apron_bar: charcoal shirt, dark buckle apron\n"
+            "  home_henley: olive henley, no apron\n"
+            "pose_overrides:\n"
+            "  stressed:\n    family: apron_bar\n"
+            "  smoking:\n    family: home_henley\n"
+            "checkpoint: good_model.safetensors\n"
+            "lora: null\n"
+            f"output_dir: {tmp_path / 'out'}\n"
+        )
+        project = tmp_path / "sandbox-vn"
+        (project / "game").mkdir(parents=True)
+        clean = make_cel_sprite()
+        with _patch_preflight(), mock.patch(
+            "matcha.cli.ComfyUIGenerator.generate", return_value=[clean]
+        ):
+            result = CliRunner().invoke(
+                app,
+                [
+                    "character",
+                    str(cfg),
+                    "--lora",
+                    "none",
+                    "--poses",
+                    "angry",
+                    "--copy-only",
+                    "--project",
+                    str(project),
+                ],
+            )
+        assert result.exit_code == 0, result.output
+        assert "Poses: stressed" in result.stdout
+        dest = project / "game" / "images" / "kite_male stressed.png"
+        assert dest.exists()
+        assert not (project / "game" / "images" / "kite_male angry.png").exists()
+        assert not (project / "game" / "matcha_characters.rpy").exists()
+        local = tmp_path / "out" / "kite_male stressed.png"
+        assert local.exists()
 
     def test_copy_only_refuses_love32(self, tmp_path):
         from typer.testing import CliRunner
