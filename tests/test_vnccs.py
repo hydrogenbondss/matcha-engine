@@ -55,6 +55,13 @@ def vnccs_object_info(server, node):
     return {node: VNCCS_OBJECT_INFO[node]}
 
 
+def txt2img_only_object_info(server, node):
+    """Models present, VNCCS nodes absent — do not KeyError on unknown names."""
+    if node not in OBJECT_INFO:
+        return {}
+    return {node: OBJECT_INFO[node]}
+
+
 def _kite_cfg(**kwargs) -> CharacterConfig:
     data = dict(
         name="kite_male",
@@ -82,7 +89,7 @@ def _kite_cfg(**kwargs) -> CharacterConfig:
 
 class TestVNCCSPreflight:
     def test_missing_nodes_are_an_error_with_install_hint(self):
-        with mock.patch.object(preflight, "_object_info", fake_object_info):
+        with mock.patch.object(preflight, "_object_info", txt2img_only_object_info):
             with pytest.raises(PreflightError, match="VNCCS") as exc:
                 preflight.validate_vnccs("127.0.0.1:8188")
         text = str(exc.value)
@@ -112,15 +119,6 @@ class TestVNCCSPreflight:
 
     def test_404_counts_as_missing_not_unreachable(self):
         import urllib.error
-
-        def raise_404(server, node):
-            raise urllib.error.HTTPError(
-                f"http://{server}/object_info/{node}",
-                404,
-                "Not Found",
-                hdrs=None,
-                fp=None,
-            )
 
         # node_registered uses _object_info, which now maps 404 → {}
         with mock.patch.object(
@@ -216,7 +214,7 @@ class TestVNCCSBackendFlag:
 
     def test_vnccs_dry_run_errors_when_nodes_missing(self, tmp_path):
         cfg = _write_char_yaml(tmp_path / "char.yaml", ["idle"])
-        with mock.patch.object(preflight, "_object_info", fake_object_info):
+        with mock.patch.object(preflight, "_object_info", txt2img_only_object_info):
             result = CliRunner().invoke(
                 app, ["character", str(cfg), "--dry-run", "--backend", "vnccs"]
             )

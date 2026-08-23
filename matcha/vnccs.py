@@ -433,6 +433,8 @@ def build_step1_creator_prompt(
     outfit: Optional[str] = None,
 ) -> dict:
     """API prompt matching shipped Step 1 Character Creator connections."""
+    if outfit is None:
+        outfit = cfg.outfit_for(pose)
     creator = creator_widget_data(cfg, pose=pose, outfit=outfit, seed=seed)
     pose_payload = pose_data_for(cfg, pose, width=cfg.width, height=cfg.height)
     return {
@@ -474,6 +476,8 @@ def build_step1_cloner_prompt(
     outfit: Optional[str] = None,
 ) -> dict:
     """API prompt matching shipped Step 1 Character Cloner connections."""
+    if outfit is None:
+        outfit = cfg.outfit_for(pose)
     _ = seed  # seed lives on Control Center / generator widget, not cloner
     pose_payload = pose_data_for(cfg, pose, width=cfg.width, height=cfg.height)
     return {
