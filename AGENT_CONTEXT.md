@@ -19,7 +19,8 @@ format for Ren'Py → deploy. See STRATEGY.md for positioning and roadmap.
 - [x] First real-GPU run (2026-07-23, Mac MPS) — 4/4 sakura poses
 - [x] Dogfood on LOVE32 + Ren'Py SDK lint clean for matcha script
 - [!] small_hours_style_v1 NaNs/blacks on Mac MPS — interim: last.safetensors
-- [ ] Consistency evaluation vs VNCCS (ComfyUI_VNCCS)
+- [x] VNCCS wrap (`--backend vnccs`) — queues verified 3.0 nodes; missing
+      install is an error (no prompt+seed fallback)
 
 ## Tech Stack
 - Python, Typer, Pydantic, Pillow, websocket-client

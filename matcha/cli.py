@@ -24,6 +24,7 @@ from matcha.images import (
 from matcha.licenses import format_license_report
 from matcha.prompts import build_negative_prompt, build_pose_prompt
 from matcha import preflight
+from matcha import vnccs
 
 app = typer.Typer(help="Matcha Engine — AI game asset pipeline")
 
@@ -283,6 +284,24 @@ def character(
             "and wire Character(image=...)"
         ),
     ),
+    backend: str = typer.Option(
+        "txt2img",
+        "--backend",
+        help=(
+            "txt2img = trusted first-success KSampler path (prompt+seed, "
+            "not a same-face lock). vnccs = queue real VNCCS 3.0 nodes "
+            "(CharacterCreatorV2 + Pose Studio + Character Generator). "
+            "Missing VNCCS nodes are an error — no silent fallback."
+        ),
+    ),
+    vnccs_ref: Optional[Path] = typer.Option(
+        None,
+        "--vnccs-ref",
+        help=(
+            "Optional Character Cloner reference image (not IP-Adapter). "
+            "Implies --backend vnccs. Requires CharacterCloner nodes."
+        ),
+    ),
 ):
     """Generate character assets and optionally deploy to Ren'Py."""
     if not config.exists():
@@ -323,6 +342,16 @@ def character(
             typer.echo(str(e), err=True)
             raise typer.Exit(1)
 
+    backend_key = (backend or "txt2img").strip().lower()
+    if backend_key not in {"txt2img", "vnccs"}:
+        typer.echo("--backend must be txt2img or vnccs", err=True)
+        raise typer.Exit(1)
+    if vnccs_ref is not None:
+        backend_key = "vnccs"
+        if not vnccs_ref.expanduser().exists():
+            typer.echo(f"VNCCS reference image not found: {vnccs_ref}", err=True)
+            raise typer.Exit(1)
+
     if (deploy or copy_only) and project is not None:
         if is_love32_project(project):
             typer.echo(
@@ -349,6 +378,26 @@ def character(
     typer.echo(f"Checkpoint: {char_config.checkpoint}")
     typer.echo(f"LoRA: {char_config.lora or '(none)'}")
     typer.echo(f"Seed: {run_seed} (shared across poses; retries offset)")
+    if backend_key == "vnccs":
+        typer.echo(
+            "Backend: vnccs — same-face lock via VNCCS "
+            "(CharacterCreatorV2 + VNCCS_PoseStudio + "
+            "VNCCS_CharacterGenerator). prompt+seed is not a lock."
+        )
+        if vnccs_ref is not None:
+            typer.echo(f"VNCCS Character Cloner ref: {vnccs_ref}")
+        typer.echo(
+            "VNCCS Control Center uses its own Qwen-Image-Edit models "
+            "(download in the VNCCS UI). YAML checkpoint is for the "
+            "Character Creator preview only. IPA / consistency_denoise "
+            "stay off on this path."
+        )
+    else:
+        typer.echo(
+            "Backend: txt2img — trusted first-success path "
+            "(--lora none). prompt+seed is not a same-face lock; "
+            "use --backend vnccs after installing VNCCS + VNCCS Utils."
+        )
     typer.echo(format_license_report(char_config.checkpoint, char_config.lora))
     if char_config.lora:
         typer.echo(
@@ -372,6 +421,7 @@ def character(
 
     # Preflight: verify the server knows these models before queueing
     # anything, so a wrong name is one clear error, not N opaque 400s.
+    vnccs_status = None
     try:
         ipa = (
             char_config.ip_adapter_file
@@ -390,10 +440,26 @@ def character(
             ip_adapter_file=ipa,
             clip_vision=cv,
         )
+        if backend_key == "vnccs":
+            vnccs_status = preflight.validate_vnccs(
+                comfyui, require_cloner=vnccs_ref is not None
+            )
     except PreflightError as e:
         typer.echo(f"Preflight failed: {e}", err=True)
         raise typer.Exit(1)
     typer.echo("Preflight OK: models found on server")
+    if backend_key == "vnccs" and vnccs_status is not None:
+        typer.echo(
+            "Preflight OK: VNCCS nodes "
+            f"(clothes={'yes' if vnccs_status.clothes_ok else 'no'}, "
+            f"cloner={'yes' if vnccs_status.cloner_ok else 'no'})"
+        )
+        if not vnccs_status.clothes_ok:
+            typer.echo(
+                "ClothesDesigner / VNCCS_ClothesGenerator not installed — "
+                "outfit families go into CharacterCreatorV2 additional_details "
+                "only (Step 2 clothes graph skipped)."
+            )
 
     if dry_run:
         typer.echo("Dry run — config and models validated, no generation")
@@ -406,12 +472,24 @@ def character(
             typer.echo(
                 "Next: generate (no LoRA) — trusted first-success path is ready."
             )
+        if backend_key == "vnccs":
+            typer.echo(
+                "Next (same-face): generate with --backend vnccs. "
+                "Keep the ComfyUI tab open if you want Pose Studio's "
+                "WebGL captures; otherwise Matcha injects headless pose plates."
+            )
         return
 
     out_dir = Path(char_config.output_dir).expanduser()
     out_dir.mkdir(parents=True, exist_ok=True)
 
     generator = ComfyUIGenerator(server_address=comfyui)
+    clone_filename = None
+    if backend_key == "vnccs" and vnccs_ref is not None:
+        clone_filename = generator.upload_image(
+            vnccs_ref.expanduser().read_bytes(),
+            filename=f"matcha_vnccs_ref_{vnccs_ref.name}",
+        )
     base_negative = char_config.negative_prompt
 
     generated: list[tuple[str, bytes, Path]] = []
@@ -456,11 +534,13 @@ def character(
         )
         negative = build_negative_prompt(base_negative, override)
         use_img2img = (
-            reference_bytes is not None
+            backend_key != "vnccs"
+            and reference_bytes is not None
             and char_config.consistency_denoise < 1.0
         )
         use_ipa = (
-            reference_bytes is not None
+            backend_key != "vnccs"
+            and reference_bytes is not None
             and char_config.ip_adapter_weight > 0
         )
         modes = []
@@ -468,7 +548,12 @@ def character(
             modes.append(f"img2img denoise={char_config.consistency_denoise}")
         if use_ipa:
             modes.append(f"ip-adapter w={char_config.ip_adapter_weight}")
-        mode = "+".join(modes) if modes else "txt2img"
+        if backend_key == "vnccs":
+            mode = "vnccs" + ("+cloner" if clone_filename else "+creator")
+            if vnccs_status and vnccs_status.clothes_ok and char_config.outfit_for(pose):
+                mode += "+clothes"
+        else:
+            mode = "+".join(modes) if modes else "txt2img"
         typer.echo(f"Generating: {pose} ({mode})...")
 
         last_err: Optional[Exception] = None
@@ -479,28 +564,40 @@ def character(
             if attempt:
                 typer.echo(f"  retry {attempt}/{retry_budget} (seed {pose_seed})...")
             try:
-                images = generator.generate(
-                    prompt=prompt,
-                    negative_prompt=negative,
-                    checkpoint=char_config.checkpoint,
-                    lora=char_config.lora,
-                    lora_strength=char_config.lora_strength,
-                    width=char_config.width,
-                    height=char_config.height,
-                    steps=char_config.steps,
-                    cfg=char_config.cfg,
-                    seed=pose_seed,
-                    init_image_bytes=reference_bytes if use_img2img else None,
-                    denoise=(
-                        char_config.consistency_denoise if use_img2img else 1.0
-                    ),
-                    ip_adapter_image_bytes=reference_bytes if use_ipa else None,
-                    ip_adapter_weight=(
-                        char_config.ip_adapter_weight if use_ipa else 0.0
-                    ),
-                    ip_adapter_file=char_config.ip_adapter_file,
-                    clip_vision=char_config.clip_vision,
-                )
+                if backend_key == "vnccs":
+                    images = vnccs.generate_pose(
+                        generator,
+                        char_config,
+                        pose,
+                        seed=pose_seed,
+                        clone_filename=clone_filename,
+                        include_clothes=bool(
+                            vnccs_status and vnccs_status.clothes_ok
+                        ),
+                    )
+                else:
+                    images = generator.generate(
+                        prompt=prompt,
+                        negative_prompt=negative,
+                        checkpoint=char_config.checkpoint,
+                        lora=char_config.lora,
+                        lora_strength=char_config.lora_strength,
+                        width=char_config.width,
+                        height=char_config.height,
+                        steps=char_config.steps,
+                        cfg=char_config.cfg,
+                        seed=pose_seed,
+                        init_image_bytes=reference_bytes if use_img2img else None,
+                        denoise=(
+                            char_config.consistency_denoise if use_img2img else 1.0
+                        ),
+                        ip_adapter_image_bytes=reference_bytes if use_ipa else None,
+                        ip_adapter_weight=(
+                            char_config.ip_adapter_weight if use_ipa else 0.0
+                        ),
+                        ip_adapter_file=char_config.ip_adapter_file,
+                        clip_vision=char_config.clip_vision,
+                    )
                 raw = images[0]
                 try:
                     assert_usable_image(raw, label=pose)

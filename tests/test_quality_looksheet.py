@@ -352,6 +352,8 @@ class TestCliGenerateLoop:
             "--retries",
             "--knockout-black",
             "--canvas",
+            "--backend",
+            "--vnccs-ref",
         ):
             assert flag in result.stdout
 

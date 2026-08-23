@@ -7,8 +7,8 @@ of STRATEGY.md §6.
 
 Status legend: `[x]` done · `[~]` in progress · `[ ]` not started · `[!]` blocked
 
-_Last updated: 2026-08-23 (Echo disk spec: 10 poses, 3 outfit families,
-`kite_male <pose>.png` copy-only; public outreach still deferred)_
+_Last updated: 2026-08-23 (VNCCS `--backend vnccs` wrap; Echo disk spec
+unchanged; public outreach still deferred)_
 
 ---
 
@@ -66,7 +66,8 @@ gitignored `sandbox-renpy/`.
   lint OK; `licenses` / `disclose` OK.
 - **Mac / MPS limits (document in README, do not hide):** img2img and
   IP-Adapter corrupt — leave off locally (`consistency_denoise: 1.0`,
-  `ip_adapter_weight: 0`). Consistency = prompt + shared seed. CUDA IPA is
+  `ip_adapter_weight: 0`). prompt+seed is **not** a same-face lock;
+  `--backend vnccs` is (after installing VNCCS + Utils). CUDA IPA is
   Phase 2 stretch / Phase 3 Pro value-add, **not** a Phase 2 exit gate.
   After heavy IPA runs, fully quit ComfyUI (or reboot) before the next clean
   generation.
@@ -166,6 +167,10 @@ not an exit criterion.
 
 **Stretch (not an exit gate)**
 
+- [x] VNCCS wrap (`--backend vnccs`) — preflight real nodes, queue shipped
+      3.0 graph (CharacterCreatorV2 / Pose Studio / Character Generator);
+      no silent prompt+seed fallback. IPA / `consistency_denoise < 1.0`
+      stay off on MPS. 2026-08-23
 - [ ] CUDA IP-Adapter retest when a GPU is available
 - [ ] Document “Mac = prompt+seed only” next to any CUDA-improved path
 

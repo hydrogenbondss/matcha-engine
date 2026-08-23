@@ -89,7 +89,8 @@ The paid wedge. Everything here exists because of a verified pain or risk:
 1. **YAML character config** → full pose × expression × outfit matrix.
    Checkpoint + LoRA are **config fields, not hardcoded** (lesson from the
    2026-07-15 debugging session).
-2. **Consistency pipeline** — benchmark VNCCS vs. own workflow; pick or wrap.
+2. **Consistency pipeline** — wrap VNCCS (MIT), do not reimplement.
+   `--backend vnccs` queues their 3.0 nodes. prompt+seed is not a lock.
 3. **Ren'Py deploy** — correct folders/naming + generated `layeredimage`,
    side-image, and `Character` scaffolding. The differentiator; over-invest here.
 4. **Preflight validation** — check checkpoint/LoRA against ComfyUI

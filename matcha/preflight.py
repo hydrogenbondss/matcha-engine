@@ -11,6 +11,14 @@ import urllib.error
 import urllib.request
 
 from matcha.errors import PreflightError
+from matcha.vnccs import (
+    CLONER_NODES,
+    CLOTHES_NODES,
+    INSTALL_HINT,
+    REQUIRED_VNCCS_NODES,
+    REQUIRED_VNCCS_UTILS_NODES,
+    VNCCSStatus,
+)
 
 # A real SD checkpoint is gigabytes; anything under this is a failed
 # download (LFS pointer, HTML error page) that will fail to deserialize.
@@ -22,6 +30,16 @@ def _object_info(server_address: str, node: str) -> dict:
     try:
         with urllib.request.urlopen(url, timeout=10) as resp:
             return json.loads(resp.read())
+    except urllib.error.HTTPError as e:
+        if e.code == 404:
+            return {}
+        raise PreflightError(
+            f"Cannot reach ComfyUI at {server_address}: {e}. "
+            "Is the server running? Health-check first:\n"
+            f"  curl -s -o /dev/null -w '%{{http_code}}\\n' "
+            f"http://{server_address}/\n"
+            "(expect 200 — connection refused means ComfyUI is not up)"
+        ) from e
     except (urllib.error.URLError, OSError) as e:
         raise PreflightError(
             f"Cannot reach ComfyUI at {server_address}: {e}. "
@@ -30,6 +48,12 @@ def _object_info(server_address: str, node: str) -> dict:
             f"http://{server_address}/\n"
             "(expect 200 — connection refused means ComfyUI is not up)"
         ) from e
+
+
+def node_registered(server_address: str, node: str) -> bool:
+    """True if ``/object_info/{node}`` lists that class_type."""
+    info = _object_info(server_address, node)
+    return bool(info.get(node))
 
 
 def _available(info: dict, node: str, field: str) -> list[str]:
@@ -102,6 +126,54 @@ def validate_models(
                 "Download CLIP-ViT-H-14-laion2B-s32B-b79K.safetensors into "
                 "ComfyUI/models/clip_vision/ (see ComfyUI_IPAdapter_plus README)."
             )
+
+
+def validate_vnccs(
+    server_address: str,
+    *,
+    require_cloner: bool = False,
+) -> VNCCSStatus:
+    """Raise PreflightError unless VNCCS + Utils nodes are on the server.
+
+    Does not fall back to prompt+seed. Missing nodes get the install hint.
+    Clothes / cloner are optional extras reported on the status object.
+    """
+    missing_required: list[str] = []
+    for node in REQUIRED_VNCCS_NODES + REQUIRED_VNCCS_UTILS_NODES:
+        if not node_registered(server_address, node):
+            missing_required.append(node)
+
+    missing_optional: list[str] = []
+    clothes_ok = True
+    for node in CLOTHES_NODES:
+        if not node_registered(server_address, node):
+            clothes_ok = False
+            missing_optional.append(node)
+    cloner_ok = True
+    for node in CLONER_NODES:
+        if not node_registered(server_address, node):
+            cloner_ok = False
+            missing_optional.append(node)
+
+    if missing_required:
+        listed = ", ".join(missing_required)
+        raise PreflightError(
+            f"VNCCS backend requested but these nodes are missing: {listed}.\n"
+            + INSTALL_HINT
+        )
+    if require_cloner and not cloner_ok:
+        listed = ", ".join(n for n in CLONER_NODES if n in missing_optional)
+        raise PreflightError(
+            f"--vnccs-ref needs Character Cloner nodes: {listed}.\n"
+            + INSTALL_HINT
+        )
+    return VNCCSStatus(
+        required_ok=True,
+        missing_required=[],
+        clothes_ok=clothes_ok,
+        cloner_ok=cloner_ok,
+        missing_optional=missing_optional,
+    )
 
 
 def validate_model_file(path_bytes: int, name: str) -> None:

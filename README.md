@@ -84,8 +84,9 @@ output. Matcha defaults keep you safe; **do not turn them on** locally:
 | Resolution | `512×512` | Prefer over `512×768` (OOM risk) |
 | LoRA | off (`--lora none` / `lora: null`) | First-success path; some LoRAs black/NaN on MPS |
 | `consistency_denoise` | `1.0` (off) | Below `1.0` → glitched frames — leave off |
-| `ip_adapter_weight` | `0` (off) | IPA → noise/corruption on MPS — leave off |
+| `ip_adapter_weight` | `0` (off) | IPA → noise/corruption on MPS — leave off. **Not** the same-face path. |
 | LoRA clip strength | forced `0` by Matcha | Non-zero clip → half-static PNGs |
+| `--backend vnccs` | opt-in | Same-face lock. Requires VNCCS + Utils. See below. |
 
 Start ComfyUI with these flags (adjust the path if your install is not
 `~/ComfyUI`). **Do not** pass `--force-fp16` — it produces solid black PNGs:
@@ -97,9 +98,12 @@ cd ~/ComfyUI && ./venv/bin/python main.py \
   --fp32-vae --cpu-vae --lowvram --use-split-cross-attention
 ```
 
-Consistency on MPS is **prompt + shared seed** for now. Identity lock via
-IP-Adapter or `consistency_denoise < 1.0` is a later CUDA path — do not turn
-those on locally, and do not drop a live Echo PNG in as a reference. Expect
+**prompt + shared seed is not a same-face lock.** It is the trusted
+512×512 `--lora none` first-success path. Identity lock is **VNCCS**
+(`--backend vnccs`) after you install those nodes. Do **not** turn on
+IP-Adapter or `consistency_denoise < 1.0` on Mac MPS — they corrupt,
+and they are not the VNCCS path. Do not drop a live Echo PNG in as an
+IP-Adapter reference. Expect
 **several minutes per pose** on Mac MPS (four poses can take ~15–25+ minutes)
 — the CLI prints each pose name as it starts; it is not hung. After a heavy
 IP-Adapter experiment, fully quit ComfyUI (or reboot) before the next clean
@@ -109,6 +113,58 @@ Keep ComfyUI in **one durable session**. Matcha does not manage that process.
 A second generate (or a UI "interrupt") that issues a global interrupt can
 kill an in-flight pose. If a run dies mid-batch, already-accepted PNGs stay
 on disk (see **Partial runs** below).
+
+## Same-face lock = VNCCS (not prompt+seed)
+
+[VNCCS](https://github.com/AHEKOT/ComfyUI_VNCCS) (MIT) is the character
+consistency engine. Matcha does **not** compete with it on generation —
+`--backend vnccs` queues their shipped 3.0 graph (Control Center →
+Character Creator **or** Character Cloner → Pose Studio → Character
+Generator) via the same ComfyUI `/prompt` API. If those nodes are missing,
+Matcha **errors** with install steps. It will not silently fall back to
+txt2img and call that consistent.
+
+Jeffrey's Mac today has ComfyUI at `~/ComfyUI` with `ComfyUI_IPAdapter_plus`
+only. **VNCCS is not installed there yet.** IP-Adapter stays off.
+
+### Install VNCCS on Mac
+
+ComfyUI Manager (easiest):
+
+1. Search and install **VNCCS - Visual Novel Character Creation Suite**
+2. Search and install **VNCCS Utils** (Pose Studio lives here)
+3. Restart ComfyUI
+4. Open a VNCCS 3.0 workflow. In **Control Center**, download the
+   recommended Qwen-Image-Edit GGUF + helper LoRAs (Pose Studio QIE,
+   Clothes Core, …). Wiki: [Installation-and-Updates](https://github.com/AHEKOT/ComfyUI_VNCCS/wiki/Installation-and-Updates)
+
+Manual:
+
+```bash
+cd ~/ComfyUI/custom_nodes
+git clone https://github.com/AHEKOT/ComfyUI_VNCCS
+git clone https://github.com/AHEKOT/ComfyUI_VNCCS_Utils
+# restart ComfyUI, then use Control Center to pull models
+```
+
+Then:
+
+```bash
+.venv/bin/matcha character configs/kite_male.yaml --backend vnccs --dry-run
+.venv/bin/matcha character configs/kite_male.yaml --backend vnccs --poses neutral
+```
+
+`--vnccs-ref some.png` is optional Character **Cloner** (reference collage).
+That is **not** IP-Adapter and does not turn IPA on.
+
+Honest limits: VNCCS 3.0 is UI-heavy (`widget_data` / Pose Studio WebGL).
+Matcha fills their widgets from YAML (identity + pose + outfit families)
+and injects headless pose plates so Pose Studio can emit IMAGE without a
+browser tab. Keep the ComfyUI tab open if you want their 3D captures.
+Control Center models are **Qwen-Image-Edit**, not the YAML Anything V5
+checkpoint — that checkpoint is only used for the Character Creator
+preview (`generation_mode: illustrious`). Default `--backend txt2img`
+/`--lora none` stays the trusted 512 first-success path.
 
 ## Trusted first success
 
@@ -154,7 +210,7 @@ PNGs (or use `--copy-only`) instead of letting Matcha write the live script.
 
 | Command | What it does |
 |---|---|
-| `matcha character <config.yaml>` | Generate sprites; `--poses`, `--copy-only`, `--deploy`, `--dry-run`, `--lora none` |
+| `matcha character <config.yaml>` | Generate sprites; `--backend vnccs` for same-face; `--poses`, `--copy-only`, `--deploy`, `--dry-run`, `--lora none` |
 | `matcha licenses …` | Commercial-use status for checkpoint/LoRA (**not legal advice**) |
 | `matcha disclose …` | Draft Steam AI survey + itch.io AI-tag text |
 | `matcha init <name>` | Scaffold a project + example character YAML |
