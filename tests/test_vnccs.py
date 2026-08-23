@@ -139,8 +139,10 @@ class TestVNCCSPreflight:
         with mock.patch.object(preflight, "_object_info", no_cloner), mock.patch.object(
             preflight, "fetch_system_stats", return_value={}
         ):
-            with pytest.raises(PreflightError, match="Character Cloner"):
+            with pytest.raises(PreflightError, match="CharacterCloner") as exc:
                 preflight.validate_vnccs("x", require_cloner=True)
+            assert "not Character Creator" in str(exc.value)
+            assert "will not silently fall back" in str(exc.value)
 
     def test_yaml_reference_field_is_optional_path(self):
         cfg = _kite_cfg(reference=Path("./refs/kite_male_neutral.png"))
