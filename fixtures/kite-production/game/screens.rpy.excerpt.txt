@@ -1,0 +1,50 @@
+# EVIDENCE EXCERPT (not a full copy)
+# source_path: /Users/jeffreytse/Desktop/LOVE32/LOVE32/game/screens.rpy
+# source_sha256_full_original: 75ba9eea01b57aa70f2474337865684982ada4ab0f9c9a9c3c33b8606c3ed1a0
+# source_total_lines: 3485
+# line_ranges: 213-240,425-437
+# limitation: Only the say-chip on-stage tag lookup for kite_male/kite_female and the Kite namebox resolver. Rest of screens.rpy (3485 lines, all characters/UI) omitted.
+# format: lines between markers are verbatim source lines; the '# --- screens.rpy lines A-B ---' marker lines were added by the fixture builder.
+# --- screens.rpy lines 213-240 ---
+        tags = {
+            "blake": ("blake_male", "blake_female"),
+            "kite": ("kite_male", "kite_female"),
+            ## Neo/Nia share one LI line — either on-stage tag suppresses chip.
+            "neo": ("neo", "nia"),
+            "nia": ("nia", "neo"),
+            "remy": ("remy",),
+            "derek": ("derek",),
+            "marcus": ("marcus",),
+            "may": ("may",),
+            "dad": ("dad",),
+            "barbie": ("barbie",),
+        }.get(identity, ())
+        for tag in tags:
+            if renpy.showing(tag):
+                return True
+        ## Male Kite leftover: prefix match if a variant tag is planted
+        ## (kite_male crossed_arms etc.) and exact showing() missed it.
+        if identity == "kite":
+            try:
+                showing = renpy.get_showing_tags(layer="master")
+            except Exception:
+                showing = ()
+            for tag in showing:
+                name = str(tag)
+                if name.startswith("kite_male") or name.startswith("kite_female"):
+                    return True
+        return False
+# --- screens.rpy lines 425-437 ---
+        if player and key == str(player).strip().lower():
+            return "gui/resense/namebox_player.png"
+
+        if key in ("remy",):
+            return "gui/resense/namebox_remy.png"
+        if key in ("blake",):
+            return "gui/resense/namebox_blake.png"
+        if key in ("neo",):
+            return "gui/resense/namebox_neo.png"
+        if key in ("nia",):
+            return "gui/resense/namebox_nia.png"
+        if key in ("kite",):
+            return "gui/resense/namebox_kite.png"

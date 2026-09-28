@@ -1,0 +1,71 @@
+{
+  "timestamp": "2026-09-09 01:48 HKT",
+  "jeffrey_yes": [
+    "MaleKite_new_v19g"
+  ],
+  "his_words": "new kite male pass",
+  "wave": "malekite_v19g_neutral_install",
+  "source": "review/art_decisions_2026_09_01/mj_li_align/style_uniform_2026_09_07/male_kite/kite_male_bust_neutral_credits_v19g.png",
+  "contact": "style_uniform_2026_09_07/SHOW_ME_MALEKITE_ONLY.png",
+  "backups_this_pass": "game/images/_replaced_2026_09_09_malekite_v19g",
+  "stage_installed": [
+    {
+      "li": "MaleKite",
+      "slot": "neutral",
+      "kind": "upgrade",
+      "src": "review/art_decisions_2026_09_01/mj_li_align/style_uniform_2026_09_07/male_kite/kite_male_bust_neutral_credits_v19g.png",
+      "dest": "game/images/kite_male neutral.png",
+      "backup": "game/images/_replaced_2026_09_09_malekite_v19g/kite_male neutral.png",
+      "size": [
+        928,
+        1232
+      ],
+      "mode": "RGBA",
+      "hair_top": 96,
+      "content_bbox": [
+        161,
+        96,
+        766,
+        1059
+      ],
+      "bottom_pct": 86.0,
+      "cut_frac": 0.6412,
+      "mtime": "2026-09-09 01:48:49"
+    }
+  ],
+  "sides_installed": [
+    {
+      "li": "MaleKite",
+      "src_stage": "game/images/kite_male neutral.png",
+      "dest": "game/images/side_treated/side_kite_male.png",
+      "cream_paper": false,
+      "size": [
+        400,
+        400
+      ],
+      "backup": "game/images/_replaced_2026_09_09_malekite_v19g/side_treated/side_kite_male.png"
+    }
+  ],
+  "keeps_updated": [
+    {
+      "src": "game/images/kite_male neutral.png",
+      "dest": "review/art_decisions_2026_09_01/mj_li_align/_compare/KEEP_kite_male.png"
+    },
+    {
+      "src": "game/images/side_treated/side_kite_male.png",
+      "dest": "review/art_decisions_2026_09_01/mj_li_align/_compare/KEEP_side_kite_male.png"
+    }
+  ],
+  "not_touched": [
+    "kite_male gentle/relaxed/warm/tired/stressed/withdrawn/soft/smoking/crossed_arms",
+    "FemaleBlake",
+    "FemaleKite",
+    "Neo",
+    "MaleBlake",
+    "Nia",
+    "May",
+    "Remy",
+    "picker M1-6"
+  ],
+  "note": "Neutral + side only from one plate. Other kite_male exprs remain prior live (1200x992 family)."
+}

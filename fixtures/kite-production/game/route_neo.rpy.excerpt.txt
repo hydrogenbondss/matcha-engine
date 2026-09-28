@@ -1,0 +1,19 @@
+# EVIDENCE EXCERPT (not a full copy)
+# source_path: /Users/jeffreytse/Desktop/LOVE32/LOVE32/game/route_neo.rpy
+# source_sha256_full_original: a4f4553031b1fd1ace7979bdfd0329a829b4c93a74956ebf7714f12af8e30877
+# source_total_lines: 3621
+# line_ranges: 2610-2615,2670-2673
+# limitation: Only the single Kite cameo show/hide in Neo's route with context; rest of route_neo.rpy omitted.
+# format: lines between markers are verbatim source lines; the '# --- route_neo.rpy lines A-B ---' marker lines were added by the fixture builder.
+# --- route_neo.rpy lines 2610-2615 ---
+
+        narrator "By the time you arrive, the back room looks less like storage and more like a paper storm."
+
+        if kite_variant == "male":
+            show kite_male neutral at left
+        else:
+# --- route_neo.rpy lines 2670-2673 ---
+        kite "I'll survive ten minutes without either of you."
+
+        hide kite_male
+        hide kite_female

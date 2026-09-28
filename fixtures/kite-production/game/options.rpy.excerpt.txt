@@ -1,0 +1,51 @@
+# EVIDENCE EXCERPT (not a full copy)
+# source_path: /Users/jeffreytse/Desktop/LOVE32/LOVE32/game/options.rpy
+# source_sha256_full_original: 30c5887ea6792da2add705494b2a6570caef85346a6de86d1f6d622b21fef6b3
+# source_total_lines: 272
+# line_ranges: 211-253
+# limitation: Only the build.classify exclusion rules (which folders/files ship). Rest of options.rpy (config, GUI, other build settings) omitted; this shows build packaging, not runtime loadability.
+# format: lines between markers are verbatim source lines; the '# --- options.rpy lines A-B ---' marker lines were added by the fixture builder.
+# --- options.rpy lines 211-253 ---
+    ## Classify files as None to exclude them from the built distributions.
+
+    build.classify('**~', None)
+    build.classify('**.bak', None)
+    build.classify('**/.**', None)
+    build.classify('**/#**', None)
+    build.classify('**/thumbs.db', None)
+
+    ## Release hygiene: these paths are retained in the working repository
+    ## for provenance, review, and authoring, but are not runtime content.
+    build.classify('game/cache/**', None)
+    build.classify('game/saves/**', None)
+    build.classify('game/qa_scripts/**', None)
+    build.classify('game/tools/**', None)
+    ## QA / SDK-only labels — reachable via config.developer in the SDK;
+    ## keep them out of player distributions (anti–vibe-coded footgun).
+    build.classify('game/test_hub.rpy', None)
+    build.classify('game/kite_demo_quickstart.rpy', None)
+    build.classify('game/video_diagnostics.rpy', None)
+    build.classify('game/dev_sprite_lineup.rpy', None)
+    build.classify('game/**/__pycache__/**', None)
+    build.classify('game/**.pyc', None)
+    build.classify('game/**/_archive*/**', None)
+    build.classify('game/**/_intake/**', None)
+    build.classify('game/**/_legacy*/**', None)
+    build.classify('game/**/_originals/**', None)
+    build.classify('game/**/_pre_baseline*/**', None)
+    build.classify('game/**/_replaced*/**', None)
+    build.classify('game/**/_unused*/**', None)
+    build.classify('game/**/_visual_normalize_preview/**', None)
+    build.classify('game/**/player_display_bak/**', None)
+    build.classify('game/**/player_male_display_bak/**', None)
+    build.classify('game/**.md', None)
+    build.classify('game/errors.txt', None)
+    build.classify('game/log.txt', None)
+    build.classify('game/fix_narrator.py', None)
+    build.classify('game/gui/neo_snap_3d_prototype.html', None)
+    build.classify('game/gui/phone/nectar_demo.html', None)
+
+    ## To archive files, classify them as 'archive'.
+
+    # build.classify('game/**.png', 'archive')
+    # build.classify('game/**.jpg', 'archive')

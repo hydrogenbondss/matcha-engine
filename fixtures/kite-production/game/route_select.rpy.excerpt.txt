@@ -1,0 +1,19 @@
+# EVIDENCE EXCERPT (not a full copy)
+# source_path: /Users/jeffreytse/Desktop/LOVE32/LOVE32/game/route_select.rpy
+# source_sha256_full_original: 5507133b10af54513e5ec82996db02c392a7618397a2aee2ab26c1d2c51bc0a5
+# source_total_lines: 609
+# line_ranges: 54-64
+# limitation: Only the Kite route-card portrait selection. Other routes omitted.
+# format: lines between markers are verbatim source lines; the '# --- route_select.rpy lines A-B ---' marker lines were added by the fixture builder.
+# --- route_select.rpy lines 54-64 ---
+        if route == "kite":
+            if kite_variant == "female":
+                portrait = "images/side_treated/side_kite_female.png"
+            else:
+                portrait = "images/side_treated/side_kite_male.png"
+            return (
+                portrait,
+                "images/bg/bar_interior.png",
+                kite_name,
+                "Sharp-eyed, and quietly kind."
+            )

@@ -1,0 +1,53 @@
+# EVIDENCE EXCERPT (not a full copy)
+# source_path: /Users/jeffreytse/Desktop/LOVE32/LOVE32/game/route_friendships.rpy
+# source_sha256_full_original: 1305bd6ee6e64bb37de2e833b257920587f8e2c675d07185be16d80077978434
+# source_total_lines: 976
+# line_ranges: 59-63,157-160,220-223,246-249,307-310,343-346,507-510,650-653,931-934
+# limitation: Only the show/hide kite_male lines with 1-3 lines of context; surrounding friendship-route dialogue and logic omitted.
+# format: lines between markers are verbatim source lines; the '# --- route_friendships.rpy lines A-B ---' marker lines were added by the fixture builder.
+# --- route_friendships.rpy lines 59-63 ---
+    blake "That's why I like it."
+
+    if kite_variant == "male":
+        show kite_male neutral at left
+        with dissolve
+# --- route_friendships.rpy lines 157-160 ---
+            $ remy_phone_soft_open()
+            if kite_variant == "male":
+                show kite_male neutral at left
+            else:
+# --- route_friendships.rpy lines 220-223 ---
+            kite "Don't thank me yet. You haven't tried the drink."
+
+    hide kite_male
+    hide kite_female
+# --- route_friendships.rpy lines 246-249 ---
+
+    if kite_variant == "male":
+        show kite_male neutral at left
+    else:
+# --- route_friendships.rpy lines 307-310 ---
+    kite "You have good taste in damaged people."
+
+    hide kite_male
+    hide kite_female
+# --- route_friendships.rpy lines 343-346 ---
+    narrator "[kite_name] keeps glancing at [neo_obj] between other customers."
+
+    show kite_male neutral at left
+    if neo_variant == "male":
+# --- route_friendships.rpy lines 507-510 ---
+
+    hide buddy
+    hide kite_male
+    hide kite_female
+# --- route_friendships.rpy lines 650-653 ---
+    narrator "[neo_name] is behind the counter — not working, just belonging. Leaning on the service side like [neo_subj] is allowed to be there."
+
+    show kite_male neutral at left
+    if neo_variant == "male":
+# --- route_friendships.rpy lines 931-934 ---
+
+    hide buddy
+    hide kite_male
+    hide kite_female

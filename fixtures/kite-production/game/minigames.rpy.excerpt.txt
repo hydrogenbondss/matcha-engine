@@ -1,0 +1,19 @@
+# EVIDENCE EXCERPT (not a full copy)
+# source_path: /Users/jeffreytse/Desktop/LOVE32/LOVE32/game/minigames.rpy
+# source_sha256_full_original: 32633c9dc7b31e9c3c65d588bd7d3dfbeee0a41cad7eee3ee14f51bb5d2eb089
+# source_total_lines: 6542
+# line_ranges: 5202-5212
+# limitation: Only the Cocktail Time minigame gallery entry referencing kite_male relaxed; rest of minigames.rpy (6542 lines) omitted, including any variant switching of this entry not captured here.
+# format: lines between markers are verbatim source lines; the '# --- minigames.rpy lines A-B ---' marker lines were added by the fixture builder.
+# --- minigames.rpy lines 5202-5212 ---
+        {
+            "name": "Cocktail Time",
+            "no": "01",
+            "accent": LOVE32_AMBER,
+            "li": "kite_male relaxed",
+            "thumb": "bg bar_counter_night",
+            "unlock": "minigame_cocktail_unlocked",
+            "launch": "cocktail",
+            "goal": "Balance Kite's drink.",
+            "score_how": "Match weight, edge, and nerve.",
+            "lock_copy": "Meet this version of Kite in story mode to unlock.",
