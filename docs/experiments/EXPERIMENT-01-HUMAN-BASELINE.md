@@ -109,130 +109,182 @@ elapsed_time:
   test_case: A
   item_type: ASSET
   asset_path: assets/kite_male_dark.png
-  status:
-  reason:
+  status: ASSET_ACTION
+  reason: >-
+    This frozen production Kite sprite depicts the character's head and current hairstyle. Changing the canonical hairstyle to shoulder-length dark hair changes what this asset depicts.
   evidence:
-    -
+    - source_path: assets/kite_male_dark.png
+      anchor_type: asset
+      anchor: sha256:d67a8f71a0e055603d59aa5f6af3437d46206981c9929ce6da481440d7593f6d
+      fact: The frozen production sprite depicts Kite with the current hairstyle, which is changed by Test A.
   game_usage:
     -
 - id: A-ASSET-04
   test_case: A
   item_type: ASSET
   asset_path: assets/kite_male_dark_relaxed.png
-  status:
-  reason:
+  status: ASSET_ACTION
+  reason: >-
+    This frozen production Kite sprite depicts the character's head and current hairstyle. Changing the canonical hairstyle changes what this asset depicts.
   evidence:
-    -
+    - source_path: assets/kite_male_dark_relaxed.png
+      anchor_type: asset
+      anchor: sha256:26f1969b35afe1556eb87e4929f662ea0373093763a1c04cb317efd3150e5a43
+      fact: The frozen production sprite depicts Kite with the current hairstyle, which is changed by Test A.
   game_usage:
     -
 - id: A-ASSET-05
   test_case: A
   item_type: ASSET
   asset_path: assets/kite_male_dark_withdrawn.png
-  status:
-  reason:
+  status: ASSET_ACTION
+  reason: >-
+    This frozen production Kite sprite depicts the character's head and current hairstyle. Changing the canonical hairstyle changes what this asset depicts.
   evidence:
-    -
+    - source_path: assets/kite_male_dark_withdrawn.png
+      anchor_type: asset
+      anchor: sha256:42187a9344adca4c2a26a51e6b5155d869aa67ae42a233c7251817cea1f009da
+      fact: The frozen production sprite depicts Kite with the current hairstyle, which is changed by Test A.
   game_usage:
     -
 - id: A-ASSET-06
   test_case: A
   item_type: ASSET
   asset_path: assets/kite_male_gentle.png
-  status:
-  reason:
+  status: ASSET_ACTION
+  reason: >-
+    This frozen production Kite sprite depicts the character's head and current hairstyle. Changing the canonical hairstyle changes what this asset depicts.
   evidence:
-    -
+    - source_path: assets/kite_male_gentle.png
+      anchor_type: asset
+      anchor: sha256:33b6351638692e99ed21eeb17c609a375fc1d33c3c754e4d2e42dc155a3e874c
+      fact: The frozen production sprite depicts Kite with the current hairstyle, which is changed by Test A.
   game_usage:
     -
 - id: A-ASSET-07
   test_case: A
   item_type: ASSET
   asset_path: assets/kite_male_relaxed.png
-  status:
-  reason:
+  status: ASSET_ACTION
+  reason: >-
+    This frozen production Kite sprite depicts the character's head and current hairstyle. Changing the canonical hairstyle changes what this asset depicts.
   evidence:
-    -
+    - source_path: assets/kite_male_relaxed.png
+      anchor_type: asset
+      anchor: sha256:a070c5e8300aa4bd97768908bb1d5a4c0eca43504401b29f1a826bb1dd0ad924
+      fact: The frozen production sprite depicts Kite with the current hairstyle, which is changed by Test A.
   game_usage:
     -
 - id: A-ASSET-08
   test_case: A
   item_type: ASSET
   asset_path: assets/kite_male_smoking.png
-  status:
-  reason:
+  status: ASSET_ACTION
+  reason: >-
+    This frozen production Kite sprite depicts the character's head and current hairstyle. Changing the canonical hairstyle changes what this asset depicts.
   evidence:
-    -
+    - source_path: assets/kite_male_smoking.png
+      anchor_type: asset
+      anchor: sha256:0a3cc3d19d12e8effd81d332865d34e54d91c6f9415ac4234f36c7a69f96646f
+      fact: The frozen production sprite depicts Kite with the current hairstyle, which is changed by Test A.
   game_usage:
     -
 - id: A-ASSET-09
   test_case: A
   item_type: ASSET
   asset_path: assets/kite_male_soft.png
-  status:
-  reason:
+  status: ASSET_ACTION
+  reason: >-
+    This frozen production Kite sprite depicts the character's head and current hairstyle. Changing the canonical hairstyle changes what this asset depicts.
   evidence:
-    -
+    - source_path: assets/kite_male_soft.png
+      anchor_type: asset
+      anchor: sha256:32df57007cc98a8d023940427bbac30f3fbbfe190c6deeeb441b42180698b798
+      fact: The frozen production sprite depicts Kite with the current hairstyle, which is changed by Test A.
   game_usage:
     -
 - id: A-ASSET-10
   test_case: A
   item_type: ASSET
   asset_path: assets/kite_male_stressed.png
-  status:
-  reason:
+  status: ASSET_ACTION
+  reason: >-
+    This frozen production Kite sprite depicts the character's head and current hairstyle. Changing the canonical hairstyle changes what this asset depicts.
   evidence:
-    -
+    - source_path: assets/kite_male_stressed.png
+      anchor_type: asset
+      anchor: sha256:06646bfe838667a133513a7bef50d984210ad36b1e158b357ca8a0efd226840a
+      fact: The frozen production sprite depicts Kite with the current hairstyle, which is changed by Test A.
   game_usage:
     -
 - id: A-ASSET-11
   test_case: A
   item_type: ASSET
   asset_path: assets/kite_male_tired.png
-  status:
-  reason:
+  status: ASSET_ACTION
+  reason: >-
+    This frozen production Kite sprite depicts the character's head and current hairstyle. Changing the canonical hairstyle changes what this asset depicts.
   evidence:
-    -
+    - source_path: assets/kite_male_tired.png
+      anchor_type: asset
+      anchor: sha256:ca79e5aa3db24ef244510093f1176f772d5021ca575e2f4b2dd7be1adac42dc2
+      fact: The frozen production sprite depicts Kite with the current hairstyle, which is changed by Test A.
   game_usage:
     -
 - id: A-ASSET-12
   test_case: A
   item_type: ASSET
   asset_path: assets/kite_male_warm.png
-  status:
-  reason:
+  status: ASSET_ACTION
+  reason: >-
+    This frozen production Kite sprite depicts the character's head and current hairstyle. Changing the canonical hairstyle changes what this asset depicts.
   evidence:
-    -
+    - source_path: assets/kite_male_warm.png
+      anchor_type: asset
+      anchor: sha256:ef315af8367228a4c734be226ff89884842598769a1f6b76b0fede71ed054d1c
+      fact: The frozen production sprite depicts Kite with the current hairstyle, which is changed by Test A.
   game_usage:
     -
 - id: A-ASSET-13
   test_case: A
   item_type: ASSET
   asset_path: assets/kite_male_withdrawn.png
-  status:
-  reason:
+  status: ASSET_ACTION
+  reason: >-
+    This frozen production Kite sprite depicts the character's head and current hairstyle. Changing the canonical hairstyle changes what this asset depicts.
   evidence:
-    -
+    - source_path: assets/kite_male_withdrawn.png
+      anchor_type: asset
+      anchor: sha256:041a58e8c5649a9f80e67be0f3076051d8dcc6286115a374eb2d0e25827d1fec
+      fact: The frozen production sprite depicts Kite with the current hairstyle, which is changed by Test A.
   game_usage:
     -
 - id: A-ASSET-14
   test_case: A
   item_type: ASSET
   asset_path: assets/kite_tattoo.png
-  status:
-  reason:
+  status: UNAFFECTED
+  reason: >-
+    This frozen asset is an evidence close-up of Kite's tattoo/bare torso and does not depict the hairstyle or head. Changing the canonical hairstyle does not change what this asset depicts.
   evidence:
-    -
+    - source_path: assets/kite_tattoo.png
+      anchor_type: asset
+      anchor: sha256:2eb838636fc6dc1aff000d4f36957662c18ad3f7719c28a8d2f21492bdccff76
+      fact: The frozen fixture identifies this as a tattoo-detail close-up rather than a head/hairstyle depiction.
   game_usage:
     -
 - id: A-ASSET-15
   test_case: A
   item_type: ASSET
   asset_path: assets/side_kite_male.png
-  status:
-  reason:
+  status: ASSET_ACTION
+  reason: >-
+    This frozen side portrait depicts Kite's head and hairstyle. Changing the canonical hairstyle changes what this asset depicts.
   evidence:
-    -
+    - source_path: assets/side_kite_male.png
+      anchor_type: asset
+      anchor: sha256:baa592a3fae8be9cef1bedbedf739a549228670cb138db2f39b43638c7b19339
+      fact: The frozen side portrait depicts Kite with the current hairstyle, which is changed by Test A.
   game_usage:
     -
 ```
