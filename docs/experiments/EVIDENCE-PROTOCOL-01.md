@@ -73,9 +73,10 @@ The full limitation text is the `# limitation:` line in each excerpt header; tha
 **One relationship per scored CODE unit × scored ASSET pair.**
 
 - Do NOT create one relationship per source line.
-- Example: if `game/route_kite.rpy` references `reference/kite_male_neutral.png` at 17 lines, that is one relationship whose evidence contains all 17 source locations.
+- Example: if `game/route_kite.rpy` references `reference/kite_male_neutral.png` at 17 source locations, that is one relationship whose evidence array contains all 17 occurrences.
+- Repeated occurrences of the same CODE unit × ASSET pair go into that one relationship's evidence array. Evidence items use the anchor structure in §5.1; line numbers are locators only.
 
-Illustrative format example only. This is NOT a ground-truth classification of any item:
+Illustrative format example only. This is NOT a ground-truth classification of any item, and it shows only three occurrences:
 
 ```yaml
 relationships:
@@ -83,10 +84,32 @@ relationships:
     relationship_status: DOWNSTREAM_USAGE
     reason: "The source references the asset but remains valid when the image changes without changing the image identifier."
     evidence:
-      - game/route_kite.rpy:72
-      - game/route_kite.rpy:113
-      - game/route_kite.rpy:131
+      - source_path: game/route_kite.rpy
+        anchor_type: declaration
+        anchor: 'image kite_male neutral = _kite_sprite("kite_male_neutral.png")'
+        locator: "game/route_kite.rpy:17"
+        fact: "The frozen fixture maps the kite_male neutral identifier to kite_male_neutral.png."
+      - source_path: game/route_kite.rpy
+        anchor_type: statement
+        anchor: "show kite_male neutral at kite_first_night"
+        context: "label kite_interaction_1; male-kite branch, first-impression show"
+        locator: "game/route_kite.rpy:72"
+        fact: "The source displays the kite_male neutral image identifier."
+      - source_path: game/route_kite.rpy
+        anchor_type: statement
+        anchor: "show kite_male neutral at kite_first_night"
+        context: "label kite_interaction_1; inside the while result_key == \"kite_interlude\" loop"
+        locator: "game/route_kite.rpy:113"
+        fact: "The source displays the kite_male neutral image identifier."
+      - source_path: game/route_kite.rpy
+        anchor_type: statement
+        anchor: "show kite_male neutral at kite_first_night"
+        context: "label kite_interaction_1; scene reset after the kite_interlude loop"
+        locator: "game/route_kite.rpy:131"
+        fact: "The source displays the kite_male neutral image identifier."
 ```
+
+The three `statement` items share the same anchor; `context` distinguishes each occurrence (§5.1).
 
 ### Decision 5: ASSET schema
 
@@ -99,9 +122,13 @@ asset_path: <fixture-relative-path>
 status: <ASSET_ACTION|UNAFFECTED|REVIEW_REQUIRED>
 reason: <why this status applies to this test>
 evidence:
-  - source: <evidence source>
-    location: <fixture path or evidence location>
-    fact: <factual observation supporting the classification>
+  - source_path: <fixture-relative-path>
+    anchor_type: <allowed-type>
+    anchor: <stable-content-anchor>
+    context: <optional>
+    locator: <optional>
+    fingerprint: <optional>
+    fact: <factual observation>
 game_usage:
   - <fixture-relative game source location>
 ```
@@ -113,7 +140,7 @@ Fields:
 - `asset_path`: exactly one of the 15 scored ASSET paths (§4.1).
 - `status`: exactly one of `ASSET_ACTION`, `UNAFFECTED`, `REVIEW_REQUIRED`.
 - `reason`: why that asset receives that status for that specific test case.
-- `evidence`: factual evidence. Actual fixture image pixels are valid evidence.
+- `evidence`: factual evidence, recorded as anchor-structured evidence items (§5.1). Actual fixture image pixels are valid evidence (anchor type `asset`).
 - `game_usage`: known production usage locations. It is contextual, not a status. It may be an empty list.
 
 Status definitions:
@@ -160,29 +187,31 @@ Final ASSET scored-unit count: **15.**
 - The same eligible CODE set is used for A, B and C.
 - A CODE unit cannot enter or leave the denominator because of a test result.
 
-### 4.3 Final CODE count = 9
+### 4.3 Final CODE count = 8
 
-Full files (4):
+Full files (3):
 
 1. `game/route_kite.rpy`
 2. `game/li_sprite_normalization.rpy`
 3. `game/side_portraits.rpy`
-4. `game/characters.rpy`
 
 Eligible excerpts (5):
 
-5. `game/credits.rpy.excerpt.txt`
-6. `game/route_select.rpy.excerpt.txt`
-7. `game/route_friendships.rpy.excerpt.txt`
-8. `game/route_neo.rpy.excerpt.txt`
-9. `game/minigames.rpy.excerpt.txt`
+4. `game/credits.rpy.excerpt.txt`
+5. `game/route_select.rpy.excerpt.txt`
+6. `game/route_friendships.rpy.excerpt.txt`
+7. `game/route_neo.rpy.excerpt.txt`
+8. `game/minigames.rpy.excerpt.txt`
+
+Eligibility rule (frozen): A CODE unit is eligible only if it contains at least one relationship to one of the 15 scored ASSET units.
 
 Explicit exclusions:
 
+- `game/characters.rpy`: evidence-only, and excluded because it contains only `define kite = Character(...)` with no image attribute and no relationship to any of the 15 scored assets (Decision 6).
 - `game/options.rpy.excerpt.txt`: evidence-only (Decision 3).
 - `game/screens.rpy.excerpt.txt`: evidence-only, and excluded because the excerpt only detects a generic `kite_male*` stage tag and does not establish a relationship to any specific one of the 15 scored assets. A generic character-level relationship is insufficient under the fixed CODE unit × scored ASSET pair rule.
 
-Final CODE scored-unit count: **9**, frozen before ground truth and before experiment timing.
+Final CODE scored-unit count: **8**, frozen before ground truth and before experiment timing.
 
 ## 5. CODE output contract
 
@@ -195,23 +224,34 @@ source_path: <fixture-relative-path>
 file_status: <CODE_ACTION|DOWNSTREAM_USAGE|REVIEW_REQUIRED|UNAFFECTED>
 reason: <why the file receives this status for this test>
 evidence:
-  - source: <evidence source>
-    location: <source location>
+  - source_path: <fixture-relative-path>
+    anchor_type: <allowed-type>
+    anchor: <stable-content-anchor>
+    context: <optional>
+    locator: <optional>
+    fingerprint: <optional>
     fact: <factual observation>
 relationships:
   - related_asset: <one scored ASSET path>
     relationship_status: <CODE_ACTION|DOWNSTREAM_USAGE|REVIEW_REQUIRED|UNAFFECTED>
     reason: <why this relationship has this status>
     evidence:
-      - <all relevant source locations>
+      - source_path: <fixture-relative-path>
+        anchor_type: <allowed-type>
+        anchor: <stable-content-anchor>
+        context: <optional>
+        locator: <optional>
+        fingerprint: <optional>
+        fact: <factual observation>
 ```
 
 Allowed `file_status` and `relationship_status` values are exactly: `CODE_ACTION`, `DOWNSTREAM_USAGE`, `REVIEW_REQUIRED`, `UNAFFECTED`. No others.
 
-- `source_path` is exactly one of the 9 eligible CODE paths (§4.3).
+- `source_path` of the record is exactly one of the 8 eligible CODE paths (§4.3).
 - `related_asset` is exactly one of the 15 scored ASSET paths (§4.1).
 - Each scored CODE unit × scored ASSET pair appears at most once in `relationships` (Decision 4).
-- For an excerpt, source locations refer only to lines inside the excerpt's stated line ranges (Decision 2).
+- A relationship's evidence array contains all relevant occurrences, as anchor-structured evidence items (§5.1).
+- For an excerpt, evidence items cite only content inside the excerpt's stated line ranges (Decision 2).
 
 Relationship status meanings:
 
@@ -219,6 +259,72 @@ Relationship status meanings:
 - **`DOWNSTREAM_USAGE`:** the source references an affected asset, but the source remains valid and needs no edit just because the asset changed.
 - **`REVIEW_REQUIRED`:** the available evidence is insufficient to determine whether this relationship requires a source edit or points to an affected asset.
 - **`UNAFFECTED`:** the specified design change has no effect on this relationship; the related asset is unaffected and no edit is needed.
+
+### 5.1 Evidence items and evidence identity
+
+Every `evidence` entry in the ASSET schema (Decision 5) and in the CODE schema (file-level `evidence` and relationship `evidence`) uses this structure:
+
+```yaml
+evidence:
+  - source_path: <fixture-relative-path>
+    anchor_type: <allowed-type>
+    anchor: <stable-content-anchor>
+    context: <optional>
+    locator: <optional>
+    fingerprint: <optional>
+    fact: <factual observation>
+```
+
+**Evidence identity is `source_path + anchor_type + anchor`.**
+
+`context`, `locator`, and `fingerprint` are disambiguation/verification fields only; they do not define evidence identity.
+
+Line numbers are convenience locators only and must never be the sole evidence identifier.
+
+An anchor must identify the actual semantic/source content being cited.
+
+Allowed `anchor_type` values are exactly: `declaration`, `statement`, `function`, `label`, `assignment`, `config`, `excerpt_header`, `asset`, `metadata`.
+
+For repeated identical statements, the anchor may be the same semantic statement, but `context` and/or `fingerprint` MUST distinguish the occurrence when necessary.
+
+### 5.2 Stable-anchor examples
+
+Format examples only. These are NOT ground-truth classifications of any item. Both anchor strings are verbatim in the frozen fixture.
+
+```yaml
+source_path: game/route_friendships.rpy.excerpt.txt
+anchor_type: statement
+anchor: "show kite_male neutral at left"
+context: "male-kite branch"
+locator: "source game/route_friendships.rpy:59-63"
+fact: "The source displays the kite_male neutral image identifier."
+```
+
+```yaml
+source_path: game/route_kite.rpy
+anchor_type: declaration
+anchor: 'image kite_male neutral = _kite_sprite("kite_male_neutral.png")'
+locator: "game/route_kite.rpy:17"
+fact: "The frozen fixture maps the kite_male neutral identifier to kite_male_neutral.png."
+```
+
+### 5.3 Direct and fixture-proven relationships
+
+A CODE → ASSET relationship may be direct or fixture-proven through an explicit image-identifier declaration contained in the frozen fixture. Filename similarity or semantic guessing is not sufficient.
+
+Valid fixture-proven relationship:
+
+```text
+show kite_male neutral
+        ↓
+image kite_male neutral = _kite_sprite("kite_male_neutral.png")
+        ↓
+kite_male_neutral.png
+```
+
+- For transitive relationships, evidence must include both the usage anchor and the mapping declaration anchor.
+- One relationship per scored CODE unit × scored ASSET pair still applies. A fixture-proven relationship is not a second relationship for the same pair.
+- Repeated occurrences go into the same relationship's evidence array.
 
 ## 6. CODE file-status derivation
 
@@ -261,6 +367,7 @@ There is no scored `METADATA` item type. The following are evidence-only:
 - `reference/KEEP_kite_male.png`
 - `game/options.rpy.excerpt.txt`
 - `game/screens.rpy.excerpt.txt`
+- `game/characters.rpy` (contains only `define kite = Character(...)` with no image attribute and no relationship to any of the 15 scored assets)
 
 Evidence-only material:
 
@@ -363,7 +470,7 @@ Exact sequence:
 2. Enumerate the 15 ASSET units.
 3. Enumerate the CODE files and excerpts.
 4. Apply the fixed CODE eligibility rule.
-5. Freeze the final CODE denominator at 9.
+5. Freeze the final CODE denominator at 8.
 6. Freeze this protocol.
 7. Establish human ground truth.
 8. Run the Matcha evaluation.
@@ -376,7 +483,7 @@ The CODE count cannot change after step 5. A later discovery requiring a differe
 The human baseline runs only after the protocol and fixture are frozen. Per test case:
 
 - **Start:** when the human receives the exact frozen test request and the frozen fixture.
-- **Stop:** when the human has completed classifications for all 15 ASSET units and all 9 eligible CODE units, including required relationships, for that test.
+- **Stop:** when the human has completed classifications for all 15 ASSET units and all 8 eligible CODE units, including required relationships, for that test.
 
 The human may inspect:
 
@@ -436,7 +543,7 @@ Record: elapsed time, final output, unresolved items. No manual correction is ma
 ### 17.2 CODE scoring
 
 - Both file-level and relationship-level classification are evaluated.
-- The denominator is always the frozen 9 eligible CODE units per test. It is never changed based on a result.
+- The denominator is always the frozen 8 eligible CODE units per test. It is never changed based on a result.
 - Measure:
   - correct `CODE_ACTION`;
   - correct `DOWNSTREAM_USAGE`;
@@ -472,7 +579,7 @@ Known limitations. None of them automatically produces `REVIEW_REQUIRED`.
 - The LOVE32 working tree differs from HEAD.
 - The approved v19g reference differs from the frozen production neutral.
 - Outfit per plate is not explicitly encoded (the fixture manifest records outfit as UNKNOWN for every asset; comments in `game/route_kite.rpy` are the only in-fixture statements linking plates to clothing).
-- Some production sprites are unreferenced (`assets/kite_male_dark.png`, `assets/kite_male_dark_relaxed.png` and `assets/kite_male_dark_withdrawn.png` have no `.rpy` reference in the fixture manifest; `assets/kite_tattoo.png` is declared at `game/route_kite.rpy:10` but no `show` statement was found).
+- Some production sprites are unreferenced (`assets/kite_male_dark.png`, `assets/kite_male_dark_relaxed.png` and `assets/kite_male_dark_withdrawn.png` have no `.rpy` reference in the fixture manifest; `assets/kite_tattoo.png` is declared by `image evidence kite_tattoo = "images/evidence/kite_tattoo.png"` in `game/route_kite.rpy` but no `show` statement was found).
 - Some CODE evidence is excerpted (Decision 2).
 - The fixture game source was not executed.
 
