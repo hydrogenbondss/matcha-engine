@@ -95,10 +95,14 @@ elapsed_time:
   test_case: A
   item_type: ASSET
   asset_path: assets/kite_male_crossed_arms.png
-  status:
-  reason:
+  status: ASSET_ACTION
+  reason: >-
+    This is a production Kite character sprite depicting his full stage presentation, including his head and hairstyle. Changing Kite's canonical hairstyle to shoulder-length dark hair changes what this asset depicts, so the existing sprite requires regeneration or replacement.
   evidence:
-    -
+    - source_path: assets/kite_male_crossed_arms.png
+      anchor_type: asset
+      anchor: sha256:3e02cec081434374e582fed11b18ed1ab8c0b76625429803de8e6ff5bed502fd
+      fact: The frozen fixture contains this 928×1232 production Kite character sprite; the proposed canonical hairstyle change alters the character depiction in this sprite.
   game_usage:
     -
 - id: A-ASSET-03
