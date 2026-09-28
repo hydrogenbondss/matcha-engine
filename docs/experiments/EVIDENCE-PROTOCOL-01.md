@@ -109,7 +109,7 @@ relationships:
         fact: "The source displays the kite_male neutral image identifier."
 ```
 
-The three `statement` items share the same anchor; `context` distinguishes each occurrence (§5.1).
+The three statement entries share the same evidence identity, but their `context` values distinguish the three evidence occurrences.
 
 ### Decision 5: ASSET schema
 
@@ -275,13 +275,17 @@ evidence:
     fact: <factual observation>
 ```
 
-**Evidence identity is `source_path + anchor_type + anchor`.**
+**Evidence identity** is `source_path + anchor_type + anchor` and identifies the underlying semantic/source evidence.
 
-`context`, `locator`, and `fingerprint` are disambiguation/verification fields only; they do not define evidence identity.
+**Evidence occurrence identity** is required when the same evidence anchor occurs multiple times within the same `source_path`. In that case, `context` and/or `fingerprint` MUST distinguish the specific occurrence.
 
-Line numbers are convenience locators only and must never be the sole evidence identifier.
+`locator` is a convenience locator only and never defines evidence identity or occurrence identity.
 
 An anchor must identify the actual semantic/source content being cited.
+
+Two evidence items may share the same evidence identity when they represent repeated occurrences of the same semantic anchor. They are distinct evidence occurrences when `context` and/or `fingerprint` distinguishes them.
+
+Line numbers are convenience locators only and must never be the sole evidence identifier.
 
 Allowed `anchor_type` values are exactly: `declaration`, `statement`, `function`, `label`, `assignment`, `config`, `excerpt_header`, `asset`, `metadata`.
 
