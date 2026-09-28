@@ -479,6 +479,6 @@ The only path added on `matcha-2-reset` relative to `main` is `docs/MATCHA-2-RES
 Diff stat (`git diff --stat main...matcha-2-reset`), recorded after the final commit on this branch:
 
 ```
-docs/MATCHA-2-RESET.md | 484 +++++++++++++++++++++++++++++++++++++++++++++++++
+ docs/MATCHA-2-RESET.md | 484 +++++++++++++++++++++++++++++++++++++++++++++++++
  1 file changed, 484 insertions(+)
 ```
