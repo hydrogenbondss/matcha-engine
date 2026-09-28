@@ -1,297 +1,514 @@
 # Evidence Protocol #1: Kite static-asset impact
 
-This protocol defines how Experiment #1 is scored against the frozen Kite fixture. It does not run the experiment, and it assigns no ground-truth status to any item.
+Status: **frozen methodology.** This protocol contains no open decisions. The previous protocol contained exactly six provisional decisions; all six are now permanently resolved (§3).
 
-## 1. Purpose and non-goals
+Path convention: unless stated otherwise, paths are relative to the fixture root `fixtures/kite-production/` (for example `assets/kite_male_warm.png`, `game/route_kite.rpy`). Repository paths such as `docs/experiments/KITE-FIXTURE-01.md` are relative to the matcha-engine repository root.
 
-**Purpose.** Fix, before any experiment runs, how ground truth and Matcha output are recorded for this question: "If Kite's canonical visual design changes, which existing production assets and game references are actually affected?" The question is asked separately for each test case in §3, against the frozen fixture in §2.
+## 1. Base and immutability
 
-**Non-goals.** This document does not:
-- run the experiment or produce any result;
-- assign a ground-truth status to any fixture item;
-- measure time or effort;
-- judge strategy, usefulness or market position;
-- change the fixture.
+- This protocol's branch is based on `matcha-2-kite-fixture` at commit `c1364f48ff92b248b3cd2aa7729c6014648008aa`.
+- The fixture `fixtures/kite-production/` is byte-identical to that commit.
+- This protocol does not alter `fixtures/kite-production/`, and nothing done under it may alter the fixture.
 
-## 2. Frozen baseline
+## 2. Purpose
 
-- **The baseline is the frozen fixture** `fixtures/kite-production/` at matcha-engine commit `c1364f48ff92b248b3cd2aa7729c6014648008aa`. It represents LOVE32 Git HEAD `f4816ca90c9a15bc927a63df5148050199ad2842`.
-- **The dirty LOVE32 working tree is not the baseline.** Nothing in the working tree after that HEAD is in scope. That includes deleted files, untracked backups and later edits.
-- **Five sprites are the frozen committed versions.** `kite_male_neutral`, `kite_male_relaxed`, `kite_male_smoking`, `kite_male_soft` and `kite_male_tired` are deleted in the LOVE32 working tree but present at HEAD. For this protocol they are the frozen committed versions held in the fixture:
-  - `reference/kite_male_neutral.png`
-  - `assets/kite_male_relaxed.png`
-  - `assets/kite_male_smoking.png`
-  - `assets/kite_male_soft.png`
-  - `assets/kite_male_tired.png`
-- **A working-tree difference is not uncertainty.** An item is never marked `REVIEW_REQUIRED` because the LOVE32 working tree differs from HEAD. That difference is a documented source-state limitation (§12), not experimental uncertainty.
-- **Two neutral images, kept separate on purpose:**
-  - `reference/kite_male_neutral.png` is the frozen production-baseline asset.
-  - `reference/kite_male_bust_neutral_credits_v19g.png` is approved-reference evidence.
-  - They differ. That difference is recorded as a historical inconsistency (§12). It does not by itself make any test case `REVIEW_REQUIRED`.
-- **What ground truth answers:** each test case is answered against the frozen production baseline. v19g is used as canonical-reference evidence where it is relevant.
+Evidence Protocol #1 defines the exact methodology for the later controlled experiment:
 
-## 3. Test cases
+> Given a specific canonical visual change to Kite, can Matcha correctly identify which existing static production assets require action, while avoiding unnecessary work?
 
-There are exactly three test cases:
+This document is methodology only. It does NOT:
 
-- **A.** Major hairstyle change.
-- **B.** Materially different outfit.
-- **C.** Small ear-accessory change.
+- run the experiment;
+- assign ground-truth classifications;
+- measure human or Matcha time;
+- modify the fixture;
+- modify Matcha production code;
+- generate assets;
+- connect to ComfyUI;
+- access LOVE32;
+- make a product or strategy judgment.
 
-No further detail of the changes is defined here.
+## 3. The six original decisions: all resolved
 
-*Fixture context only. This does not define the changes:*
-- `metadata/KITE_ASSET_MASTERLIST.md` video prompts describe male Kite with a "shaved head".
-- Comments in `game/route_kite.rpy` link some plates to an apron, a henley or a dark shirt (for example lines 16, 747, 1575, 1621, 1624, 1739, 2006).
-- In the fixture, earrings are mentioned only for female Kite (`KITE_ASSET_MASTERLIST.md` prompts for the female scenes). No fixture file mentions an ear accessory for male Kite.
+### Decision 1: KEEP asset
 
-## 4. Scoring scope
+- `reference/KEEP_kite_male.png` is **evidence-only**.
+- It is not a scored production asset, because it is a review-folder copy documenting the approved 2026-09-09 install, not the frozen production-baseline file at LOVE32 HEAD.
+- The scored ASSET set is exactly: the 14 files under `fixtures/kite-production/assets/` plus `reference/kite_male_neutral.png` = **15 scored ASSET units** (listed in §4.1).
+- `reference/KEEP_kite_male.png` may be cited as canonical-reference evidence.
 
-Experiment #1 scores only two item types: `ASSET` and `CODE`. Everything else in the fixture is evidence-only.
+### Decision 2: Excerpts
 
-### 4.1 Scored units
+- The five excerpts `game/credits.rpy.excerpt.txt`, `game/route_select.rpy.excerpt.txt`, `game/route_friendships.rpy.excerpt.txt`, `game/route_neo.rpy.excerpt.txt` and `game/minigames.rpy.excerpt.txt` are **eligible scored CODE units**, because they contain direct relationships to scored static assets.
+- Their scope is strictly limited to the source line ranges stated in each excerpt header.
+- An excerpt:
+  - represents only those stated lines;
+  - does not establish anything about the rest of the original source file;
+  - retains the original source path;
+  - retains the original full-file SHA-256;
+  - retains the stated source line ranges;
+  - retains its stated limitation.
 
-**Frozen Kite asset items (item type `ASSET`), 15 items:**
-- `reference/kite_male_neutral.png`
-- `assets/kite_male_gentle.png`
-- `assets/kite_male_stressed.png`
-- `assets/kite_male_warm.png`
-- `assets/kite_male_withdrawn.png`
-- `assets/kite_male_crossed_arms.png`
-- `assets/kite_male_relaxed.png`
-- `assets/kite_male_smoking.png`
-- `assets/kite_male_soft.png`
-- `assets/kite_male_tired.png`
-- `assets/kite_male_dark.png`
-- `assets/kite_male_dark_relaxed.png`
-- `assets/kite_male_dark_withdrawn.png`
-- `assets/side_kite_male.png`
-- `assets/kite_tattoo.png`
+Excerpt headers as frozen in the fixture:
 
-**Frozen relevant game-source items (item type `CODE`), 11 items:**
-- Full copies:
-  - `game/route_kite.rpy`
-  - `game/li_sprite_normalization.rpy`
-  - `game/side_portraits.rpy`
-  - `game/characters.rpy`
-- Excerpts (provisional handling, see §4.3):
-  - `game/credits.rpy.excerpt.txt`
-  - `game/screens.rpy.excerpt.txt`
-  - `game/route_select.rpy.excerpt.txt`
-  - `game/route_friendships.rpy.excerpt.txt`
-  - `game/route_neo.rpy.excerpt.txt`
-  - `game/minigames.rpy.excerpt.txt`
-  - `game/options.rpy.excerpt.txt`
+| Excerpt | Original source path (LOVE32-relative) | Original full-file SHA-256 | Original total lines | Stated line ranges | Stated limitation (summary) |
+|---|---|---|---|---|---|
+| `game/credits.rpy.excerpt.txt` | `game/credits.rpy` | `e77b031c7c5f109552170736822afdd7d8f44200b0bfcf7b986ff0ae31270f88` | 1165 | 106-120, 164-176, 668-678 | Kite credits-polaroid sprite resolver, its caller, and the credits hide statement only |
+| `game/route_select.rpy.excerpt.txt` | `game/route_select.rpy` | `5507133b10af54513e5ec82996db02c392a7618397a2aee2ab26c1d2c51bc0a5` | 609 | 54-64 | Kite route-card portrait selection only |
+| `game/route_friendships.rpy.excerpt.txt` | `game/route_friendships.rpy` | `1305bd6ee6e64bb37de2e833b257920587f8e2c675d07185be16d80077978434` | 976 | 59-63, 157-160, 220-223, 246-249, 307-310, 343-346, 507-510, 650-653, 931-934 | show/hide `kite_male` lines with 1-3 lines of context only |
+| `game/route_neo.rpy.excerpt.txt` | `game/route_neo.rpy` | `a4f4553031b1fd1ace7979bdfd0329a829b4c93a74956ebf7714f12af8e30877` | 3621 | 2610-2615, 2670-2673 | The single Kite cameo show/hide in Neo's route only |
+| `game/minigames.rpy.excerpt.txt` | `game/minigames.rpy` | `32633c9dc7b31e9c3c65d588bd7d3dfbeee0a41cad7eee3ee14f51bb5d2eb089` | 6542 | 5202-5212 | Cocktail Time gallery entry referencing `kite_male relaxed` only |
 
-### 4.2 Evidence-only items
+The full limitation text is the `# limitation:` line in each excerpt header; that text governs.
 
-These items are never classified and never receive an experiment status:
-- `metadata/fixture-manifest.json` (manifest and provenance)
-- `metadata/INSTALL_REPORT_MALEKITE_V19G.json` (install report)
-- `metadata/KITE_ASSET_MASTERLIST.md` (masterlist)
-- `reference/kite_male_bust_neutral_credits_v19g.png` (approved-reference evidence, §2)
-- `reference/KEEP_kite_male.png` (provisional, see §4.3)
-- `docs/experiments/KITE-FIXTURE-01.md` (provenance record)
+### Decision 3: `options.rpy`
 
-Evidence-only items can be read and cited during ground-truth review and during evaluation of Matcha's output. They can change how a scored item is classified. They are never themselves scored as an affected or unaffected production unit.
+- `game/options.rpy.excerpt.txt` is **evidence-only**, not scored CODE.
+- Reason: its excerpt establishes build/package exclusion rules, not a direct relationship to a scored Kite static asset under Tests A–C.
+- It may be cited to establish why backup/archive/dev material is excluded from the fixture.
+- It does not enter the CODE denominator.
 
-### 4.3 Provisional scope choices
+### Decision 4: Relationship granularity
 
-These choices are provisional and are listed again under "Open points for Jeffrey".
+**One relationship per scored CODE unit × scored ASSET pair.**
 
-- **`reference/KEEP_kite_male.png` is evidence-only.** It is a review-folder copy of the approved plate as installed on 2026-09-09. It is not a production file at the baseline HEAD, so it is treated as canonical-reference evidence alongside v19g.
-- **Excerpt files are scored as `CODE` for their excerpted lines only.**
-  - Each excerpt stands for its original source file, but only for the line ranges stated in its header.
-  - Its `file_status` describes those lines only.
-  - References outside the excerpted ranges are out of scope and are not inferred.
-  - The excerpt's limitation is cited in `evidence`.
-- **`game/options.rpy.excerpt.txt` is scored as `CODE`,** like the other game-source items, even though its lines are build-packaging rules rather than asset references.
-- **Relationships are recorded only against scored `ASSET` items.** A code relationship is recorded only when the related asset is one of the 15 scored asset items. References to assets outside the fixture are not recorded as relationships; §12 lists them. Examples: female Kite images, `namebox_kite.png`, `bg/kite_apartment.png`, videos.
+- Do NOT create one relationship per source line.
+- Example: if `game/route_kite.rpy` references `reference/kite_male_neutral.png` at 17 lines, that is one relationship whose evidence contains all 17 source locations.
 
-## 5. Item types
+Illustrative format example only. This is NOT a ground-truth classification of any item:
 
-- **Assign the item type first.** Every scored item gets its item type before any status: `ASSET` or `CODE`.
-- **METADATA is evidence-only.** `METADATA` is not a scored item type in Experiment #1. Metadata files may be used as evidence during ground-truth review and Matcha evaluation. They are never themselves classified as `ASSET_ACTION`, `CODE_ACTION`, `DOWNSTREAM_USAGE`, `UNAFFECTED` or `REVIEW_REQUIRED`.
-- **Asset and code statuses never mix.** Asset items never receive `CODE_ACTION` or `DOWNSTREAM_USAGE`. Code items never receive `ASSET_ACTION`.
+```yaml
+relationships:
+  - related_asset: reference/kite_male_neutral.png
+    relationship_status: DOWNSTREAM_USAGE
+    reason: "The source references the asset but remains valid when the image changes without changing the image identifier."
+    evidence:
+      - game/route_kite.rpy:72
+      - game/route_kite.rpy:113
+      - game/route_kite.rpy:131
+```
 
-## 6. Asset status
+### Decision 5: ASSET schema
 
-Each scored `ASSET` item receives exactly one status per test case:
+An ASSET record has exactly one status field. `file_status` is NOT used for ASSETs. Exact schema:
+
+```yaml
+test_case: <A|B|C>
+item_type: ASSET
+asset_path: <fixture-relative-path>
+status: <ASSET_ACTION|UNAFFECTED|REVIEW_REQUIRED>
+reason: <why this status applies to this test>
+evidence:
+  - source: <evidence source>
+    location: <fixture path or evidence location>
+    fact: <factual observation supporting the classification>
+game_usage:
+  - <fixture-relative game source location>
+```
+
+Fields:
+
+- `test_case`: exactly one of `A`, `B`, `C`.
+- `item_type`: always `ASSET`.
+- `asset_path`: exactly one of the 15 scored ASSET paths (§4.1).
+- `status`: exactly one of `ASSET_ACTION`, `UNAFFECTED`, `REVIEW_REQUIRED`.
+- `reason`: why that asset receives that status for that specific test case.
+- `evidence`: factual evidence. Actual fixture image pixels are valid evidence.
+- `game_usage`: known production usage locations. It is contextual, not a status. It may be an empty list.
+
+Status definitions:
 
 - **`ASSET_ACTION`:** The available evidence establishes that the specified design change changes the visual content that this asset depicts.
 - **`UNAFFECTED`:** The available evidence establishes that the specified design change does not change the visual content that this asset depicts.
 - **`REVIEW_REQUIRED`:** The available evidence is insufficient to determine whether the specified design change affects this asset.
 
-In short:
-- established affected → `ASSET_ACTION`
-- established unaffected → `UNAFFECTED`
-- cannot determine → `REVIEW_REQUIRED`
+`ASSET_ACTION` must never mean "might need review". `REVIEW_REQUIRED` must never mean "low confidence".
 
-`ASSET_ACTION` does not mean "might need review". It is used only when the effect is established.
+### Decision 6: CODE units without relevant relationships
 
-## 7. Code status
+- CODE units without relevant relationships are NOT scored.
+- A CODE unit is eligible only if it contains at least one relationship to one of the 15 scored ASSET units.
+- Otherwise it is **out of scoring scope**. It is not assigned `UNAFFECTED` to enlarge the denominator.
 
-Code status has two layers: the relationship level and the file level.
+## 4. Scored units
 
-### 7.1 Relationship level
+### 4.1 ASSET units (15)
 
-For each relevant asset/code relationship in a scored `CODE` item (see §4.3 for which relationships count), record exactly one of:
+1. `reference/kite_male_neutral.png`
+2. `assets/kite_male_crossed_arms.png`
+3. `assets/kite_male_dark.png`
+4. `assets/kite_male_dark_relaxed.png`
+5. `assets/kite_male_dark_withdrawn.png`
+6. `assets/kite_male_gentle.png`
+7. `assets/kite_male_relaxed.png`
+8. `assets/kite_male_smoking.png`
+9. `assets/kite_male_soft.png`
+10. `assets/kite_male_stressed.png`
+11. `assets/kite_male_tired.png`
+12. `assets/kite_male_warm.png`
+13. `assets/kite_male_withdrawn.png`
+14. `assets/kite_tattoo.png`
+15. `assets/side_kite_male.png`
 
-- **`CODE_ACTION`:** Because of the specified design change, this reference requires the source code itself to be edited.
-- **`DOWNSTREAM_USAGE`:** This source references an affected asset, but the source remains valid and needs no edit just because the asset changed.
-- **`UNAFFECTED`:** The specified design change has no effect on this reference. The related asset is unaffected, and no edit is needed.
-- **`REVIEW_REQUIRED`:** The available evidence is insufficient to determine whether this reference requires an edit or points to an affected asset.
+Final ASSET scored-unit count: **15.**
 
-Example:
+### 4.2 Fixed CODE denominator
 
-```renpy
-show kite_male neutral
-```
+- The CODE denominator is determined once, before ground truth and before either human or Matcha evaluation.
+- Eligibility depends only on frozen fixture structural evidence, not on the results of Tests A, B or C.
+- **The CODE denominator is a property of the frozen fixture, not of an individual test case.**
+- The same eligible CODE set is used for A, B and C.
+- A CODE unit cannot enter or leave the denominator because of a test result.
 
-- If `kite_male_neutral.png` changes but the image identifier stays valid: `DOWNSTREAM_USAGE`.
-- If the source must change the identifier, path, declaration, transform or other code because of the design change: `CODE_ACTION`.
+### 4.3 Final CODE count = 9
 
-### 7.2 File level
+Full files (4):
 
-Each scored `CODE` item receives exactly one primary `file_status` per test case, derived from its relationships:
+1. `game/route_kite.rpy`
+2. `game/li_sprite_normalization.rpy`
+3. `game/side_portraits.rpy`
+4. `game/characters.rpy`
 
-- **Precedence:** `CODE_ACTION` > `DOWNSTREAM_USAGE` > `UNAFFECTED`.
-- **When `REVIEW_REQUIRED` applies:** only when no higher-priority definite status exists and the evidence prevents classification.
-- **An unresolved relationship never downgrades a definite edit.** If any relationship is `CODE_ACTION`, the file is `CODE_ACTION`, even if other relationships are `REVIEW_REQUIRED`.
-- **Unresolved relationships stay visible.** They are still recorded individually as `REVIEW_REQUIRED` at the relationship level.
+Eligible excerpts (5):
 
-Example: a `.rpy` file has (1) a reference that definitely requires editing, which is `CODE_ACTION`, and (2) another reference whose impact cannot be determined, which is `REVIEW_REQUIRED`. The file's primary status is `CODE_ACTION`. The second relationship is still listed separately as `REVIEW_REQUIRED`.
+5. `game/credits.rpy.excerpt.txt`
+6. `game/route_select.rpy.excerpt.txt`
+7. `game/route_friendships.rpy.excerpt.txt`
+8. `game/route_neo.rpy.excerpt.txt`
+9. `game/minigames.rpy.excerpt.txt`
 
-A code file with no relevant relationship to any scored asset is `UNAFFECTED` at file level.
+Explicit exclusions:
 
-## 8. Asset/code separation
+- `game/options.rpy.excerpt.txt`: evidence-only (Decision 3).
+- `game/screens.rpy.excerpt.txt`: evidence-only, and excluded because the excerpt only detects a generic `kite_male*` stage tag and does not establish a relationship to any specific one of the 15 scored assets. A generic character-level relationship is insufficient under the fixed CODE unit × scored ASSET pair rule.
 
-- **Status is not a dependency record.** Do not encode the whole dependency relationship in a status.
-  - An asset's `status` answers only whether the asset's depicted content changes.
-  - A code file's `file_status` answers only whether that file needs an edit or references an affected asset.
-  - Relationships are recorded separately, under `relationships` in the code output (§11).
-- **Code references do not change asset statuses.** That a code file references an affected asset does not change the asset's own status.
-- **Asset statuses do not force code edits.** An asset's `ASSET_ACTION` does not by itself make any code file `CODE_ACTION`.
+Final CODE scored-unit count: **9**, frozen before ground truth and before experiment timing.
 
-## 9. Meaning of REVIEW_REQUIRED
+## 5. CODE output contract
 
-- **Asset items:** `REVIEW_REQUIRED` means only that the available evidence is insufficient to determine whether the specified design change affects this asset.
-- **Code items and relationships:** it means only that the available evidence is insufficient to determine whether the source requires editing, or whether it references an affected asset.
+A CODE record has two levels, and both are recorded: file level and relationship level. Exact schema:
 
-It does NOT mean:
-- low confidence;
-- an inconvenient result;
-- that Matcha is unsure despite sufficient evidence;
-- "probably affected";
-- that the LOVE32 working tree differs from HEAD (§2, §12);
-- that the approved v19g image differs from the frozen production neutral (§2, §12).
-
-Use it only when the evidence genuinely cannot establish the answer.
-
-## 10. Ground-truth rule
-
-**Classify by required action.** Ground truth classifies what action is actually required under the specific test case. It does not classify by ownership or dependency.
-
-- **Assets:** "Does the specified visual change alter what this asset depicts?"
-- **Code:** "Does the specified visual change require editing this source code?" If yes: `CODE_ACTION`.
-- **Code, separately:** "Does this source reference an affected asset even though the source itself remains valid?" If yes: `DOWNSTREAM_USAGE`.
-
-**Non-reasons.** Do not classify an item as affected merely because:
-- it belongs to Kite;
-- it mentions Kite;
-- it references Kite;
-- it is downstream of Kite;
-- it could conceivably contain the changed feature.
-
-**Per test case.** Every status is tied to one specific test case (A, B or C). Each item is classified separately for each test case.
-
-**Baseline and evidence.**
-- Ground truth is set against the frozen production baseline (§2).
-- Evidence-only items (§4.2), including v19g as canonical-reference evidence, may inform a classification.
-- Ground truth is not set by this document.
-
-## 11. Output contract
-
-Ground truth and Matcha output both use the same contract, once per test case. Only the status values below are allowed.
-
-**Allowed status vocabulary** (no others):
-- ASSET: `ASSET_ACTION`, `UNAFFECTED`, `REVIEW_REQUIRED`.
-- CODE: `CODE_ACTION`, `DOWNSTREAM_USAGE`, `UNAFFECTED`, `REVIEW_REQUIRED`.
-
-**For each scored asset:**
-
-```text
-item_type: ASSET
-asset/path
-file_status
-status
-reason
-evidence
-game_usage
-```
-
-**For each scored code file:**
-
-```text
+```yaml
+test_case: <A|B|C>
 item_type: CODE
-source/path
-file_status
-reason
-evidence
+source_path: <fixture-relative-path>
+file_status: <CODE_ACTION|DOWNSTREAM_USAGE|REVIEW_REQUIRED|UNAFFECTED>
+reason: <why the file receives this status for this test>
+evidence:
+  - source: <evidence source>
+    location: <source location>
+    fact: <factual observation>
 relationships:
-  - related_asset
-  - relationship_status
-  - reason
-  - evidence
+  - related_asset: <one scored ASSET path>
+    relationship_status: <CODE_ACTION|DOWNSTREAM_USAGE|REVIEW_REQUIRED|UNAFFECTED>
+    reason: <why this relationship has this status>
+    evidence:
+      - <all relevant source locations>
 ```
 
-**Notes on use:**
-- Paths are fixture paths as listed in §4.1.
-- `related_asset` is one of the 15 scored asset paths.
-- Asset `game_usage` may cite the manifest's `game_usage` references.
-- The code contract carries both the file-level classification and the relationship-level evidence, so uncertainty is not hidden.
-- The asset contract lists both `file_status` and `status`. It is kept exactly as given.
-  - Provisional handling until Jeffrey clarifies: both fields use the ASSET vocabulary and carry the same value.
-- Evidence-only items (§4.2) never appear as scored entries. They may be cited inside `evidence`.
+Allowed `file_status` and `relationship_status` values are exactly: `CODE_ACTION`, `DOWNSTREAM_USAGE`, `REVIEW_REQUIRED`, `UNAFFECTED`. No others.
 
-## 12. Documented source-state limitations and historical inconsistencies
+- `source_path` is exactly one of the 9 eligible CODE paths (§4.3).
+- `related_asset` is exactly one of the 15 scored ASSET paths (§4.1).
+- Each scored CODE unit × scored ASSET pair appears at most once in `relationships` (Decision 4).
+- For an excerpt, source locations refer only to lines inside the excerpt's stated line ranges (Decision 2).
 
-These are recorded facts about the source. None of them is by itself a reason for `REVIEW_REQUIRED`.
+Relationship status meanings:
 
-- **Working tree vs HEAD.** At fixture capture the LOVE32 working tree had five `kite_male` plates deleted (unstaged), plus other unrelated changes. The fixture holds the committed HEAD versions, and they are the baseline.
-  - In the working tree, the code shows `side_kite_male.png` in place of a missing plate (`li_sprite_normalization.rpy:268-290`).
-  - That fallback does not occur at the baseline, because the plates exist there.
-- **Approved reference vs production neutral.**
-  - The v19g plate was approved on 2026-09-09 (`INSTALL_REPORT_MALEKITE_V19G.json`) and installed. `KEEP_kite_male.png` is the copy saved at install.
-  - The HEAD neutral (`reference/kite_male_neutral.png`) differs from both. No approval for the later change appears in the fixture.
-- **YAML vs production.**
-  - `configs/kite_male.yaml` says `angry` aliases `stressed`. Production maps `angry` to the neutral file (`route_kite.rpy:26`).
-  - The YAML's comments on space-separated filenames and mixed canvases do not match the fixture: underscore filenames, all 928×1232 plates.
-  - The YAML is not evidence for ground truth unless a fixture item supports it.
-- **Unreferenced plates.** `assets/kite_male_dark*.png` ship in `game/images` but no reference was found in the searched `.rpy` source.
-- **Declared but not shown.** `assets/kite_tattoo.png` is declared (`route_kite.rpy:10`) but no `show` statement was found.
-- **Excerpt coverage.** The seven excerpt files contain only their stated line ranges (§4.3).
-- **Out of fixture.** None of the following is in the fixture, so none can be scored:
-  - Kite videos. Content was not verified. `kite_good_male_ending.mp4` is referenced but missing.
-  - Female Kite assets.
-  - `namebox_kite.png`, `bg/kite_apartment.png`, audio.
-  - Backup and review folders.
-  - Their references are listed in `docs/experiments/KITE-FIXTURE-01.md` §4.
-- **Outfit per plate.** The fixture manifest records outfit as UNKNOWN for every asset. Comments in `route_kite.rpy` are the only in-fixture statements linking plates to clothing.
+- **`CODE_ACTION`:** because of the specified design change, the source itself must be edited for this asset relationship.
+- **`DOWNSTREAM_USAGE`:** the source references an affected asset, but the source remains valid and needs no edit just because the asset changed.
+- **`REVIEW_REQUIRED`:** the available evidence is insufficient to determine whether this relationship requires a source edit or points to an affected asset.
+- **`UNAFFECTED`:** the specified design change has no effect on this relationship; the related asset is unaffected and no edit is needed.
 
-## 13. Freeze rule
+## 6. CODE file-status derivation
 
-- After this commit, neither this protocol nor the fixture (`fixtures/kite-production/`) may be changed during Evidence Protocol #1 or the controlled experiment.
-- The fixture freeze rule in `docs/experiments/KITE-FIXTURE-01.md` §10 still applies.
-- Any later change to this protocol requires a new, separately committed version before any scoring takes place.
+Precedence, exactly:
 
-## Open points for Jeffrey
+`CODE_ACTION > DOWNSTREAM_USAGE > REVIEW_REQUIRED > UNAFFECTED`
 
-Each point below has provisional handling in this document. None is settled by the rules given.
+The file status is the highest-precedence status among the unit's relationships. Examples:
 
-1. **`reference/KEEP_kite_male.png`:** provisionally evidence-only, not a scored asset (§4.2, §4.3).
-2. **Excerpt files** (`game/*.excerpt.txt`, 7 files): provisionally scored as `CODE` for their excerpted line ranges only. References outside those ranges are out of scope and not inferred (§4.3).
-3. **`game/options.rpy.excerpt.txt`:** provisionally scored as `CODE`, even though it holds build-packaging rules rather than asset references (§4.3).
-4. **Relationship granularity:** provisionally, relationships are recorded only against the 15 scored asset items. How many relationships to record per file (per reference line, or per related asset with all lines cited in `evidence`) is not fixed by the rules. Provisionally: one relationship per related asset, with all line references in `evidence` (§4.3, §7.1).
-5. **Asset contract `file_status` vs `status`:** kept exactly as given. Provisionally both carry the same ASSET-vocabulary value (§11).
-6. **Code file with no relevant relationship:** provisionally `UNAFFECTED` at file level (§7.2).
+```text
+(1) UNAFFECTED, DOWNSTREAM_USAGE, UNAFFECTED  -> file_status DOWNSTREAM_USAGE
+(2) DOWNSTREAM_USAGE + REVIEW_REQUIRED        -> file_status DOWNSTREAM_USAGE
+    (the unresolved relationship remains visible at relationship level)
+(3) CODE_ACTION + REVIEW_REQUIRED             -> file_status CODE_ACTION
+    (the definite edit requirement wins)
+(4) REVIEW_REQUIRED + UNAFFECTED              -> file_status REVIEW_REQUIRED
+(5) UNAFFECTED + UNAFFECTED                   -> file_status UNAFFECTED
+(6) No relevant scored-asset relationships    -> out of scoring scope; no experiment file_status
+```
+
+An unresolved relationship never downgrades a definite `CODE_ACTION` or `DOWNSTREAM_USAGE`.
+
+## 7. Relationship status vs file status
+
+- Do not confuse relationship_status `DOWNSTREAM_USAGE` with file_status `DOWNSTREAM_USAGE`.
+- Relationship status describes one CODE-to-ASSET relationship. File status summarizes the entire eligible CODE unit.
+- A `CODE_ACTION` relationship means the source must change for that specific asset relationship. It does not automatically make every other relationship in the same file `CODE_ACTION`.
+- Asset and code statuses never mix: ASSET records never receive `CODE_ACTION` or `DOWNSTREAM_USAGE`; CODE records never receive `ASSET_ACTION`.
+- A CODE reference to an affected asset does not change that asset's own `status`, and an asset's `ASSET_ACTION` does not by itself make any CODE unit or relationship `CODE_ACTION`.
+
+## 8. Metadata and evidence-only material
+
+There is no scored `METADATA` item type. The following are evidence-only:
+
+- `metadata/fixture-manifest.json`
+- `metadata/INSTALL_REPORT_MALEKITE_V19G.json`
+- `metadata/KITE_ASSET_MASTERLIST.md`
+- `docs/experiments/KITE-FIXTURE-01.md` (repository path)
+- `reference/kite_male_bust_neutral_credits_v19g.png`
+- `reference/KEEP_kite_male.png`
+- `game/options.rpy.excerpt.txt`
+- `game/screens.rpy.excerpt.txt`
+
+Evidence-only material:
+
+- may be cited as evidence;
+- never receives an experiment status;
+- never enters a scoring denominator.
+
+## 9. Exact test requests (frozen)
+
+The wording below is quoted exactly and must not be paraphrased.
+
+### Test A: major hair change
+
+Exact request:
+
+> Kite's canonical hairstyle changes from the current documented hairstyle to shoulder-length dark hair.
+
+Question:
+
+> Which existing static production assets require regeneration or review because of this change?
+
+- Do not specify new filenames.
+- Do not assume a generation pipeline.
+
+### Test B: outfit change
+
+Exact request:
+
+> Kite's canonical outfit changes to a materially different outfit.
+
+Question:
+
+> Which existing static production assets visually depict the changed outfit and therefore require action?
+
+- Ground truth must rely on frozen production evidence, not on Matcha YAML outfit-family declarations as production truth.
+
+### Test C: small accessory change
+
+Exact request:
+
+> Kite's canonical small ear accessory changes.
+
+Question:
+
+> Which existing static production assets actually show the affected accessory and therefore require action?
+
+- The absence of a male-earring statement in text metadata does NOT automatically justify `REVIEW_REQUIRED`.
+- Actual fixture image pixels are valid evidence.
+- Use `REVIEW_REQUIRED` only when the total available evidence genuinely cannot establish whether the accessory is depicted.
+
+These exact requests are frozen once the experiment begins.
+
+## 10. Frozen baseline
+
+- Fixture commit: `c1364f48ff92b248b3cd2aa7729c6014648008aa`.
+- Underlying LOVE32 HEAD: `f4816ca90c9a15bc927a63df5148050199ad2842`.
+- The dirty LOVE32 working tree is not the baseline.
+- The five sprites deleted in the LOVE32 working tree are evaluated using their frozen HEAD versions contained in the fixture:
+  - `reference/kite_male_neutral.png`
+  - `assets/kite_male_relaxed.png`
+  - `assets/kite_male_smoking.png`
+  - `assets/kite_male_soft.png`
+  - `assets/kite_male_tired.png`
+- A working-tree/HEAD difference is not itself `REVIEW_REQUIRED`.
+
+## 11. Canonical reference treatment
+
+- `reference/kite_male_neutral.png`: frozen production-baseline asset (scored).
+- `reference/kite_male_bust_neutral_credits_v19g.png`: approved-reference evidence (evidence-only).
+- `reference/KEEP_kite_male.png`: evidence-only approved-install copy.
+- Historical inconsistency: the approved-reference material (v19g, approved and installed on 2026-09-09 per `metadata/INSTALL_REPORT_MALEKITE_V19G.json`, with `KEEP_kite_male.png` saved at install) and the frozen production neutral differ.
+- That inconsistency does not automatically make any test item `REVIEW_REQUIRED`.
+- Ground truth is established against the frozen production baseline, using approved-reference material as evidence where relevant.
+
+## 12. Ground-truth rule
+
+Ground truth classifies the action actually required for the specific test case.
+
+- **ASSET:** "Does the specified visual change alter what this asset depicts?"
+- **CODE:** "Does the specified visual change require editing this source code?" If yes: `CODE_ACTION`.
+- **CODE, separately:** "Does this source reference an affected asset even though the source itself remains valid?" If yes: `DOWNSTREAM_USAGE`.
+
+Do not classify an item as affected merely because it:
+
+- belongs to Kite;
+- mentions Kite;
+- references Kite;
+- is downstream of Kite;
+- could conceivably contain the changed feature.
+
+Statuses are assigned independently for Tests A, B and C.
+
+`REVIEW_REQUIRED` means only that the available evidence is insufficient to determine the answer. It does not mean low confidence, an inconvenient result, "probably affected", or that Matcha is unsure despite sufficient evidence.
+
+## 13. CODE eligibility frozen before ground truth
+
+Exact sequence:
+
+1. Freeze the fixture at `c1364f48`.
+2. Enumerate the 15 ASSET units.
+3. Enumerate the CODE files and excerpts.
+4. Apply the fixed CODE eligibility rule.
+5. Freeze the final CODE denominator at 9.
+6. Freeze this protocol.
+7. Establish human ground truth.
+8. Run the Matcha evaluation.
+9. Compare and score.
+
+The CODE count cannot change after step 5. A later discovery requiring a different denominator becomes a future protocol revision, not a change to Experiment #1.
+
+## 14. Human baseline
+
+The human baseline runs only after the protocol and fixture are frozen. Per test case:
+
+- **Start:** when the human receives the exact frozen test request and the frozen fixture.
+- **Stop:** when the human has completed classifications for all 15 ASSET units and all 9 eligible CODE units, including required relationships, for that test.
+
+The human may inspect:
+
+- frozen fixture images;
+- evidence-only metadata;
+- frozen fixture game source.
+
+The human may not:
+
+- inspect Matcha's output;
+- modify the fixture;
+- use evidence outside the fixture;
+- change the test wording.
+
+Record: elapsed time, final output, unresolved items. Timing is not estimated beforehand.
+
+## 15. Matcha evaluation
+
+The Matcha evaluation runs only after human ground truth is frozen.
+
+Matcha receives:
+
+- the same frozen fixture;
+- the same exact test request;
+- the same evidence scope.
+
+Matcha may not receive:
+
+- human ground truth;
+- human classifications;
+- human timing;
+- corrections based on its partial output.
+
+Record: elapsed time, final output, unresolved items. No manual correction is made during the evaluation.
+
+## 16. Blinding
+
+- Human ground truth is completed and frozen before Matcha output is compared against it.
+- The evaluator must not modify ground truth after seeing Matcha's result.
+- Comparison occurs only after both sides are complete.
+
+## 17. Scoring
+
+### 17.1 ASSET scoring
+
+- Binary action classes: `ASSET_ACTION`, `UNAFFECTED`. Third state: `REVIEW_REQUIRED`.
+- Precision and recall are calculated only over ground-truth cases where ground truth is binary-determinable.
+- `REVIEW_REQUIRED` is NOT treated as positive or negative.
+- Record separately:
+  - ground-truth determinate cases;
+  - ground-truth `REVIEW_REQUIRED` cases;
+  - Matcha `REVIEW_REQUIRED` cases;
+  - false positives;
+  - false negatives.
+- Per test: at most 15 ASSET units. Across the three tests: 45 ASSET classification records.
+
+### 17.2 CODE scoring
+
+- Both file-level and relationship-level classification are evaluated.
+- The denominator is always the frozen 9 eligible CODE units per test. It is never changed based on a result.
+- Measure:
+  - correct `CODE_ACTION`;
+  - correct `DOWNSTREAM_USAGE`;
+  - correct `REVIEW_REQUIRED`;
+  - incorrect code actions;
+  - missed code actions;
+  - incorrect downstream relationships;
+  - missed downstream relationships.
+
+## 18. Metrics
+
+- **Asset precision:** `TP / (TP + FP)`.
+- **Asset recall:** `TP / (TP + FN)`.
+- Only determinate binary ASSET ground truth enters asset precision and recall.
+- **Ground-truth review rate:** ASSET cases whose ground truth is `REVIEW_REQUIRED`, divided by all ASSET cases.
+- **Matcha review rate:** Matcha ASSET outputs classified `REVIEW_REQUIRED`, divided by all eligible ASSET cases.
+- **Coverage:** percentage of eligible scored items for which Matcha produces a non-`REVIEW_REQUIRED` classification.
+- **Downstream traceability:** how many actual eligible CODE-to-ASSET relationships are correctly identified.
+- **Code-action precision:** how often a predicted `CODE_ACTION` relationship or file corresponds to a ground-truth code edit requirement.
+
+No arbitrary success thresholds are defined.
+
+## 19. Limitations
+
+Known limitations. None of them automatically produces `REVIEW_REQUIRED`.
+
+- Videos are excluded.
+- Audio is excluded.
+- Backgrounds are excluded.
+- UI/namebox assets are excluded.
+- Female Kite is excluded.
+- Dev-only, archive and backup material is excluded.
+- The LOVE32 working tree differs from HEAD.
+- The approved v19g reference differs from the frozen production neutral.
+- Outfit per plate is not explicitly encoded (the fixture manifest records outfit as UNKNOWN for every asset; comments in `game/route_kite.rpy` are the only in-fixture statements linking plates to clothing).
+- Some production sprites are unreferenced (`assets/kite_male_dark.png`, `assets/kite_male_dark_relaxed.png` and `assets/kite_male_dark_withdrawn.png` have no `.rpy` reference in the fixture manifest; `assets/kite_tattoo.png` is declared at `game/route_kite.rpy:10` but no `show` statement was found).
+- Some CODE evidence is excerpted (Decision 2).
+- The fixture game source was not executed.
+
+## 20. Stop conditions
+
+Once the experiment begins, do NOT:
+
+- add test cases;
+- change test wording;
+- change the fixture;
+- change the ASSET denominator;
+- change the CODE denominator;
+- change status definitions;
+- change relationship granularity;
+- remove inconvenient false positives;
+- treat `REVIEW_REQUIRED` as success;
+- add newly discovered files to the denominator.
+
+Any methodological change becomes a new protocol revision and is not applied retroactively.
+
+## 21. Success-evidence criteria
+
+This protocol does not declare success or failure. The experiment may identify evidence relevant to a later strategy judgment:
+
+- high asset precision;
+- high asset recall;
+- low false-positive rate;
+- useful downstream tracing;
+- correct separation of asset action vs code action;
+- measurable human-work reduction;
+- measurable time reduction.
+
+No arbitrary pass/fail thresholds are defined.
+
+## 22. Protocol freeze rule
+
+> Once the controlled experiment begins, this protocol must not be changed for Tests A, B, or C. Any methodological change becomes a new protocol revision and cannot be applied retroactively to Experiment #1.
+
+The fixture freeze rule in `docs/experiments/KITE-FIXTURE-01.md` §10 continues to apply.
