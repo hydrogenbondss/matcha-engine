@@ -70,8 +70,8 @@ Start timing when the human receives the exact frozen test request and the froze
 
 ```yaml
 start_time: 2026-09-29T00:45:42+08:00
-end_time:
-elapsed_time:
+end_time: 2026-09-29T01:47:00+08:00
+elapsed_time: '01:01:18'
 ```
 
 ### Test A: ASSET records
