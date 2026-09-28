@@ -69,7 +69,7 @@ Question:
 Start timing when the human receives the exact frozen test request and the frozen fixture. Stop when all required classifications and relationships for that test are complete.
 
 ```yaml
-start_time:
+start_time: 2026-09-29T00:45:42+08:00
 end_time:
 elapsed_time:
 ```
@@ -81,10 +81,14 @@ elapsed_time:
   test_case: A
   item_type: ASSET
   asset_path: reference/kite_male_neutral.png
-  status:
-  reason:
+  status: ASSET_ACTION
+  reason: >-
+    The frozen neutral sprite visibly depicts Kite with the current short hairstyle. Changing Kite's canonical hairstyle to shoulder-length dark hair would change what this asset depicts, so this existing sprite would need regeneration or replacement.
   evidence:
-    -
+    - source_path: reference/kite_male_neutral.png
+      anchor_type: asset
+      anchor: sha256:b3469eeed8510f5ae0807cafc8564b21b9be617a3a27027f7eca6d230c0da07d
+      fact: The frozen production neutral sprite depicts Kite with the current short hairstyle; the Test A change replaces that hairstyle with shoulder-length dark hair.
   game_usage:
     -
 - id: A-ASSET-02
