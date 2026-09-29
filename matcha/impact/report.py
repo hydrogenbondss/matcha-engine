@@ -33,6 +33,12 @@ def summarise_counts(report: dict[str, Any]) -> dict[str, Any]:
 
 
 def write_json(report: dict[str, Any], path: Path) -> Path:
+    """Write *report* as JSON, first stamping its run ``provenance`` block
+    (added in place if absent, so the returned report and the markdown carry it too)."""
+    from matcha.impact.provenance import build_provenance
+
+    if "provenance" not in report:
+        report["provenance"] = build_provenance(report)
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
@@ -122,6 +128,24 @@ def render_markdown(report: dict[str, Any]) -> str:
         lines += [f"- `{o['source_path']}`: {o['reason']}" for o in report["out_of_scope_code"]]
     lines += ["", "## Unresolved items", ""]
     lines += [f"- [{u.get('kind', 'other')}] {_md_escape(u['item'])}" for u in report["unresolved_items"]] or ["- (none)"]
+    pv = report.get("provenance")
+    if pv:
+        mi = pv["provider"]["model_identity"]
+        vp = pv["vision_prompt"]
+        lines += [
+            "",
+            "## Provenance",
+            "",
+            f"- Engine git commit: {pv['engine']['git_commit'] or 'unavailable'}",
+            f"- Fixture manifest sha256: {pv['fixture']['manifest_sha256']}",
+            f"- Reference: `{pv['reference']['path']}` sha256 {pv['reference']['sha256']}",
+            f"- Provider: {pv['provider']['name']} / model {pv['provider']['model'] or '-'} (state {pv['provider']['state']})",
+            "- Provider model identity: "
+            + (f"digest {mi.get('digest') or '-'}; details {json.dumps(mi.get('details'), sort_keys=True)}" if mi else "none"),
+            f"- Vision prompt template sha256: {vp['template_sha256']}",
+            f"- Vision module sha256: {vp['vision_module_sha256']}",
+            f"- Rendered prompt sha256: {vp['rendered_prompt_sha256'] or 'none (no prompt sent)'}",
+        ]
     lines += ["", "## Limitations (v1)", ""]
     lines += [f"- {_md_escape(x)}" for x in report.get("limitations", [])]
     lines.append("")

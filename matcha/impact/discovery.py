@@ -75,7 +75,7 @@ def discover(
         "api_key_env_present": {k: bool(env.get(k)) for k in API_KEY_VARS},
         "python_packages": {p: _find_spec(p) for p in PACKAGES},
         "binaries": {b: bool(which(b)) for b in BINARIES},
-        "ollama": {"host": host, "reachable": False, "models": [], "vision_models": []},
+        "ollama": {"host": host, "reachable": False, "models": [], "vision_models": [], "model_identity": {}},
         "comfyui": {"address": comfyui, "reachable": False,
                     "note": "ComfyUI is Matcha's image-generation backend; there is no classification adapter for it."},
         "missing": [],
@@ -84,13 +84,27 @@ def discover(
     try:
         tags = http(host.rstrip("/") + "/api/tags")
         out["ollama"]["reachable"] = True
-        names = [m.get("name") or m.get("model") for m in (tags.get("models") or [])]
-        out["ollama"]["models"] = [n for n in names if n]
+        entries: dict[str, dict] = {}
+        for m in tags.get("models") or []:
+            n = m.get("name") or m.get("model")
+            if n:
+                entries.setdefault(n, m)
+        out["ollama"]["models"] = list(entries)
         for n in out["ollama"]["models"]:
+            # keep the model identity fields Ollama already returned (never invented)
+            tag = entries[n]
+            out["ollama"]["model_identity"][n] = {
+                "digest": tag.get("digest") if isinstance(tag.get("digest"), str) else None,
+                "details": tag.get("details") if isinstance(tag.get("details"), dict) else None,
+                "source": "/api/tags",
+            }
             try:
                 info = http(host.rstrip("/") + "/api/show", {"model": n})
             except (urllib.error.URLError, OSError, ValueError):
                 continue
+            if isinstance(info.get("details"), dict):
+                out["ollama"]["model_identity"][n]["details"] = info["details"]
+                out["ollama"]["model_identity"][n]["source"] = "digest: /api/tags; details: /api/show"
             if "vision" in (info.get("capabilities") or []):
                 out["ollama"]["vision_models"].append(n)
     except (urllib.error.URLError, OSError, ValueError) as e:
