@@ -137,6 +137,8 @@ def render_markdown(report: dict[str, Any]) -> str:
             "## Provenance",
             "",
             f"- Engine git commit: {pv['engine']['git_commit'] or 'unavailable'}",
+            "- Engine worktree dirty (tracked or untracked changes): "
+            + {True: "yes", False: "no"}.get(pv["engine"].get("git_worktree_dirty"), "unknown"),
             f"- Fixture manifest sha256: {pv['fixture']['manifest_sha256']}",
             f"- Reference: `{pv['reference']['path']}` sha256 {pv['reference']['sha256']}",
             f"- Provider: {pv['provider']['name']} / model {pv['provider']['model'] or '-'} (state {pv['provider']['state']})",
@@ -144,7 +146,10 @@ def render_markdown(report: dict[str, Any]) -> str:
             + (f"digest {mi.get('digest') or '-'}; details {json.dumps(mi.get('details'), sort_keys=True)}" if mi else "none"),
             f"- Vision prompt template sha256: {vp['template_sha256']}",
             f"- Vision module sha256: {vp['vision_module_sha256']}",
-            f"- Rendered prompt sha256: {vp['rendered_prompt_sha256'] or 'none (no prompt sent)'}",
+            f"- Rendered prompt sha256: {vp['rendered_prompt_sha256'] or 'none (no prompt rendered)'}"
+            " (SHA-256 of the exact prompt Matcha renders from the request and reference-presence state; "
+            "a reproducibility fingerprint, not proof of network delivery; provider availability and "
+            "execution state are reported separately)",
         ]
     lines += ["", "## Limitations (v1)", ""]
     lines += [f"- {_md_escape(x)}" for x in report.get("limitations", [])]
