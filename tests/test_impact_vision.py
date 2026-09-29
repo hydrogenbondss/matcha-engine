@@ -56,15 +56,27 @@ def test_malformed_output_becomes_review_required(raw, fragment):
     assert fragment in c.reason
 
 
-def test_low_confidence_becomes_review_required_with_reason():
-    c = validate_response({**GOOD, "confidence": 0.4}, threshold=0.7)
-    assert c.status == "REVIEW_REQUIRED"
-    assert c.provider_status == "ASSET_ACTION"
-    assert "below the threshold" in c.reason and "head and hair" in c.reason
-    assert c.provider_state == "AVAILABLE" and c.review_cause == "LOW_CONFIDENCE"
-    c = validate_response({"status": "UNAFFECTED", "confidence": 0.69, "reason": "not in frame"}, threshold=0.7)
-    assert c.status == "REVIEW_REQUIRED"
-    assert validate_response({**GOOD, "confidence": 0.7}, threshold=0.7).status == "ASSET_ACTION"
+@pytest.mark.parametrize("status", ["ASSET_ACTION", "UNAFFECTED"])
+@pytest.mark.parametrize("conf", [0.0, 0.01, 0.4, 0.69, 0.7, 1.0])
+def test_low_confidence_determinate_verdict_stays_determinate(status, conf):
+    c = validate_response({"status": status, "confidence": conf, "reason": "The head and hair are visible."})
+    assert c.status == status and c.provider_status == status
+    assert c.provider_state == "AVAILABLE" and c.review_cause is None and c.valid_provider_output is True
+    assert c.confidence == conf  # kept as metadata
+    assert c.reason == "The head and hair are visible."
+
+
+def test_no_confidence_threshold_exists():
+    import inspect
+
+    import matcha.impact.vision as vision
+    from matcha.impact.engine import run_impact
+
+    assert not hasattr(vision, "DEFAULT_CONFIDENCE_THRESHOLD")
+    assert "LOW_CONFIDENCE" not in vision.REVIEW_CAUSES
+    assert "threshold" not in inspect.signature(validate_response).parameters
+    assert "threshold" not in inspect.signature(classify_asset).parameters
+    assert not any("threshold" in p for p in inspect.signature(run_impact).parameters)
 
 
 def test_provider_review_required_is_kept_even_at_low_confidence():

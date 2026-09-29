@@ -46,8 +46,8 @@ V1_LIMITATIONS = (
     "old look, alignment/crop/offset tables tuned to the old art, comments documenting the old design).",
     "The identifier policy is a keyword heuristic over the request text; 'auto' yields only 'preserved' or "
     "'unknown', never 'changed'. 'changed' is a manual assertion via --identifier-policy.",
-    "Low-confidence provider verdicts are reported as REVIEW_REQUIRED with review_cause LOW_CONFIDENCE; this "
-    "is an engine policy, not an evidence-sufficiency judgement.",
+    "Provider confidence is recorded as metadata only; it never changes a verdict, and there is no confidence "
+    "threshold. A determinate provider verdict is reported as given, even at low confidence.",
     "Dynamic image/file references (concatenation, formatting, show expression, image-loading calls with "
     "non-literal arguments, calls to helpers that build paths dynamically) are surfaced as unresolved items "
     "and never resolved or counted as relationships.",

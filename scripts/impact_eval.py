@@ -8,8 +8,10 @@ Subcommands:
 
     validate-inventory  compare discovered CODE x ASSET pairs and evidence with
                         the worksheet's frozen structural inventory; separate
-                        PASS/FAIL for pairs, evidence identity, evidence
-                        occurrence and field agreement (bit-mask exit code)
+                        layers for pairs, strict and normalized evidence
+                        identity, evidence occurrence, and diagnostic field
+                        agreement; overall PASS / PASS_WITH_NORMALIZATION /
+                        FAIL (bit-mask exit code, see "validation" below)
     compare             score an impact JSON report against one frozen test
                         section (A, B or C) of the worksheet, per protocol
                         §17-18 (REVIEW_REQUIRED neither positive nor negative)
@@ -85,30 +87,47 @@ def load_test(worksheet: Path, test: str) -> dict[str, Any]:
 
 # ------------------------------------------------------------- validation ----
 #
-# validate-inventory reports four separate checks, each with its own PASS/FAIL:
+# validate-inventory reports five separate layers, each with its own result:
 #
-#   pairs                 the CODE x ASSET pair set (graph correctness)
-#   evidence_identity     per pair, the multiset of evidence identities
-#                         (source_path, anchor_type, anchor), strict (protocol §5.1)
-#   evidence_occurrence   per pair, every occurrence on one side aligns with
-#                         exactly one occurrence on the other side, and within
-#                         each side occurrence identities are unique. Alignment
-#                         uses (source_path, locator) as a *matching aid only*;
-#                         the locator is never treated as identity.
-#   field_agreement       for aligned occurrences: anchor, anchor_type,
-#                         context, fingerprint and fact equality
+#   A pairs                         the exact CODE x ASSET pair set.  PASS/FAIL.
+#   B evidence_identity             per pair, the multiset of strict evidence
+#                                   identities (source_path, anchor_type, anchor),
+#                                   protocol §5.1.  PASS/FAIL.
+#   C evidence_identity_normalized  B after the documented ANCHOR_TYPE
+#                                   NORMALIZATION below, applied to both sides.
+#                                   PASS/FAIL (informational on its own).
+#   D evidence_occurrence           per pair, every occurrence on one side aligns
+#                                   with exactly one occurrence on the other, and
+#                                   within each side no two occurrences share
+#                                   identity + context + fingerprint (protocol:
+#                                   repeated identities must be distinguished by
+#                                   context and/or fingerprint).  Alignment uses
+#                                   (source_path, locator) as a matching aid only,
+#                                   preferring equal anchors; context/fingerprint
+#                                   prose is used only to tell occurrences apart,
+#                                   never required to equal the inventory's prose.
+#                                   PASS/FAIL.
+#   E field_agreement               anchor / anchor_type / context / fingerprint /
+#                                   fact equality over aligned occurrences.
+#                                   DIAGNOSTIC ONLY: result is "DIAGNOSTIC", with
+#                                   all_fields_equal true/false; never fails.
 #
-# The overall verdict is PASS only if all four pass.  The exit code is a bit
-# mask, so a pair failure and an evidence failure are distinct:
-#   1 = pairs FAIL, 2 = evidence_identity FAIL, 4 = evidence_occurrence FAIL,
-#   8 = field_agreement FAIL.
-#
-# In addition (informational, never changes the strict verdict),
-# evidence_identity_normalized applies the documented ANCHOR_TYPE
-# NORMALIZATION below to both sides and reports whether the identity
-# multisets agree after it.
+# overall (machine-readable) is one of:
+#   "PASS"                     A, B and D pass.
+#   "PASS_WITH_NORMALIZATION"  A and D pass; B fails strictly, but every strict
+#                              identity difference is explained by the accepted
+#                              normalization (C passes).  The strict FAIL stays
+#                              visible in B, and normalization_applied is true.
+#   "FAIL"                     A fails, or B fails and C fails (a strict identity
+#                              difference no accepted normalization explains),
+#                              or D fails.  "failures" lists the failing layers.
+# Exit code: bit mask of failures, so pair and evidence failures stay distinct:
+#   1 = pairs, 2 = evidence identity not explained by an accepted normalization,
+#   4 = evidence occurrence.  PASS and PASS_WITH_NORMALIZATION both exit 0.
+#   Field-agreement differences never set a bit.
 
-EXIT_BITS = {"pairs": 1, "evidence_identity": 2, "evidence_occurrence": 4, "field_agreement": 8}
+EXIT_BITS = {"pairs": 1, "evidence_identity": 2, "evidence_occurrence": 4}
+ACCEPTED_NORMALIZATIONS = ("anchor_type_binding",)
 
 # Python/Ren'Py binding syntax: `name = expr`, `$ name = expr`, `define|default name = expr`,
 # `obj.attr = expr`, `x[k] = expr`, augmented `op=`, but not `==`; or a `"key": value` dict entry.
@@ -230,13 +249,32 @@ def compare_inventory(discovered: dict[tuple[str, str], list[dict]], inventory: 
     norm["result"] = _pf(not norm["inventory_only"] and not norm["discovered_only"])
     occ["result"] = _pf(not occ["unaligned_inventory"] and not occ["unaligned_discovered"]
                         and not occ["duplicate_occurrence_identity"])
-    agree["result"] = _pf(not agree["differences"] and not occ["unaligned_inventory"] and not occ["unaligned_discovered"])
-    checks = {"pairs": pairs, "evidence_identity": ident, "evidence_occurrence": occ, "field_agreement": agree}
-    code = sum(bit for name, bit in EXIT_BITS.items() if checks[name]["result"] == "FAIL")
+    agree["result"] = "DIAGNOSTIC"
+    agree["all_fields_equal"] = not agree["differences"]
+    agree["affects_overall"] = False
+    norm["name"] = ACCEPTED_NORMALIZATIONS[0]
+    norm["explains_strict_mismatch"] = ident["result"] == "FAIL" and norm["result"] == "PASS"
+
+    failures = []
+    if pairs["result"] == "FAIL":
+        failures.append("pairs")
+    if ident["result"] == "FAIL" and norm["result"] == "FAIL":
+        failures.append("evidence_identity")
+    if occ["result"] == "FAIL":
+        failures.append("evidence_occurrence")
+    code = sum(EXIT_BITS[f] for f in failures)
+    normalization_applied = not failures and norm["explains_strict_mismatch"]
+    overall = "FAIL" if failures else ("PASS_WITH_NORMALIZATION" if normalization_applied else "PASS")
     return {
-        **checks,
+        "pairs": pairs,
+        "evidence_identity": ident,
         "evidence_identity_normalized": norm,
-        "overall": _pf(code == 0),
+        "evidence_occurrence": occ,
+        "field_agreement": agree,
+        "overall": overall,
+        "failures": failures,
+        "normalization_applied": normalization_applied,
+        "accepted_normalizations": list(ACCEPTED_NORMALIZATIONS) if normalization_applied else [],
         "exit_code": code,
     }
 
@@ -424,36 +462,40 @@ def _fmt(v) -> str:
 def _validation_text(r: dict) -> str:
     p, i, n, o, f = r["pairs"], r["evidence_identity"], r["evidence_identity_normalized"], r["evidence_occurrence"], r["field_agreement"]
     lines = [
-        f"[{p['result']}] pairs: inventory {p['inventory']}, discovered {p['discovered']}, exact {p['exact']}/{p['inventory']}, "
+        f"[A {p['result']}] pairs: inventory {p['inventory']}, discovered {p['discovered']}, exact {p['exact']}/{p['inventory']}, "
         f"extra {len(p['extra'])}, missing {len(p['missing'])}"
     ]
     lines += [f"    EXTRA   {x}" for x in p["extra"]] + [f"    MISSING {x}" for x in p["missing"]]
     lines.append(
-        f"[{i['result']}] evidence identity (strict source_path+anchor_type+anchor): inventory {i['inventory_items']}, "
+        f"[B {i['result']}] evidence identity (strict source_path+anchor_type+anchor): inventory {i['inventory_items']}, "
         f"discovered {i['discovered_items']}, matched {i['matched']}, inventory-only {len(i['inventory_only'])}, "
         f"discovered-only {len(i['discovered_only'])}"
     )
     lines += [f"    INVENTORY-ONLY  {x['pair']} {x['identity']}" for x in i["inventory_only"]]
     lines += [f"    DISCOVERED-ONLY {x['pair']} {x['identity']}" for x in i["discovered_only"]]
     lines.append(
-        f"[{o['result']}] evidence occurrence: inventory {o['inventory_occurrences']}, discovered "
+        f"[C {n['result']}] evidence identity after accepted normalization '{n['name']}' (statement/assignment on a "
+        f"binding anchor -> binding): matched {n['matched']}, inventory-only {len(n['inventory_only'])}, "
+        f"discovered-only {len(n['discovered_only'])}; explains strict mismatch: {str(n['explains_strict_mismatch']).lower()}"
+    )
+    lines.append(
+        f"[D {o['result']}] evidence occurrence: inventory {o['inventory_occurrences']}, discovered "
         f"{o['discovered_occurrences']}, aligned {o['aligned']}, unaligned inventory {len(o['unaligned_inventory'])}, "
         f"unaligned discovered {len(o['unaligned_discovered'])}, duplicate occurrence identities "
         f"{len(o['duplicate_occurrence_identity'])}"
     )
     lines.append(
-        f"[{f['result']}] field agreement over {f['aligned']} aligned occurrences: anchor {f['anchor_equal']}, "
-        f"anchor_type {f['anchor_type_equal']}, context {f['context_equal']}, fingerprint {f['fingerprint_equal']}, "
-        f"fact {f['fact_equal']} ({len(f['differences'])} field differences)"
+        f"[E DIAGNOSTIC] field agreement over {f['aligned']} aligned occurrences (never affects overall): "
+        f"anchor {f['anchor_equal']}, anchor_type {f['anchor_type_equal']}, context {f['context_equal']}, "
+        f"fingerprint {f['fingerprint_equal']}, fact {f['fact_equal']} ({len(f['differences'])} field differences)"
     )
     for d in f["differences"]:
         if d["field"] in ("anchor", "anchor_type"):
             lines.append(f"    {d['field'].upper()} DIFF {d['pair']} @ {d['locator']}: inventory={d['inventory']!r} discovered={d['discovered']!r}")
     lines.append(
-        f"[info: {n['result']}] evidence identity after documented anchor_type normalization: matched {n['matched']}, "
-        f"inventory-only {len(n['inventory_only'])}, discovered-only {len(n['discovered_only'])}"
+        f"OVERALL: {r['overall']} (failures: {', '.join(r['failures']) or 'none'}; exit code {r['exit_code']}: "
+        f"1=pairs 2=unexplained identity 4=occurrence)"
     )
-    lines.append(f"OVERALL: {r['overall']} (exit code {r['exit_code']}: 1=pairs 2=identity 4=occurrence 8=fields)")
     return "\n".join(lines)
 
 

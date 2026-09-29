@@ -1070,6 +1070,49 @@ def disclose(
         typer.echo(doc)
 
 
+# ---------------------------------------------------------------------------
+# Output safety for `matcha impact` (CLI layer only).
+#
+# --output / --summary are refused when they resolve (symlinks and ".."
+# resolved) to a location inside:
+#   * the --fixture root (everything below it, including metadata/ and game/);
+#   * PROTECTED_REPO_DIRS of the git repository that contains the fixture, and
+#     of the git repository that contains this matcha package.  A repository
+#     root is the nearest ancestor with a ".git" entry (a directory, or a file
+#     for linked worktrees).
+# The directory list is deliberately generic: it protects every document in
+# the repository's experiment-documentation directory without naming any
+# single document.  There is no override flag.
+# ---------------------------------------------------------------------------
+PROTECTED_REPO_DIRS = ("docs/experiments",)
+
+
+def _repo_root(start: Path) -> Optional[Path]:
+    for d in (start, *start.parents):
+        if (d / ".git").exists():
+            return d
+    return None
+
+
+def _inside(path: Path, root: Path) -> bool:
+    return path == root or root in path.parents
+
+
+def protected_output_reason(path: Path, fixture: Path) -> Optional[str]:
+    """Why *path* must not be written by `matcha impact`, or None if it is safe."""
+    target = Path(path).expanduser().resolve()
+    fx = Path(fixture).expanduser().resolve()
+    if _inside(target, fx):
+        return f"{path} resolves to {target}, inside the fixture root {fx}"
+    roots = {r for r in (_repo_root(fx), _repo_root(Path(__file__).resolve().parent)) if r is not None}
+    for root in sorted(roots):
+        for rel in PROTECTED_REPO_DIRS:
+            d = (root / rel).resolve()
+            if _inside(target, d):
+                return f"{path} resolves to {target}, inside the protected repository directory {d}"
+    return None
+
+
 @app.command()
 def impact(
     fixture: Path = typer.Option(..., "--fixture", help="Frozen fixture root (contains metadata/fixture-manifest.json)"),
@@ -1084,9 +1127,6 @@ def impact(
         help="Vision provider: auto | unavailable | ollama | ollama:<model>. auto = a local Ollama vision model if discovery finds one, else unavailable",
     ),
     summary: Optional[Path] = typer.Option(None, "--summary", help="Also write a markdown summary here"),
-    confidence_threshold: float = typer.Option(
-        0.7, "--confidence-threshold", help="Provider verdicts below this confidence become REVIEW_REQUIRED"
-    ),
     identifier_policy: str = typer.Option(
         "auto",
         "--identifier-policy",
@@ -1099,10 +1139,19 @@ def impact(
     relationships from the game sources, classifies each asset with a vision
     provider (or reports the provider as unavailable), propagates statuses per
     Evidence Protocol #1, and writes JSON (+ optional markdown). Never writes
-    into the fixture or any game project.
+    into the fixture or any game project; --output/--summary inside the
+    fixture root or a protected repository directory are refused.
     """
     from matcha.impact.engine import ImpactError, run_impact
     from matcha.impact.fixture import FixtureError
+
+    for option, dest in (("--output", output), ("--summary", summary)):
+        if dest is None:
+            continue
+        why = protected_output_reason(dest, fixture)
+        if why:
+            typer.echo(f"impact: refusing to write {option}: {why}", err=True)
+            raise typer.Exit(1)
 
     try:
         report = run_impact(
@@ -1112,7 +1161,6 @@ def impact(
             output=output,
             provider=provider,
             summary=summary,
-            confidence_threshold=confidence_threshold,
             identifier_policy=identifier_policy,
         )
     except (ImpactError, FixtureError) as e:
@@ -1129,6 +1177,11 @@ def impact(
     typer.echo(f"code units: {c['code_units']} {c['file_status']}")
     typer.echo(f"relationships: {c['relationships']} {c['relationship_status']}")
     typer.echo(f"unresolved: {c['unresolved_items']} {c['unresolved_by_kind']}")
+    typer.echo(
+        f"analysis completeness: {report['analysis_completeness']} "
+        f"({report['static_relationships']} static relationships; "
+        f"{report['unresolved_dependency_count']} unresolved dependencies {report['unresolved_dependency_kinds']})"
+    )
     typer.echo(f"elapsed: {report['timing']['elapsed']}")
     typer.echo(f"wrote {output}" + (f" and {summary}" if summary else ""))
 

@@ -79,7 +79,7 @@ def test_evaluator_normalization_rule(anchor_type, anchor, expected):
     assert impact_eval.normalize_anchor_type(anchor_type, anchor) == expected
 
 
-def test_normalization_is_symmetric_and_informational_only():
+def test_normalization_is_symmetric_and_stays_visible():
     anchor = 'pic = "images/hero_b.png"'
     inv = {("game/syn.rpy", "assets/b.png"): [{"source_path": "game/syn.rpy", "anchor_type": "statement", "anchor": anchor,
                                                "locator": "source game/syn.rpy:6", "context": "c", "fingerprint": None, "fact": "f"}]}
@@ -87,6 +87,6 @@ def test_normalization_is_symmetric_and_informational_only():
     r = impact_eval.compare_inventory(disc, inv)
     assert r["evidence_identity"]["result"] == "FAIL"  # strict mismatch stays visible
     assert r["evidence_identity_normalized"]["result"] == "PASS"
-    assert r["overall"] == "FAIL"
+    assert r["overall"] == "PASS_WITH_NORMALIZATION" and r["exit_code"] == 0
     r2 = impact_eval.compare_inventory(inv, disc)  # swapped sides
     assert r2["evidence_identity_normalized"]["result"] == "PASS"

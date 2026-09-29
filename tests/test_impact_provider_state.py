@@ -47,7 +47,7 @@ def test_unavailable_report_never_claims_valid_output(tmp_path, monkeypatch):
 
 class _PerCandidate:
     """Behaviour chosen by opaque candidate number: 1 error, 2 malformed, 3 semantic RR,
-    4 low confidence, others ASSET_ACTION."""
+    4 low-confidence UNAFFECTED, others ASSET_ACTION."""
 
     name, model = "fake", "fake-1"
 
@@ -74,7 +74,8 @@ def test_each_cause_is_distinguishable_in_the_report(tmp_path):
     assert (by[1]["provider_state"], by[1]["review_cause"]) == ("ERROR", "PROVIDER_ERROR")
     assert (by[2]["provider_state"], by[2]["review_cause"]) == ("INVALID_OUTPUT", "INVALID_PROVIDER_OUTPUT")
     assert (by[3]["provider_state"], by[3]["review_cause"]) == ("AVAILABLE", "SEMANTIC_REVIEW_REQUIRED")
-    assert (by[4]["provider_state"], by[4]["review_cause"]) == ("AVAILABLE", "LOW_CONFIDENCE")
+    assert (by[4]["status"], by[4]["provider_state"], by[4]["review_cause"]) == ("UNAFFECTED", "AVAILABLE", None)
+    assert by[4]["classification"]["confidence"] == 0.1
     assert (by[5]["status"], by[5]["provider_state"], by[5]["review_cause"]) == ("ASSET_ACTION", "AVAILABLE", None)
     for n in (1, 2):
         assert by[n]["classification"]["valid_provider_output"] is False
@@ -93,7 +94,8 @@ def test_each_cause_is_distinguishable_in_the_report(tmp_path):
         {"status": "ASSET_ACTION", "provider_state": "UNAVAILABLE", "reason": "x"},
         {"status": "UNAFFECTED", "provider_state": "ERROR", "reason": "x"},
         {"status": "REVIEW_REQUIRED", "provider_state": "AVAILABLE", "reason": "x"},  # no cause
-        {"status": "ASSET_ACTION", "provider_state": "AVAILABLE", "reason": "x", "review_cause": "LOW_CONFIDENCE"},
+        {"status": "ASSET_ACTION", "provider_state": "AVAILABLE", "reason": "x", "review_cause": "SEMANTIC_REVIEW_REQUIRED"},
+        {"status": "REVIEW_REQUIRED", "provider_state": "AVAILABLE", "reason": "x", "review_cause": "LOW_CONFIDENCE"},
         {"status": "PROVIDER_UNAVAILABLE", "provider_state": "UNAVAILABLE", "reason": "x"},
         {"status": "REVIEW_REQUIRED", "provider_state": "BROKEN", "reason": "x", "review_cause": "PROVIDER_ERROR"},
     ],

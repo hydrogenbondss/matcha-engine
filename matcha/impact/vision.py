@@ -14,6 +14,11 @@ Two things are recorded separately for every asset:
   ``ERROR`` / ``INVALID_OUTPUT``), plus a machine-readable ``review_cause``
   whenever the status is ``REVIEW_REQUIRED``.
 
+Confidence is recorded as metadata only.  It never changes a verdict: a
+valid determinate verdict stays determinate at any confidence, and a valid
+``REVIEW_REQUIRED`` stays ``REVIEW_REQUIRED`` (protocol: REVIEW_REQUIRED
+never means "low confidence").  There is no confidence threshold.
+
 When no provider can run, no verdict is fabricated.  The asset gets
 ``REVIEW_REQUIRED`` with provider state ``UNAVAILABLE`` and cause
 ``PROVIDER_UNAVAILABLE``.  It never goes through :func:`validate_response`,
@@ -41,7 +46,6 @@ from typing import Any, Optional, Protocol
 
 from matcha.impact.model import ASSET_STATUSES
 
-DEFAULT_CONFIDENCE_THRESHOLD = 0.7
 PROVIDER_UNAVAILABLE = "provider unavailable"
 
 # Provider execution state, per asset. Independent of the asset status.
@@ -50,7 +54,6 @@ PROVIDER_STATES = ("AVAILABLE", "UNAVAILABLE", "ERROR", "INVALID_OUTPUT")
 # Why an asset is REVIEW_REQUIRED (None when the status is determinate).
 REVIEW_CAUSES = (
     "SEMANTIC_REVIEW_REQUIRED",  # a valid provider verdict of REVIEW_REQUIRED
-    "LOW_CONFIDENCE",  # a valid determinate verdict below the confidence threshold
     "PROVIDER_UNAVAILABLE",  # no provider could run; nothing was classified
     "PROVIDER_ERROR",  # the provider raised or the transport failed
     "INVALID_PROVIDER_OUTPUT",  # malformed or out-of-enum provider output
@@ -159,7 +162,7 @@ class ProviderUnavailableError(RuntimeError):
     """Raised by a provider that cannot classify anything."""
 
 
-def validate_response(raw: Any, *, threshold: float = DEFAULT_CONFIDENCE_THRESHOLD) -> Classification:
+def validate_response(raw: Any) -> Classification:
     """Strictly validate the output of a provider that actually ran.
 
     Accepted shape (JSON object or JSON text)::
@@ -171,9 +174,8 @@ def validate_response(raw: Any, *, threshold: float = DEFAULT_CONFIDENCE_THRESHO
 
     Unknown extra keys are rejected, so a drifting model format gets noticed.
     Invalid output gives provider state ``INVALID_OUTPUT``.  Valid output
-    gives ``AVAILABLE``.  A valid determinate verdict below *threshold*
-    becomes ``REVIEW_REQUIRED`` with cause ``LOW_CONFIDENCE``, keeping the
-    claimed verdict in ``provider_status``.
+    gives ``AVAILABLE`` and the provider's verdict unchanged; ``confidence``
+    is kept as metadata and never alters the verdict.
     """
     data = raw
     if isinstance(raw, (bytes, bytearray)):
@@ -223,20 +225,6 @@ def validate_response(raw: Any, *, threshold: float = DEFAULT_CONFIDENCE_THRESHO
             review_cause="SEMANTIC_REVIEW_REQUIRED",
             confidence=conf,
             reason=reason.strip(),
-            locator=locator,
-            provider_status=status,
-            raw=raw,
-        )
-    if conf < threshold:
-        return Classification(
-            status="REVIEW_REQUIRED",
-            provider_state="AVAILABLE",
-            review_cause="LOW_CONFIDENCE",
-            confidence=conf,
-            reason=(
-                f"provider verdict {status} not accepted: confidence {conf:.2f} is below the "
-                f"threshold {threshold:.2f}. Provider reason: {reason.strip()}"
-            ),
             locator=locator,
             provider_status=status,
             raw=raw,
@@ -385,8 +373,6 @@ def classify_asset(
     reference_image: Optional[ImageInput],
     candidate_image: ImageInput,
     context: dict[str, Any],
-    *,
-    threshold: float = DEFAULT_CONFIDENCE_THRESHOLD,
 ) -> Classification:
     if isinstance(provider, UnavailableProvider):
         return unavailable_classification()
@@ -398,4 +384,4 @@ def classify_asset(
         return _error(f"provider error: {type(e).__name__}: {e}")
     if isinstance(raw, dict) and "__transport_error__" in raw:
         return _error(f"provider transport error: {raw['__transport_error__']}", raw)
-    return validate_response(raw, threshold=threshold)
+    return validate_response(raw)

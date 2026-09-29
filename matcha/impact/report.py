@@ -63,7 +63,19 @@ def render_markdown(report: dict[str, Any]) -> str:
         lines += ["> **Provider unavailable.** No visual judgement was made; every asset is REVIEW_REQUIRED.", ""]
         if prov.get("missing"):
             lines += ["Missing for a real provider:", ""] + [f"- {m}" for m in prov["missing"]] + [""]
+    kinds = report.get("unresolved_dependency_kinds") or {}
+    pe = report.get("provider_execution") or {}
     lines += [
+        "## Analysis completeness",
+        "",
+        f"- Analysis completeness: **{report.get('analysis_completeness')}**",
+        f"- Statically established relationships: {report.get('static_relationships')}",
+        f"- Unresolved dependencies: {report.get('unresolved_dependency_count')}"
+        + (" (" + ", ".join(f"{k} {v}" for k, v in kinds.items()) + ")" if kinds else ""),
+        f"- {report.get('completeness_statement')}",
+        f"- Provider execution (separate, operational): state {pe.get('provider_state')}; "
+        f"{pe.get('assets_with_valid_provider_output')}/{pe.get('assets_total')} assets have valid provider output.",
+        "",
         "## Counts",
         "",
         f"- ASSET: {c['assets']} — " + ", ".join(f"{k} {v}" for k, v in sorted(c["asset_status"].items())),

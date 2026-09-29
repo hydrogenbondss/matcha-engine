@@ -8,6 +8,7 @@ writes one report.
 from __future__ import annotations
 
 import datetime as _dt
+from collections import Counter
 from pathlib import Path
 from typing import Any, Callable, Optional
 
@@ -27,7 +28,6 @@ from matcha.impact.propagate import (
 )
 from matcha.impact.report import SCHEMA_VERSION, summarise_counts, write_json, write_markdown
 from matcha.impact.vision import (
-    DEFAULT_CONFIDENCE_THRESHOLD,
     PROVIDER_UNAVAILABLE,
     UnavailableProvider,
     classify_asset,
@@ -95,6 +95,54 @@ def _excerpt_header_evidence(fx: Fixture, path: str) -> list[Evidence]:
     return out
 
 
+# ---- analysis completeness ---------------------------------------------------
+# Unresolved-item kinds that are NOT source dependencies:
+#   provider_unavailable     an operational state (see provider.state and each
+#                            asset's provider_state); it says nothing about which
+#                            production dependencies exist.
+#   no_static_relationship   an observation about an asset (no static relationship
+#                            was found), not an unresolved source construct.
+# Every other kind (dynamic_reference, unresolved_image_name,
+# conflicting_declaration, ambiguous_literal, scanner_limitation such as ATL
+# image blocks the v1 scanner does not support, and any kind added later) is an
+# unresolved dependency that could hide a relationship, so any one of them makes
+# analysis_completeness INCOMPLETE.
+NON_DEPENDENCY_KINDS = {
+    "provider_unavailable": "operational state; reported in provider.state and per-asset provider_state",
+    "no_static_relationship": "observation about an asset, not an unresolved source construct",
+}
+
+
+def analysis_completeness(unresolved: list[dict[str, Any]], static_relationships: int) -> dict[str, Any]:
+    deps = [u for u in unresolved if u.get("kind", "other") not in NON_DEPENDENCY_KINDS]
+    kinds = dict(sorted(Counter(u.get("kind", "other") for u in deps).items()))
+    state = "INCOMPLETE" if deps else "COMPLETE"
+    if deps:
+        statement = (
+            f"{static_relationships} CODE-to-ASSET relationship(s) were statically established. This is NOT a "
+            f"claim that all production dependencies were established: {len(deps)} unresolved dependency item(s) "
+            f"({', '.join(f'{k} {v}' for k, v in kinds.items())}) could hide further relationships."
+        )
+    else:
+        statement = (
+            f"{static_relationships} CODE-to-ASSET relationship(s) were statically established and the v1 scanner "
+            "detected no unresolved dependency. This is still only a claim about the constructs the v1 scanner "
+            "understands (see limitations), not proof that all production dependencies were established."
+        )
+    return {
+        "analysis_completeness": state,
+        "static_relationships": static_relationships,
+        "unresolved_dependency_count": len(deps),
+        "unresolved_dependency_kinds": kinds,
+        "completeness_statement": statement,
+        "completeness_rule": {
+            "incomplete_when": "any unresolved item whose kind is not listed in not_dependencies",
+            "not_dependencies": dict(NON_DEPENDENCY_KINDS),
+            "scope": "static dependency discovery only; provider execution is reported separately",
+        },
+    }
+
+
 def run_impact(
     *,
     fixture: Path,
@@ -103,7 +151,6 @@ def run_impact(
     output: Path,
     provider: str = "auto",
     summary: Optional[Path] = None,
-    confidence_threshold: float = DEFAULT_CONFIDENCE_THRESHOLD,
     identifier_policy: str = "auto",
     discovery_fn: Optional[Callable[[], dict[str, Any]]] = None,
     provider_obj: Any = None,
@@ -153,7 +200,6 @@ def run_impact(
                 ref_input,
                 load_image_input(cand, candidate_id),
                 {"candidate_id": candidate_id},
-                threshold=confidence_threshold,
             )
         else:
             cls = unavailable_classification()
@@ -287,6 +333,8 @@ def run_impact(
                 }
             )
 
+    completeness = analysis_completeness(unresolved, len(graph.relationships))
+    valid_outputs = sum(1 for r in asset_records if r["classification"]["valid_provider_output"])
     end = _now()
     report: dict[str, Any] = {
         "schema_version": SCHEMA_VERSION,
@@ -312,7 +360,7 @@ def run_impact(
             "available": ok,
             "selection_note": note,
             "requested": provider if provider_obj is None else "injected",
-            "confidence_threshold": confidence_threshold,
+            "confidence_policy": "recorded as metadata only; never changes a verdict (no threshold)",
             "missing": list(getattr(prov, "missing", []) or []) if not ok else [],
             "discovery": disc,
         },
@@ -330,6 +378,13 @@ def run_impact(
             for u in graph.out_of_scope_code
         ],
         "unresolved_items": unresolved,
+        **completeness,
+        "provider_execution": {
+            "provider_state": "AVAILABLE" if ok else "UNAVAILABLE",
+            "assets_total": len(asset_records),
+            "assets_with_valid_provider_output": valid_outputs,
+            "note": "operational state; independent of analysis_completeness",
+        },
         "limitations": list(V1_LIMITATIONS),
     }
     report["counts"] = summarise_counts(report)

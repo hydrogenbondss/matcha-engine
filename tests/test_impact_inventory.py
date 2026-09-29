@@ -27,20 +27,23 @@ def test_pairs_exactly_match_frozen_inventory():
 
 def test_evidence_checks_are_reported_separately_and_mismatch_stays_visible():
     r = _real()
-    for k in ("pairs", "evidence_identity", "evidence_occurrence", "field_agreement", "evidence_identity_normalized"):
+    for k in ("pairs", "evidence_identity", "evidence_occurrence", "evidence_identity_normalized"):
         assert r[k]["result"] in ("PASS", "FAIL")
+    assert r["field_agreement"]["result"] == "DIAGNOSTIC"
     i = r["evidence_identity"]
     assert i["inventory_items"] == i["discovered_items"] == 127
     # every occurrence aligns one-to-one
     assert r["evidence_occurrence"]["result"] == "PASS" and r["evidence_occurrence"]["aligned"] == 127
-    # the overall verdict is the AND of the four strict checks, never the pair result alone
-    strict = [r[k]["result"] for k in ("pairs", "evidence_identity", "evidence_occurrence", "field_agreement")]
-    assert r["overall"] == ("PASS" if all(x == "PASS" for x in strict) else "FAIL")
     assert (r["exit_code"] & 1) == 0
+    # field agreement is diagnostic only
+    assert r["field_agreement"]["result"] == "DIAGNOSTIC" and r["field_agreement"]["affects_overall"] is False
     if i["result"] == "FAIL":
-        assert r["overall"] == "FAIL" and r["exit_code"] & 2
-        # any strict identity mismatch is an anchor_type-only difference that the documented
-        # normalization accounts for; it is still reported as a strict FAIL
+        # any strict identity mismatch is an anchor_type-only difference that the accepted
+        # normalization explains; it stays visible as a strict FAIL and yields PASS_WITH_NORMALIZATION
         assert r["evidence_identity_normalized"]["result"] == "PASS"
         for x in i["inventory_only"] + i["discovered_only"]:
             assert x["identity"][1] in ("statement", "assignment")
+        assert r["overall"] == "PASS_WITH_NORMALIZATION" and r["normalization_applied"] is True
+    else:
+        assert r["overall"] == "PASS"
+    assert r["exit_code"] == 0 and r["failures"] == []

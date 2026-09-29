@@ -100,9 +100,11 @@ def test_malformed_and_uncertain_provider_output_end_to_end(tmp_path):
         discovery_fn=fake_discovery,
         provider_obj=_Always({"status": "UNAFFECTED", "confidence": 0.3, "reason": "maybe"}),
     )
-    assert r["counts"]["asset_status"] == {"REVIEW_REQUIRED": 15}
-    assert all(a["classification"]["provider_status"] == "UNAFFECTED" for a in r["assets"])
-    assert r["counts"]["asset_review_cause"] == {"LOW_CONFIDENCE": 15}
+    # low confidence never changes a determinate verdict; confidence is metadata
+    assert r["counts"]["asset_status"] == {"UNAFFECTED": 15}
+    assert all(a["classification"]["confidence"] == 0.3 for a in r["assets"])
+    assert r["counts"]["asset_review_cause"] == {}
+    assert r["counts"]["relationship_status"] == {"UNAFFECTED": 30}
 
 
 def test_mixed_statuses_file_precedence(tmp_path):
@@ -129,8 +131,18 @@ def test_mixed_statuses_file_precedence(tmp_path):
     assert {a["review_cause"] for a in r["assets"] if a["status"] == "REVIEW_REQUIRED"} == {"SEMANTIC_REVIEW_REQUIRED"}
 
 
+def test_cli_has_no_confidence_threshold_option(tmp_path):
+    res = CliRunner().invoke(
+        app,
+        ["impact", "--fixture", str(REAL_FIXTURE), "--request", "x", "--output", str(tmp_path / "o.json"),
+         "--provider", "unavailable", "--confidence-threshold", "0.7"],
+    )
+    assert res.exit_code == 2 and "No such option" in res.output
+
+
 def test_bad_inputs(tmp_path):
-    res = CliRunner().invoke(app, ["impact", "--fixture", str(tmp_path), "--request", "x", "--output", str(tmp_path / "o.json")])
+    (tmp_path / "emptyfx").mkdir()
+    res = CliRunner().invoke(app, ["impact", "--fixture", str(tmp_path / "emptyfx"), "--request", "x", "--output", str(tmp_path / "o.json")])
     assert res.exit_code == 1 and "fixture manifest not found" in res.output
     res = CliRunner().invoke(
         app,
