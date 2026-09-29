@@ -1,8 +1,8 @@
 """Pair-set validation and evidence validation are separate (synthetic data).
 
-Overall fails only for: a pair mismatch, a strict identity mismatch that the
-accepted normalization does not explain, or an occurrence mismatch/duplicate.
-Field (prose) differences are diagnostic only."""
+Overall fails for: a pair mismatch, any strict identity mismatch (strict
+identity is authoritative; a normalization may only explain it), or an
+occurrence mismatch/duplicate.  Field (prose) differences are diagnostic only."""
 
 import subprocess
 import sys
@@ -31,7 +31,7 @@ def _copy(d):
 def test_all_pass():
     r = impact_eval.compare_inventory(_copy(BASE), _copy(BASE))
     assert r["overall"] == "PASS" and r["exit_code"] == 0 and r["failures"] == []
-    assert r["normalization_applied"] is False
+    assert r["explanation"] is None and r["evidence_identity"]["explained_by_normalization"] is False
     assert all(r[k]["result"] == "PASS" for k in ("pairs", "evidence_identity", "evidence_identity_normalized", "evidence_occurrence"))
     assert r["field_agreement"]["result"] == "DIAGNOSTIC" and r["field_agreement"]["all_fields_equal"] is True
 
@@ -115,16 +115,19 @@ def test_field_agreement_counts_each_field():
     assert r["overall"] == "PASS" and r["exit_code"] == 0 and r["failures"] == []
 
 
-def test_strict_mismatch_explained_by_normalization_passes_with_normalization():
+def test_strict_mismatch_explained_by_normalization_still_fails():
+    import json
+
     disc = _copy(BASE)
     disc[("game/x.rpy", "assets/b.png")][0]["anchor_type"] = "statement"  # binding anchor, other label
     r = impact_eval.compare_inventory(disc, _copy(BASE))
-    assert r["evidence_identity"]["result"] == "FAIL"  # stays visible
-    assert r["evidence_identity_normalized"]["result"] == "PASS"
+    assert r["evidence_identity"]["result"] == "FAIL"  # strict identity is authoritative
+    assert r["evidence_identity_normalized"]["result"] == "PASS"  # diagnostic only
     assert r["evidence_identity_normalized"]["explains_strict_mismatch"] is True
-    assert r["overall"] == "PASS_WITH_NORMALIZATION" and r["normalization_applied"] is True
-    assert r["accepted_normalizations"] == ["anchor_type_binding"]
-    assert r["exit_code"] == 0 and r["failures"] == []
+    assert r["evidence_identity"]["explained_by_normalization"] is True
+    assert "anchor_type_binding" in r["explanation"] and "remains a FAIL" in r["explanation"]
+    assert r["overall"] == "FAIL" and r["failures"] == ["evidence_identity"] and r["exit_code"] == 2
+    assert "PASS_WITH_NORMALIZATION" not in json.dumps(r)
 
 
 def test_normalization_does_not_rescue_other_failures():
@@ -132,7 +135,10 @@ def test_normalization_does_not_rescue_other_failures():
     disc[("game/x.rpy", "assets/b.png")][0]["anchor_type"] = "statement"
     disc[("game/y.rpy", "assets/a.png")] = [_e("show a happy", src="game/y.rpy", locator="source game/y.rpy:5")]
     r = impact_eval.compare_inventory(disc, _copy(BASE))
-    assert r["overall"] == "FAIL" and r["normalization_applied"] is False and "pairs" in r["failures"]
+    # the extra pair's evidence is also unaligned, so all three layers fail with distinct bits
+    assert r["overall"] == "FAIL" and r["failures"] == ["pairs", "evidence_identity", "evidence_occurrence"]
+    assert r["exit_code"] == 7
+    assert r["evidence_identity"]["explained_by_normalization"] is False
 
 
 def test_cli_exit_code_is_bitmask(tmp_path):
@@ -141,5 +147,5 @@ def test_cli_exit_code_is_bitmask(tmp_path):
                          capture_output=True, text=True)
     assert "[A PASS] pairs:" in res.stdout and "OVERALL:" in res.stdout
     assert res.returncode & 1 == 0
-    passed = "OVERALL: PASS " in res.stdout or "OVERALL: PASS_WITH_NORMALIZATION " in res.stdout
-    assert passed == (res.returncode == 0)
+    assert "PASS_WITH_NORMALIZATION" not in res.stdout
+    assert ("OVERALL: PASS " in res.stdout) == (res.returncode == 0)

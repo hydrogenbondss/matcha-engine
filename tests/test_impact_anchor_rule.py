@@ -87,6 +87,7 @@ def test_normalization_is_symmetric_and_stays_visible():
     r = impact_eval.compare_inventory(disc, inv)
     assert r["evidence_identity"]["result"] == "FAIL"  # strict mismatch stays visible
     assert r["evidence_identity_normalized"]["result"] == "PASS"
-    assert r["overall"] == "PASS_WITH_NORMALIZATION" and r["exit_code"] == 0
+    assert r["overall"] == "FAIL" and r["exit_code"] == 2  # strict identity is authoritative
+    assert r["evidence_identity"]["explained_by_normalization"] is True
     r2 = impact_eval.compare_inventory(inv, disc)  # swapped sides
     assert r2["evidence_identity_normalized"]["result"] == "PASS"

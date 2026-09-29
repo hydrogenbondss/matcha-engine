@@ -10,8 +10,8 @@ Subcommands:
                         the worksheet's frozen structural inventory; separate
                         layers for pairs, strict and normalized evidence
                         identity, evidence occurrence, and diagnostic field
-                        agreement; overall PASS / PASS_WITH_NORMALIZATION /
-                        FAIL (bit-mask exit code, see "validation" below)
+                        agreement; overall PASS / FAIL with strict identity
+                        authoritative (bit-mask exit code, see "validation")
     compare             score an impact JSON report against one frozen test
                         section (A, B or C) of the worksheet, per protocol
                         §17-18 (REVIEW_REQUIRED neither positive nor negative)
@@ -95,7 +95,8 @@ def load_test(worksheet: Path, test: str) -> dict[str, Any]:
 #                                   protocol §5.1.  PASS/FAIL.
 #   C evidence_identity_normalized  B after the documented ANCHOR_TYPE
 #                                   NORMALIZATION below, applied to both sides.
-#                                   PASS/FAIL (informational on its own).
+#                                   DIAGNOSTIC: its PASS/FAIL only explains a
+#                                   strict mismatch; it never affects overall.
 #   D evidence_occurrence           per pair, every occurrence on one side aligns
 #                                   with exactly one occurrence on the other, and
 #                                   within each side no two occurrences share
@@ -112,22 +113,20 @@ def load_test(worksheet: Path, test: str) -> dict[str, Any]:
 #                                   DIAGNOSTIC ONLY: result is "DIAGNOSTIC", with
 #                                   all_fields_equal true/false; never fails.
 #
+# Strict evidence identity (B) is authoritative (protocol §5.1 defines
+# evidence identity strictly as source_path + anchor_type + anchor).
 # overall (machine-readable) is one of:
-#   "PASS"                     A, B and D pass.
-#   "PASS_WITH_NORMALIZATION"  A and D pass; B fails strictly, but every strict
-#                              identity difference is explained by the accepted
-#                              normalization (C passes).  The strict FAIL stays
-#                              visible in B, and normalization_applied is true.
-#   "FAIL"                     A fails, or B fails and C fails (a strict identity
-#                              difference no accepted normalization explains),
-#                              or D fails.  "failures" lists the failing layers.
+#   "PASS"  A, B and D pass.
+#   "FAIL"  A, B or D fails.  "failures" lists the failing layers.
+# A normalization may EXPLAIN a strict mismatch (evidence_identity
+# .explained_by_normalization / .explanation, and the top-level
+# "explanation"), but it never turns a strict FAIL into a pass.
 # Exit code: bit mask of failures, so pair and evidence failures stay distinct:
-#   1 = pairs, 2 = evidence identity not explained by an accepted normalization,
-#   4 = evidence occurrence.  PASS and PASS_WITH_NORMALIZATION both exit 0.
-#   Field-agreement differences never set a bit.
+#   1 = pairs, 2 = strict evidence identity, 4 = evidence occurrence.
+#   Normalized identity (C) and field agreement (E) never set a bit.
 
 EXIT_BITS = {"pairs": 1, "evidence_identity": 2, "evidence_occurrence": 4}
-ACCEPTED_NORMALIZATIONS = ("anchor_type_binding",)
+DIAGNOSTIC_NORMALIZATION = "anchor_type_binding"
 
 # Python/Ren'Py binding syntax: `name = expr`, `$ name = expr`, `define|default name = expr`,
 # `obj.attr = expr`, `x[k] = expr`, augmented `op=`, but not `==`; or a `"key": value` dict entry.
@@ -252,19 +251,38 @@ def compare_inventory(discovered: dict[tuple[str, str], list[dict]], inventory: 
     agree["result"] = "DIAGNOSTIC"
     agree["all_fields_equal"] = not agree["differences"]
     agree["affects_overall"] = False
-    norm["name"] = ACCEPTED_NORMALIZATIONS[0]
+    norm["name"] = DIAGNOSTIC_NORMALIZATION
+    norm["diagnostic_only"] = True
     norm["explains_strict_mismatch"] = ident["result"] == "FAIL" and norm["result"] == "PASS"
+
+    strict_diffs = len(ident["inventory_only"]) + len(ident["discovered_only"])
+    unexplained = len(norm["inventory_only"]) + len(norm["discovered_only"])
+    ident["explained_by_normalization"] = norm["explains_strict_mismatch"]
+    if ident["result"] == "PASS":
+        ident["explanation"] = None
+    elif norm["explains_strict_mismatch"]:
+        ident["explanation"] = (
+            f"Strict evidence identity (protocol §5.1: source_path + anchor_type + anchor) FAILS: {strict_diffs} "
+            f"identity difference(s). All of them are explained by the documented diagnostic normalization "
+            f"'{DIAGNOSTIC_NORMALIZATION}' (anchor_type 'statement'/'assignment' on a binding anchor -> 'binding'). "
+            "The normalization is diagnostic only; strict identity is authoritative, so this remains a FAIL."
+        )
+    else:
+        ident["explanation"] = (
+            f"Strict evidence identity (protocol §5.1: source_path + anchor_type + anchor) FAILS: {strict_diffs} "
+            f"identity difference(s), of which {unexplained} are not explained by the documented diagnostic "
+            f"normalization '{DIAGNOSTIC_NORMALIZATION}'. Strict identity is authoritative, so this is a FAIL."
+        )
 
     failures = []
     if pairs["result"] == "FAIL":
         failures.append("pairs")
-    if ident["result"] == "FAIL" and norm["result"] == "FAIL":
+    if ident["result"] == "FAIL":
         failures.append("evidence_identity")
     if occ["result"] == "FAIL":
         failures.append("evidence_occurrence")
     code = sum(EXIT_BITS[f] for f in failures)
-    normalization_applied = not failures and norm["explains_strict_mismatch"]
-    overall = "FAIL" if failures else ("PASS_WITH_NORMALIZATION" if normalization_applied else "PASS")
+    overall = "FAIL" if failures else "PASS"
     return {
         "pairs": pairs,
         "evidence_identity": ident,
@@ -273,8 +291,7 @@ def compare_inventory(discovered: dict[tuple[str, str], list[dict]], inventory: 
         "field_agreement": agree,
         "overall": overall,
         "failures": failures,
-        "normalization_applied": normalization_applied,
-        "accepted_normalizations": list(ACCEPTED_NORMALIZATIONS) if normalization_applied else [],
+        "explanation": ident["explanation"],
         "exit_code": code,
     }
 
@@ -473,8 +490,10 @@ def _validation_text(r: dict) -> str:
     )
     lines += [f"    INVENTORY-ONLY  {x['pair']} {x['identity']}" for x in i["inventory_only"]]
     lines += [f"    DISCOVERED-ONLY {x['pair']} {x['identity']}" for x in i["discovered_only"]]
+    if i.get("explanation"):
+        lines.append(f"    EXPLANATION: {i['explanation']}")
     lines.append(
-        f"[C {n['result']}] evidence identity after accepted normalization '{n['name']}' (statement/assignment on a "
+        f"[C {n['result']} diagnostic] evidence identity after documented normalization '{n['name']}' (statement/assignment on a "
         f"binding anchor -> binding): matched {n['matched']}, inventory-only {len(n['inventory_only'])}, "
         f"discovered-only {len(n['discovered_only'])}; explains strict mismatch: {str(n['explains_strict_mismatch']).lower()}"
     )
@@ -494,7 +513,7 @@ def _validation_text(r: dict) -> str:
             lines.append(f"    {d['field'].upper()} DIFF {d['pair']} @ {d['locator']}: inventory={d['inventory']!r} discovered={d['discovered']!r}")
     lines.append(
         f"OVERALL: {r['overall']} (failures: {', '.join(r['failures']) or 'none'}; exit code {r['exit_code']}: "
-        f"1=pairs 2=unexplained identity 4=occurrence)"
+        f"1=pairs 2=strict identity 4=occurrence)"
     )
     return "\n".join(lines)
 

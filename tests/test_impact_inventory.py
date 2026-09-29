@@ -38,12 +38,12 @@ def test_evidence_checks_are_reported_separately_and_mismatch_stays_visible():
     # field agreement is diagnostic only
     assert r["field_agreement"]["result"] == "DIAGNOSTIC" and r["field_agreement"]["affects_overall"] is False
     if i["result"] == "FAIL":
-        # any strict identity mismatch is an anchor_type-only difference that the accepted
-        # normalization explains; it stays visible as a strict FAIL and yields PASS_WITH_NORMALIZATION
+        # strict identity is authoritative: any strict mismatch fails overall with bit 2.
+        # The documented normalization explains it (diagnostic only) and the output says so.
         assert r["evidence_identity_normalized"]["result"] == "PASS"
         for x in i["inventory_only"] + i["discovered_only"]:
             assert x["identity"][1] in ("statement", "assignment")
-        assert r["overall"] == "PASS_WITH_NORMALIZATION" and r["normalization_applied"] is True
+        assert i["explained_by_normalization"] is True and "anchor_type_binding" in r["explanation"]
+        assert r["overall"] == "FAIL" and r["failures"] == ["evidence_identity"] and r["exit_code"] == 2
     else:
-        assert r["overall"] == "PASS"
-    assert r["exit_code"] == 0 and r["failures"] == []
+        assert r["overall"] == "PASS" and r["exit_code"] == 0 and r["failures"] == []
