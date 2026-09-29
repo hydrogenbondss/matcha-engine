@@ -1070,5 +1070,68 @@ def disclose(
         typer.echo(doc)
 
 
+@app.command()
+def impact(
+    fixture: Path = typer.Option(..., "--fixture", help="Frozen fixture root (contains metadata/fixture-manifest.json)"),
+    request: str = typer.Option(..., "--request", help="Canonical change request text, verbatim"),
+    output: Path = typer.Option(..., "--output", help="Write the JSON impact report here"),
+    reference: Optional[Path] = typer.Option(
+        None, "--reference", help="Reference image of the current canonical design (path, or relative to --fixture)"
+    ),
+    provider: str = typer.Option(
+        "auto",
+        "--provider",
+        help="Vision provider: auto | unavailable | ollama | ollama:<model>. auto = a local Ollama vision model if discovery finds one, else unavailable",
+    ),
+    summary: Optional[Path] = typer.Option(None, "--summary", help="Also write a markdown summary here"),
+    test_case: Optional[str] = typer.Option(None, "--test-case", help="Optional label copied into each record (e.g. A)"),
+    confidence_threshold: float = typer.Option(
+        0.7, "--confidence-threshold", help="Provider verdicts below this confidence become REVIEW_REQUIRED"
+    ),
+    identifier_policy: str = typer.Option(
+        "auto",
+        "--identifier-policy",
+        help="auto | preserved | changed | unknown: whether existing file names / image identifiers stay valid",
+    ),
+):
+    """Read-only impact analysis of a frozen fixture for one change request.
+
+    Loads scored ASSET and CODE units from the fixture, discovers CODE -> ASSET
+    relationships from the game sources, classifies each asset with a vision
+    provider (or reports the provider as unavailable), propagates statuses per
+    Evidence Protocol #1, and writes JSON (+ optional markdown). Never writes
+    into the fixture or any game project.
+    """
+    from matcha.impact.engine import ImpactError, run_impact
+    from matcha.impact.fixture import FixtureError
+
+    try:
+        report = run_impact(
+            fixture=fixture,
+            request=request,
+            reference=reference,
+            output=output,
+            provider=provider,
+            summary=summary,
+            test_case=test_case,
+            confidence_threshold=confidence_threshold,
+            identifier_policy=identifier_policy,
+        )
+    except (ImpactError, FixtureError) as e:
+        typer.echo(f"impact: {e}", err=True)
+        raise typer.Exit(1)
+    c = report["counts"]
+    p = report["provider"]
+    typer.echo(
+        f"provider: {p['name']}" + (f" ({p['model']})" if p.get("model") else "")
+        + ("" if p["available"] else " — provider unavailable, all assets REVIEW_REQUIRED")
+    )
+    typer.echo(f"assets: {c['assets']} {c['asset_status']}")
+    typer.echo(f"code units: {c['code_units']} {c['file_status']}")
+    typer.echo(f"relationships: {c['relationships']} {c['relationship_status']}")
+    typer.echo(f"elapsed: {report['timing']['elapsed']}")
+    typer.echo(f"wrote {output}" + (f" and {summary}" if summary else ""))
+
+
 if __name__ == "__main__":
     app()
