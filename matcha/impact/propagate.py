@@ -16,6 +16,16 @@ File status is the highest-precedence relationship status:
 ``CODE_ACTION > DOWNSTREAM_USAGE > REVIEW_REQUIRED > UNAFFECTED`` (§6).
 An asset's ASSET_ACTION never by itself makes a relationship CODE_ACTION
 (§7); only an identifier change does.
+
+v1 LIMITATION (deliberate, not solved): CODE_ACTION is reachable only through
+the identifier policy.  v1 propagates an affected asset with preserved
+identifiers to DOWNSTREAM_USAGE, and with changed identifiers to CODE_ACTION.
+It does not independently understand semantic source edits that a visual
+change can require, for example dialogue or narration that describes the old
+look, alignment/crop/offset tables tuned to the old silhouette, or
+comments/metadata that document the old design.  The identifier policy itself
+is a keyword heuristic over the request text (``auto`` never yields
+``changed``; ``--identifier-policy changed`` is a manual assertion).
 """
 
 from __future__ import annotations
@@ -27,6 +37,26 @@ from typing import Iterable
 from matcha.impact.model import CODE_STATUSES
 
 PRECEDENCE = ("CODE_ACTION", "DOWNSTREAM_USAGE", "REVIEW_REQUIRED", "UNAFFECTED")
+
+# Reported verbatim in every report's ``limitations`` field.
+V1_LIMITATIONS = (
+    "CODE_ACTION is derived only from the identifier policy: an affected asset with preserved identifiers "
+    "propagates to DOWNSTREAM_USAGE and with changed identifiers to CODE_ACTION. v1 does not independently "
+    "understand semantic source edits a visual change may require (e.g. dialogue or narration describing the "
+    "old look, alignment/crop/offset tables tuned to the old art, comments documenting the old design).",
+    "The identifier policy is a keyword heuristic over the request text; 'auto' yields only 'preserved' or "
+    "'unknown', never 'changed'. 'changed' is a manual assertion via --identifier-policy.",
+    "Low-confidence provider verdicts are reported as REVIEW_REQUIRED with review_cause LOW_CONFIDENCE; this "
+    "is an engine policy, not an evidence-sufficiency judgement.",
+    "Dynamic image/file references (concatenation, formatting, show expression, image-loading calls with "
+    "non-literal arguments, calls to helpers that build paths dynamically) are surfaced as unresolved items "
+    "and never resolved or counted as relationships.",
+    "Ren'Py automatic image names (declared implicitly from files under images/) and ATL image blocks are not "
+    "modelled.",
+    "Excerpt block markers are trusted; their ranges are not cross-checked against the excerpt header.",
+    "The vision provider receives only the request, the reference image and the candidate image; it does not "
+    "receive written design documentation.",
+)
 IDENTIFIER_POLICIES = ("preserved", "changed", "unknown")
 
 # Wording that would put file names / paths / image identifiers in play.

@@ -10,6 +10,7 @@ from matcha.impact.vision import (
     UnavailableProvider,
     build_prompt,
     classify_asset,
+    load_image_input,
     validate_response,
 )
 
@@ -18,7 +19,8 @@ GOOD = {"status": "ASSET_ACTION", "confidence": 0.93, "reason": "The head and ha
 
 def test_valid_dict_and_json_text():
     c = validate_response(GOOD)
-    assert (c.status, c.valid, c.confidence) == ("ASSET_ACTION", True, 0.93)
+    assert (c.status, c.valid_provider_output, c.confidence) == ("ASSET_ACTION", True, 0.93)
+    assert c.provider_state == "AVAILABLE" and c.review_cause is None
     c = validate_response(json.dumps({**GOOD, "locator": "upper third"}))
     assert c.status == "ASSET_ACTION" and c.locator == "upper third"
     assert validate_response(json.dumps(GOOD).encode()).status == "ASSET_ACTION"
@@ -49,7 +51,8 @@ def test_valid_dict_and_json_text():
 def test_malformed_output_becomes_review_required(raw, fragment):
     c = validate_response(raw)
     assert c.status == "REVIEW_REQUIRED"
-    assert c.valid is False
+    assert c.provider_state == "INVALID_OUTPUT" and c.review_cause == "INVALID_PROVIDER_OUTPUT"
+    assert c.valid_provider_output is False and c.confidence is None
     assert fragment in c.reason
 
 
@@ -58,6 +61,7 @@ def test_low_confidence_becomes_review_required_with_reason():
     assert c.status == "REVIEW_REQUIRED"
     assert c.provider_status == "ASSET_ACTION"
     assert "below the threshold" in c.reason and "head and hair" in c.reason
+    assert c.provider_state == "AVAILABLE" and c.review_cause == "LOW_CONFIDENCE"
     c = validate_response({"status": "UNAFFECTED", "confidence": 0.69, "reason": "not in frame"}, threshold=0.7)
     assert c.status == "REVIEW_REQUIRED"
     assert validate_response({**GOOD, "confidence": 0.7}, threshold=0.7).status == "ASSET_ACTION"
@@ -65,7 +69,8 @@ def test_low_confidence_becomes_review_required_with_reason():
 
 def test_provider_review_required_is_kept_even_at_low_confidence():
     c = validate_response({"status": "REVIEW_REQUIRED", "confidence": 0.2, "reason": "cropped out"})
-    assert c.status == "REVIEW_REQUIRED" and c.valid is True and c.reason == "cropped out"
+    assert c.status == "REVIEW_REQUIRED" and c.valid_provider_output is True and c.reason == "cropped out"
+    assert c.provider_state == "AVAILABLE" and c.review_cause == "SEMANTIC_REVIEW_REQUIRED"
 
 
 class _Boom:
@@ -81,8 +86,10 @@ class _Boom:
 def test_provider_exception_and_transport_error(tmp_path):
     img = tmp_path / "a.png"
     png(img)
+    img = load_image_input(img, "candidate-01")
     c = classify_asset(_Boom(), "req", None, img, {})
     assert c.status == "REVIEW_REQUIRED" and "provider error" in c.reason
+    assert c.provider_state == "ERROR" and c.review_cause == "PROVIDER_ERROR" and not c.valid_provider_output
 
     class _T(_Boom):
         def classify(self, *a):
@@ -90,6 +97,7 @@ def test_provider_exception_and_transport_error(tmp_path):
 
     c = classify_asset(_T(), "req", None, img, {})
     assert c.status == "REVIEW_REQUIRED" and "transport error" in c.reason
+    assert c.provider_state == "ERROR" and c.review_cause == "PROVIDER_ERROR"
 
 
 def test_unavailable_provider(tmp_path):
@@ -97,8 +105,10 @@ def test_unavailable_provider(tmp_path):
     png(img)
     p = UnavailableProvider(missing=["x"])
     assert p.available() == (False, "provider unavailable")
-    c = classify_asset(p, "req", None, img, {})
-    assert (c.status, c.reason, c.confidence) == ("REVIEW_REQUIRED", "provider unavailable", 0.0)
+    c = classify_asset(p, "req", None, load_image_input(img, "candidate-01"), {})
+    assert (c.status, c.reason, c.confidence) == ("REVIEW_REQUIRED", "provider unavailable", None)
+    assert c.provider_state == "UNAVAILABLE" and c.review_cause == "PROVIDER_UNAVAILABLE"
+    assert c.to_dict()["valid_provider_output"] is False
 
 
 def test_ollama_adapter_payload_and_validation(tmp_path, monkeypatch):
@@ -115,13 +125,18 @@ def test_ollama_adapter_payload_and_validation(tmp_path, monkeypatch):
     monkeypatch.setattr(OllamaProvider, "_post", fake_post)
     p = OllamaProvider(model="some-vl")
     assert p.available() == (True, "ok")
-    c = classify_asset(p, "Hair changes.", ref, cand, {"asset_path": "assets/c.png"})
+    c = classify_asset(
+        p, "Hair changes.", load_image_input(ref, "reference"), load_image_input(cand, "candidate-01"),
+        {"candidate_id": "candidate-01"},
+    )
     assert c.status == "ASSET_ACTION"
     path, payload = calls[-1]
     assert path == "/api/chat" and payload["format"] == "json"
     assert len(payload["messages"][0]["images"]) == 2
     assert "Hair changes." in payload["messages"][0]["content"]
-    assert "assets/c.png" in payload["messages"][0]["content"]
+    blob = json.dumps(payload)
+    for leak in ("c.png", "r.png", str(tmp_path), "candidate-01"):
+        assert leak not in blob
 
 
 def test_ollama_without_vision_is_unavailable(monkeypatch):
@@ -131,9 +146,10 @@ def test_ollama_without_vision_is_unavailable(monkeypatch):
 
 
 def test_prompt_is_generic():
-    p = build_prompt("X changes.", "assets/a.png", True)
+    p = build_prompt("X changes.", True)
     assert "FIRST image is the reference" in p and "JSON" in p
-    assert "Do not guess from the file name" in p
+    assert "not in frame" not in p
+    assert "FIRST image" not in build_prompt("X changes.", False)
 
 
 def test_discovery_reports_presence_only_and_no_values():

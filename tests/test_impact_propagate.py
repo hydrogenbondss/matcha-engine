@@ -72,3 +72,13 @@ def test_asset_action_alone_never_creates_code_action():
 )
 def test_identifier_policy_inference(request_text, policy):
     assert infer_identifier_policy(request_text)[0] == policy
+
+
+def test_v1_code_action_limitation_is_documented():
+    import matcha.impact.propagate as propagate
+    from matcha.impact.propagate import V1_LIMITATIONS
+
+    text = " ".join(V1_LIMITATIONS)
+    assert "CODE_ACTION" in text and "DOWNSTREAM_USAGE" in text
+    assert "semantic" in text.lower()
+    assert "semantic" in (propagate.__doc__ or "").lower() and "limitation" in (propagate.__doc__ or "").lower()

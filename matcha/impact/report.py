@@ -24,6 +24,11 @@ def summarise_counts(report: dict[str, Any]) -> dict[str, Any]:
             len(r["evidence"]) for c in report["code"] for r in c["relationships"]
         ),
         "unresolved_items": len(report["unresolved_items"]),
+        "unresolved_by_kind": dict(Counter(u.get("kind", "other") for u in report["unresolved_items"])),
+        "asset_provider_state": dict(Counter(a["provider_state"] for a in report["assets"])),
+        "asset_review_cause": dict(
+            Counter(a["review_cause"] for a in report["assets"] if a["review_cause"] is not None)
+        ),
     }
 
 
@@ -46,11 +51,10 @@ def render_markdown(report: dict[str, Any]) -> str:
         "# Matcha impact report",
         "",
         f"- Request: {report['request']}",
-        f"- Test case label: {report.get('test_case') or '(none)'}",
         f"- Reference asset: `{report['reference_asset']['path']}` (sha256 {report['reference_asset']['sha256']})",
         f"- Fixture: `{report['fixture']['root']}` (manifest sha256 {report['fixture']['manifest_sha256']})",
         f"- Provider: **{prov['name']}**" + (f" / model `{prov['model']}`" if prov.get("model") else "")
-        + f" (available: {prov['available']}; {prov['selection_note']})",
+        + f" (state: {prov['state']}; {prov['selection_note']})",
         f"- Identifier policy: {report['identifier_policy']['policy']} ({report['identifier_policy']['reason']})",
         f"- Timing: {t['start']} -> {t['end']} ({t['elapsed']})",
         "",
@@ -67,17 +71,24 @@ def render_markdown(report: dict[str, Any]) -> str:
         f"- Relationships: {c['relationships']} — "
         + ", ".join(f"{k} {v}" for k, v in sorted(c["relationship_status"].items())),
         f"- Relationship evidence items: {c['relationship_evidence_items']}",
-        f"- Unresolved items: {c['unresolved_items']}",
+        f"- Unresolved items: {c['unresolved_items']} ("
+        + ", ".join(f"{k} {v}" for k, v in sorted(c["unresolved_by_kind"].items()))
+        + ")",
+        "- Asset provider states: " + ", ".join(f"{k} {v}" for k, v in sorted(c["asset_provider_state"].items())),
+        "- Asset review causes: "
+        + (", ".join(f"{k} {v}" for k, v in sorted(c["asset_review_cause"].items())) or "(none)"),
         "",
         "## Assets",
         "",
-        "| Asset | Status | Confidence | Reason | Game usage |",
-        "|---|---|---|---|---|",
+        "| Asset | Candidate id | Status | Provider state | Review cause | Confidence | Reason | Game usage | Dynamic candidates |",
+        "|---|---|---|---|---|---|---|---|---|",
     ]
     for a in report["assets"]:
+        conf = a["classification"]["confidence"]
         lines.append(
-            f"| `{a['asset_path']}` | {a['status']} | {a['classification']['confidence']:.2f} | "
-            f"{_md_escape(a['reason'])} | {len(a['game_usage'])} |"
+            f"| `{a['asset_path']}` | {a['candidate_id']} | {a['status']} | {a['provider_state']} | "
+            f"{a['review_cause'] or '-'} | {'-' if conf is None else f'{conf:.2f}'} | "
+            f"{_md_escape(a['reason'])} | {len(a['game_usage'])} | {len(a['dynamic_reference_candidates'])} |"
         )
     lines += ["", "## CODE units", "", "| Source | File status | Relationships |", "|---|---|---|"]
     for u in report["code"]:
@@ -98,7 +109,9 @@ def render_markdown(report: dict[str, Any]) -> str:
         lines += ["", "## CODE candidates out of scoring scope", ""]
         lines += [f"- `{o['source_path']}`: {o['reason']}" for o in report["out_of_scope_code"]]
     lines += ["", "## Unresolved items", ""]
-    lines += [f"- {_md_escape(u['item'])}" for u in report["unresolved_items"]] or ["- (none)"]
+    lines += [f"- [{u.get('kind', 'other')}] {_md_escape(u['item'])}" for u in report["unresolved_items"]] or ["- (none)"]
+    lines += ["", "## Limitations (v1)", ""]
+    lines += [f"- {_md_escape(x)}" for x in report.get("limitations", [])]
     lines.append("")
     return "\n".join(lines)
 

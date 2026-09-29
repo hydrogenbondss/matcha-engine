@@ -32,7 +32,7 @@ def test_cli_unavailable_provider_end_to_end(tmp_path, monkeypatch):
     res = CliRunner().invoke(
         app,
         ["impact", "--fixture", str(REAL_FIXTURE), "--request", REQ, "--reference", str(REF),
-         "--output", str(out), "--summary", str(md), "--provider", "auto", "--test-case", "A"],
+         "--output", str(out), "--summary", str(md), "--provider", "auto"],
     )
     assert res.exit_code == 0, res.output
     assert "provider unavailable" in res.output
@@ -40,18 +40,26 @@ def test_cli_unavailable_provider_end_to_end(tmp_path, monkeypatch):
     assert r["counts"]["assets"] == 15 and r["counts"]["code_units"] == 8 and r["counts"]["relationships"] == 30
     assert r["counts"]["asset_status"] == {"REVIEW_REQUIRED": 15}
     assert all(a["reason"] == "provider unavailable" for a in r["assets"])
+    assert r["provider"]["state"] == "UNAVAILABLE"
+    assert r["counts"]["asset_provider_state"] == {"UNAVAILABLE": 15}
+    assert r["counts"]["asset_review_cause"] == {"PROVIDER_UNAVAILABLE": 15}
+    assert '"valid_provider_output": true' not in out.read_text()
+    assert r["limitations"]
     assert r["provider"]["available"] is False and r["provider"]["missing"]
     assert r["unresolved_items"][0]["item"].startswith("Vision provider unavailable")
+    assert r["unresolved_items"][0]["kind"] == "provider_unavailable"
     assert r["reference_asset"]["path"] == "reference/kite_male_neutral.png"
     for k in ("start", "end", "elapsed"):
         assert r["timing"][k]
     assert re.match(r"\d{2}:\d{2}:\d{2}\.\d{3}$", r["timing"]["elapsed"])
     assert "Provider unavailable" in md.read_text()
     for a in r["assets"]:
-        assert a["item_type"] == "ASSET" and a["test_case"] == "A"
+        assert a["item_type"] == "ASSET" and "test_case" not in a
+        assert re.fullmatch(r"candidate-\d{2}", a["candidate_id"])
         assert a["evidence"][0]["anchor_type"] == "asset"
     for c in r["code"]:
-        assert c["item_type"] == "CODE" and c["relationships"]
+        assert c["item_type"] == "CODE" and c["relationships"] and "test_case" not in c
+    assert "test_case" not in r
 
 
 def test_all_asset_action_propagates_to_downstream(tmp_path):
@@ -83,6 +91,8 @@ def test_malformed_and_uncertain_provider_output_end_to_end(tmp_path):
     )
     assert r["counts"]["asset_status"] == {"REVIEW_REQUIRED": 15}
     assert all("malformed provider output" in a["reason"] for a in r["assets"])
+    assert r["counts"]["asset_provider_state"] == {"INVALID_OUTPUT": 15}
+    assert r["counts"]["asset_review_cause"] == {"INVALID_PROVIDER_OUTPUT": 15}
     assert r["counts"]["relationship_status"] == {"REVIEW_REQUIRED": 30}
 
     r = run_impact(
@@ -92,12 +102,14 @@ def test_malformed_and_uncertain_provider_output_end_to_end(tmp_path):
     )
     assert r["counts"]["asset_status"] == {"REVIEW_REQUIRED": 15}
     assert all(a["classification"]["provider_status"] == "UNAFFECTED" for a in r["assets"])
+    assert r["counts"]["asset_review_cause"] == {"LOW_CONFIDENCE": 15}
 
 
 def test_mixed_statuses_file_precedence(tmp_path):
+    # The provider only sees opaque candidate ids; odd ids -> UNAFFECTED, even -> REVIEW_REQUIRED.
     class _Mixed(_Always):
         def classify(self, request, reference_image, candidate_image, context):
-            if "side" in context["asset_path"]:
+            if int(candidate_image.id.split("-")[1]) % 2:
                 return {"status": "UNAFFECTED", "confidence": 0.9, "reason": "n/a"}
             return {"status": "REVIEW_REQUIRED", "confidence": 0.9, "reason": "unclear"}
 
@@ -105,9 +117,16 @@ def test_mixed_statuses_file_precedence(tmp_path):
         fixture=REAL_FIXTURE, request=REQ, reference=REF, output=tmp_path / "r.json",
         discovery_fn=fake_discovery, provider_obj=_Mixed(None),
     )
-    files = {c["source_path"]: c["file_status"] for c in r["code"]}
-    # a unit whose only relationships are UNAFFECTED stays UNAFFECTED; mixed -> REVIEW_REQUIRED
-    assert "UNAFFECTED" in files.values() and "REVIEW_REQUIRED" in files.values()
+    asset = {a["asset_path"]: a["status"] for a in r["assets"]}
+    for c in r["code"]:
+        rel = {x["relationship_status"] for x in c["relationships"]}
+        for x in c["relationships"]:
+            assert x["relationship_status"] == (
+                "UNAFFECTED" if asset[x["related_asset"]] == "UNAFFECTED" else "REVIEW_REQUIRED"
+            )
+        # precedence: any REVIEW_REQUIRED relationship -> file REVIEW_REQUIRED; all UNAFFECTED -> UNAFFECTED
+        assert c["file_status"] == ("REVIEW_REQUIRED" if "REVIEW_REQUIRED" in rel else "UNAFFECTED")
+    assert {a["review_cause"] for a in r["assets"] if a["status"] == "REVIEW_REQUIRED"} == {"SEMANTIC_REVIEW_REQUIRED"}
 
 
 def test_bad_inputs(tmp_path):

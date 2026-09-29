@@ -10,6 +10,13 @@ constructs that create a static-asset reference:
   e.g. Python data passed to screens or dict entries
 * entries of module-level UPPER_CASE table literals (``NAME = { ... }``)
 
+It also *flags* (but never resolves) constructs that appear to build an
+image/file reference dynamically: string concatenation, f-strings, ``%``
+formatting or ``.format`` with image-like pieces, ``show expression <expr>``,
+and image-loading calls (``Image``, ``im.*``, ``renpy.loadable`` and similar)
+whose argument is not a string literal.  These become ``DynamicRef`` records
+so that relationship discovery can surface them as unresolved dependencies.
+
 Comments are ignored.  Excerpt files (``# EVIDENCE EXCERPT`` header plus
 ``# --- <file> lines A-B ---`` block markers) are scanned only inside their
 marked blocks, and every line is mapped back to its original source line.
@@ -62,6 +69,7 @@ class Line:
     table: Optional[str] = None
     prev_nonblank: Optional[str] = None
     indent: int = 0
+    bare: str = ""  # code with string literals blanked to ""
 
     @property
     def is_excerpt(self) -> bool:
@@ -105,12 +113,23 @@ class StringRef:
 
 
 @dataclass
+class DynamicRef:
+    """A construct that seems to build an image/file reference at run time."""
+
+    line: Line
+    reasons: list[str]
+    prefixes: list[str] = field(default_factory=list)  # literal leading fragments
+    suffixes: list[str] = field(default_factory=list)  # literal trailing fragments (e.g. ".png")
+
+
+@dataclass
 class ScanResult:
     unit: CodeUnit
     lines: list[Line] = field(default_factory=list)
     declarations: list[Declaration] = field(default_factory=list)
     usages: list[ImageUsage] = field(default_factory=list)
     strings: list[StringRef] = field(default_factory=list)
+    dynamic: list[DynamicRef] = field(default_factory=list)
     warnings: list[str] = field(default_factory=list)
 
 
@@ -196,11 +215,128 @@ def parse_show_name(rest: str) -> Optional[str]:
 
 
 def literal_anchor_type(line: Line) -> str:
+    """Anchor type for a line that carries a string-literal reference.
+
+    Generic rule, from Ren'Py/Python syntax only:
+
+    * inside an UPPER_CASE table literal -> ``config``
+    * a binding: ``name = expr`` / ``$ name = expr`` / ``define|default name =
+      expr`` / ``obj.attr = expr`` / ``x[k] = expr`` (augmented forms too, but
+      not ``==``), or a ``"key": value`` dict entry -> ``assignment``
+    * anything else (return, call argument, list item, ...) -> ``statement``
+    """
     if line.table:
         return "config"
     if _ASSIGN_RE.match(line.code) or _DICT_ENTRY_RE.match(line.code):
         return "assignment"
     return "statement"
+
+
+# ---------------------------------------------------------------------------
+# Dynamic reference detection (flag only; no static evaluation)
+# ---------------------------------------------------------------------------
+
+_LOAD_CALL_RE = re.compile(
+    r"(?<![\w.])(Image|im\.\w+|renpy\.(?:loadable|image|show|displayable|file|open_file|exists|load_image))"
+    r"\s*\(\s*(?!(?:True|False|None)\b)([A-Za-z_][\w\.]*(?:\s*\[[^\]]*\])?)\s*[,)]"
+)
+_FSTRING_PREFIX_RE = re.compile(r"(?i)^(?:rf|fr|f)$")
+
+
+def string_spans(code: str) -> list[tuple[int, int, str, str]]:
+    """(start, end, value, prefix) for each string literal in *code*.
+
+    *code* is a comment-stripped line.  ``prefix`` holds the string-prefix
+    letters (``f``, ``rb`` ...) directly before the opening quote.  ``start``
+    includes the prefix.
+    """
+    spans = []
+    i, n = 0, len(code)
+    while i < n:
+        c = code[i]
+        if c not in "\"'":
+            i += 1
+            continue
+        k = i
+        while k > 0 and i - k < 2 and code[k - 1] in "rRbBfFuU":
+            k -= 1
+        if k > 0 and (code[k - 1].isalnum() or code[k - 1] == "_"):
+            k = i  # letters belong to an identifier, not a string prefix
+        pre = code[k:i]
+        q = c * 3 if code.startswith(c * 3, i) else c
+        j = i + len(q)
+        buf = []
+        while j < n:
+            if code[j] == "\\" and j + 1 < n:
+                buf.append(code[j : j + 2])
+                j += 2
+                continue
+            if code.startswith(q, j):
+                break
+            buf.append(code[j])
+            j += 1
+        end = min(j + len(q), n)
+        spans.append((k, end, "".join(buf), pre))
+        i = end
+    return spans
+
+
+def _image_like(v: str) -> bool:
+    low = v.lower()
+    return is_image_path(v) or low.startswith("images/") or v.endswith("/")
+
+
+def _ext_suffix(v: str) -> Optional[str]:
+    for ext in IMAGE_EXTS:
+        if v.lower().endswith(ext):
+            return v
+    return None
+
+
+def detect_dynamic(code: str, bare: str) -> tuple[list[str], list[str], list[str]]:
+    """Return (reasons, literal prefixes, literal suffixes) for *code*."""
+    reasons: list[str] = []
+    prefixes: list[str] = []
+    suffixes: list[str] = []
+    spans = string_spans(code)
+    concat_parts = []
+    for idx, (start, end, value, pre) in enumerate(spans):
+        after = code[end:].lstrip()
+        before = code[:start].rstrip()
+        cat_after = after.startswith("+") and not after.startswith("+=")
+        cat_before = before.endswith("+") or before.endswith("+=")
+        if cat_after or cat_before:
+            concat_parts.append((value, cat_before, cat_after))
+        if _FSTRING_PREFIX_RE.match(pre or "") and "{" in value and _image_like(value.split("{")[0] + value.rsplit("}", 1)[-1]):
+            reasons.append("f-string builds an image/file path")
+            head = value.split("{", 1)[0]
+            if head and not head.startswith("."):
+                prefixes.append(head)
+            tail = value.rsplit("}", 1)[-1]
+            if _ext_suffix(tail):
+                suffixes.append(tail)
+        if after.startswith("%") and not after.startswith("%=") and "%" in value and _image_like(value.replace("%s", "").replace("%d", "")):
+            reasons.append("%-formatting builds an image/file path")
+            head = value.split("%", 1)[0]
+            if head and not head.startswith("."):
+                prefixes.append(head)
+        if after.startswith(".format(") and "{" in value and _image_like(value.split("{")[0] + value.rsplit("}", 1)[-1]):
+            reasons.append(".format() builds an image/file path")
+            head = value.split("{", 1)[0]
+            if head and not head.startswith("."):
+                prefixes.append(head)
+    if concat_parts and any(_image_like(v) for v, _, _ in concat_parts):
+        reasons.append("string concatenation builds an image/file path")
+        for v, cb, ca in concat_parts:
+            if ca and not cb and v and not v.startswith("."):
+                prefixes.append(v)
+            if cb and _ext_suffix(v):
+                suffixes.append(v)
+    for m in _LOAD_CALL_RE.finditer(bare):
+        reasons.append(f"{m.group(1)}() is called with a non-literal argument '{m.group(2)}'")
+    # de-duplicate, keep order
+    uniq = lambda xs: list(dict.fromkeys(xs))
+    return uniq(reasons), uniq(prefixes), uniq(suffixes)
 
 
 def _iter_units(unit: CodeUnit, text: str):
@@ -284,12 +420,22 @@ def scan_unit(unit: CodeUnit, text: str) -> ScanResult:
             table=line_table,
             prev_nonblank=prev,
             indent=indent,
+            bare=bare,
         )
         res.lines.append(ln)
         if stripped_raw:
             prev = stripped_raw
         if not code:
             continue
+
+        reasons, prefixes, suffixes = detect_dynamic(code, bare)
+        m = _SHOW_RE.match(code)
+        if m and m.group(2).split()[0] == "expression":
+            expr = m.group(2).split(None, 1)[1] if len(m.group(2).split(None, 1)) > 1 else ""
+            if not (expr[:1] in "\"'" and len(strings) == 1):
+                reasons = [f"{m.group(1)} expression with a non-literal displayable"] + reasons
+        if reasons:
+            res.dynamic.append(DynamicRef(line=ln, reasons=reasons, prefixes=prefixes, suffixes=suffixes))
 
         m = _IMAGE_DECL_RE.match(code)
         if m:
@@ -307,7 +453,9 @@ def scan_unit(unit: CodeUnit, text: str) -> ScanResult:
             name = parse_show_name(m.group(2))
             if name:
                 res.usages.append(ImageUsage(name=name, keyword=m.group(1), line=ln))
-            continue
+                continue
+            # show screen / show expression / show layer: fall through so any
+            # string literal on the line is still scanned.
         for s in strings:
             if is_image_path(s):
                 res.strings.append(StringRef(value=s, kind="file", line=ln))

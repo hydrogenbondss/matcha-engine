@@ -6,12 +6,18 @@ The executable engine (``matcha/impact``) never imports it.
 
 Subcommands:
 
-    validate-inventory  compare discovered CODE x ASSET pairs (and evidence)
-                        with the worksheet's frozen structural inventory
-    compare             compare an impact JSON report with one frozen test
-                        section (A, B or C) of the worksheet
+    validate-inventory  compare discovered CODE x ASSET pairs and evidence with
+                        the worksheet's frozen structural inventory; separate
+                        PASS/FAIL for pairs, evidence identity, evidence
+                        occurrence and field agreement (bit-mask exit code)
+    compare             score an impact JSON report against one frozen test
+                        section (A, B or C) of the worksheet, per protocol
+                        §17-18 (REVIEW_REQUIRED neither positive nor negative)
+    oracle-propagation  feed baseline asset statuses through the engine rules
 
-Both are read-only: they print results (and optionally write a JSON file
+The evaluator owns the test labels (A/B/C); the engine report carries none.
+
+All are read-only: they print results (and optionally write a JSON file
 outside the fixture); they never edit the worksheet.
 """
 
@@ -78,64 +84,161 @@ def load_test(worksheet: Path, test: str) -> dict[str, Any]:
 
 
 # ------------------------------------------------------------- validation ----
+#
+# validate-inventory reports four separate checks, each with its own PASS/FAIL:
+#
+#   pairs                 the CODE x ASSET pair set (graph correctness)
+#   evidence_identity     per pair, the multiset of evidence identities
+#                         (source_path, anchor_type, anchor), strict (protocol §5.1)
+#   evidence_occurrence   per pair, every occurrence on one side aligns with
+#                         exactly one occurrence on the other side, and within
+#                         each side occurrence identities are unique. Alignment
+#                         uses (source_path, locator) as a *matching aid only*;
+#                         the locator is never treated as identity.
+#   field_agreement       for aligned occurrences: anchor, anchor_type,
+#                         context, fingerprint and fact equality
+#
+# The overall verdict is PASS only if all four pass.  The exit code is a bit
+# mask, so a pair failure and an evidence failure are distinct:
+#   1 = pairs FAIL, 2 = evidence_identity FAIL, 4 = evidence_occurrence FAIL,
+#   8 = field_agreement FAIL.
+#
+# In addition (informational, never changes the strict verdict),
+# evidence_identity_normalized applies the documented ANCHOR_TYPE
+# NORMALIZATION below to both sides and reports whether the identity
+# multisets agree after it.
+
+EXIT_BITS = {"pairs": 1, "evidence_identity": 2, "evidence_occurrence": 4, "field_agreement": 8}
+
+# Python/Ren'Py binding syntax: `name = expr`, `$ name = expr`, `define|default name = expr`,
+# `obj.attr = expr`, `x[k] = expr`, augmented `op=`, but not `==`; or a `"key": value` dict entry.
+_BINDING_RE = re.compile(
+    r"^(?:\$\s*)?(?:define\s+|default\s+)?[A-Za-z_][\w\.]*(?:\[[^\]]*\])?\s*[-+*/]?=(?!=)"
+    r"|^(?:\"[^\"]*\"|'[^']*')\s*:"
+)
+
+ANCHOR_TYPE_NORMALIZATION = (
+    "anchor_type 'statement' and 'assignment' are normalized to one class 'binding' when the anchor "
+    "text is itself a Python/Ren'Py binding (name = expr, $ name = expr, define/default name = expr, "
+    "attribute or subscript target, augmented assignment, or a \"key\": value dict entry). Every other "
+    "anchor_type is compared unchanged. Reason: the frozen protocol (§5.1) allows both types but defines "
+    "neither, and the frozen inventory labels syntactically identical bindings inconsistently, so the "
+    "distinction cannot be derived from source syntax."
+)
+
+
+def normalize_anchor_type(anchor_type: str, anchor: str) -> str:
+    if anchor_type in ("statement", "assignment") and _BINDING_RE.match(anchor.strip()):
+        return "binding"
+    return anchor_type
+
 
 def _identity(e: dict) -> tuple:
     return (e["source_path"], e["anchor_type"], e["anchor"])
 
 
+def _norm_identity(e: dict) -> tuple:
+    return (e["source_path"], normalize_anchor_type(e["anchor_type"], e["anchor"]), e["anchor"])
+
+
+def _occ_identity(e: dict) -> tuple:
+    return _identity(e) + (e.get("context"), e.get("fingerprint"))
+
+
+def _pf(ok: bool) -> str:
+    return "PASS" if ok else "FAIL"
+
+
+def _brief(e: dict) -> dict:
+    return {k: e.get(k) for k in ("source_path", "anchor_type", "anchor", "locator")}
+
+
+def _align(inv_items: list[dict], dis_items: list[dict]):
+    """Pair occurrences by (source_path, locator); prefer equal anchors within a group."""
+    groups: dict[tuple, tuple[list, list]] = {}
+    for e in inv_items:
+        groups.setdefault((e["source_path"], e.get("locator")), ([], []))[0].append(e)
+    for e in dis_items:
+        groups.setdefault((e["source_path"], e.get("locator")), ([], []))[1].append(e)
+    aligned, inv_only, dis_only = [], [], []
+    for _, (iv, dv) in groups.items():
+        iv, dv = list(iv), list(dv)
+        for e in list(iv):
+            match = next((d for d in dv if d["anchor"] == e["anchor"]), None)
+            if match is not None:
+                aligned.append((e, match))
+                iv.remove(e)
+                dv.remove(match)
+        while iv and dv:
+            aligned.append((iv.pop(0), dv.pop(0)))
+        inv_only += iv
+        dis_only += dv
+    return aligned, inv_only, dis_only
+
+
 def compare_inventory(discovered: dict[tuple[str, str], list[dict]], inventory: dict[tuple[str, str], list[dict]]) -> dict:
     d_pairs, i_pairs = set(discovered), set(inventory)
-    result: dict[str, Any] = {
-        "inventory_pairs": len(i_pairs),
-        "discovered_pairs": len(d_pairs),
-        "exact_pairs": len(d_pairs & i_pairs),
-        "extra_pairs": sorted(d_pairs - i_pairs),
-        "missing_pairs": sorted(i_pairs - d_pairs),
+    pairs = {
+        "inventory": len(i_pairs),
+        "discovered": len(d_pairs),
+        "exact": len(d_pairs & i_pairs),
+        "extra": sorted(d_pairs - i_pairs),
+        "missing": sorted(i_pairs - d_pairs),
     }
-    ev = Counter()
-    mismatches = []
-    for pair in sorted(d_pairs & i_pairs):
-        inv_items, dis_items = inventory[pair], discovered[pair]
-        ev["inventory_items"] += len(inv_items)
-        ev["discovered_items"] += len(dis_items)
-        inv_id = Counter(_identity(e) for e in inv_items)
-        dis_id = Counter(_identity(e) for e in dis_items)
-        ev["identity_matched"] += sum((inv_id & dis_id).values())
-        # occurrence level: identity + source location (validation-only matching aid)
-        inv_occ = {(_identity(e), e.get("locator")): e for e in inv_items}
-        dis_occ = {(_identity(e), e.get("locator")): e for e in dis_items}
-        both = set(inv_occ) & set(dis_occ)
-        ev["occurrence_matched"] += len(both)
-        ev["context_equal"] += sum(inv_occ[k].get("context") == dis_occ[k].get("context") for k in both)
-        ev["fingerprint_equal"] += sum(inv_occ[k].get("fingerprint") == dis_occ[k].get("fingerprint") for k in both)
-        ev["fact_equal"] += sum(inv_occ[k].get("fact") == dis_occ[k].get("fact") for k in both)
-        by_loc_inv = {(e["source_path"], e.get("locator")): e for e in inv_items}
-        for e in dis_items:
-            k = (_identity(e), e.get("locator"))
-            if k in inv_occ:
-                continue
-            other = by_loc_inv.get((e["source_path"], e.get("locator")))
-            mismatches.append(
-                {
-                    "pair": list(pair),
-                    "locator": e.get("locator"),
-                    "discovered": {"anchor_type": e["anchor_type"], "anchor": e["anchor"]},
-                    "inventory": (
-                        {"anchor_type": other["anchor_type"], "anchor": other["anchor"]} if other else None
-                    ),
-                }
-            )
-        for e in inv_items:
-            k = (_identity(e), e.get("locator"))
-            if k not in dis_occ and (e["source_path"], e.get("locator")) not in {
-                (x["source_path"], x.get("locator")) for x in dis_items
-            }:
-                mismatches.append({"pair": list(pair), "locator": e.get("locator"), "discovered": None,
-                                   "inventory": {"anchor_type": e["anchor_type"], "anchor": e["anchor"]}})
-    result["evidence"] = dict(ev)
-    result["evidence_mismatches"] = mismatches
-    result["pairs_ok"] = not result["extra_pairs"] and not result["missing_pairs"] and result["exact_pairs"] == len(i_pairs)
-    return result
+    pairs["result"] = _pf(not pairs["extra"] and not pairs["missing"])
+
+    ident = {"inventory_items": 0, "discovered_items": 0, "matched": 0, "inventory_only": [], "discovered_only": []}
+    norm = {"matched": 0, "inventory_only": [], "discovered_only": [], "rule": ANCHOR_TYPE_NORMALIZATION}
+    occ = {"inventory_occurrences": 0, "discovered_occurrences": 0, "aligned": 0,
+           "unaligned_inventory": [], "unaligned_discovered": [], "duplicate_occurrence_identity": []}
+    fields = ("anchor", "anchor_type", "context", "fingerprint", "fact")
+    agree = {"aligned": 0, **{f"{f}_equal": 0 for f in fields}, "differences": []}
+
+    for pair in sorted(d_pairs | i_pairs):
+        inv_items, dis_items = inventory.get(pair, []), discovered.get(pair, [])
+        ident["inventory_items"] += len(inv_items)
+        ident["discovered_items"] += len(dis_items)
+        for key, bucket in ((_identity, ident), (_norm_identity, norm)):
+            ic, dc = Counter(key(e) for e in inv_items), Counter(key(e) for e in dis_items)
+            bucket["matched"] += sum((ic & dc).values())
+            for k, n in (ic - dc).items():
+                bucket["inventory_only"] += [{"pair": list(pair), "identity": list(k)}] * n
+            for k, n in (dc - ic).items():
+                bucket["discovered_only"] += [{"pair": list(pair), "identity": list(k)}] * n
+
+        occ["inventory_occurrences"] += len(inv_items)
+        occ["discovered_occurrences"] += len(dis_items)
+        for side, items in (("inventory", inv_items), ("discovered", dis_items)):
+            for k, n in Counter(_occ_identity(e) for e in items).items():
+                if n > 1:
+                    occ["duplicate_occurrence_identity"].append({"side": side, "pair": list(pair), "occurrence_identity": list(k), "count": n})
+        aligned, inv_only, dis_only = _align(inv_items, dis_items)
+        occ["aligned"] += len(aligned)
+        occ["unaligned_inventory"] += [{"pair": list(pair), **_brief(e)} for e in inv_only]
+        occ["unaligned_discovered"] += [{"pair": list(pair), **_brief(e)} for e in dis_only]
+
+        for ie, de in aligned:
+            agree["aligned"] += 1
+            for f in fields:
+                if ie.get(f) == de.get(f):
+                    agree[f"{f}_equal"] += 1
+                else:
+                    agree["differences"].append({"pair": list(pair), "locator": ie.get("locator"), "field": f,
+                                                 "inventory": ie.get(f), "discovered": de.get(f)})
+
+    ident["result"] = _pf(not ident["inventory_only"] and not ident["discovered_only"])
+    norm["result"] = _pf(not norm["inventory_only"] and not norm["discovered_only"])
+    occ["result"] = _pf(not occ["unaligned_inventory"] and not occ["unaligned_discovered"]
+                        and not occ["duplicate_occurrence_identity"])
+    agree["result"] = _pf(not agree["differences"] and not occ["unaligned_inventory"] and not occ["unaligned_discovered"])
+    checks = {"pairs": pairs, "evidence_identity": ident, "evidence_occurrence": occ, "field_agreement": agree}
+    code = sum(bit for name, bit in EXIT_BITS.items() if checks[name]["result"] == "FAIL")
+    return {
+        **checks,
+        "evidence_identity_normalized": norm,
+        "overall": _pf(code == 0),
+        "exit_code": code,
+    }
 
 
 def discovered_from_fixture(fixture: Path) -> dict[tuple[str, str], list[dict]]:
@@ -156,86 +259,121 @@ def discovered_from_report(report: dict) -> dict[tuple[str, str], list[dict]]:
 # ------------------------------------------------------------- comparison ----
 
 def _ratio(n: int, d: int) -> Optional[float]:
+    """n/d, or None (reported as JSON null / 'undefined') when d == 0."""
     return round(n / d, 4) if d else None
 
 
-def compare_report(report: dict, baseline: dict) -> dict:
-    base_assets = {a["asset_path"]: a["status"] for a in baseline["assets"]}
-    auto_assets = {a["asset_path"]: a["status"] for a in report["assets"]}
+ASSET_STATUSES = ("ASSET_ACTION", "UNAFFECTED", "REVIEW_REQUIRED")
+CODE_STATUSES = ("CODE_ACTION", "DOWNSTREAM_USAGE", "REVIEW_REQUIRED", "UNAFFECTED")
+
+
+def _matrix(pairs: list[tuple[str, str]], statuses: tuple[str, ...]) -> dict[str, dict[str, int]]:
+    """Ground truth rows x automated columns, every status present (zeros included)."""
+    m = {g: {a: 0 for a in statuses} for g in statuses}
+    for g, a in pairs:
+        m.setdefault(g, {x: 0 for x in statuses}).setdefault(a, 0)
+        m[g][a] += 1
+    return m
+
+
+def score_assets(base_assets: dict[str, str], auto_assets: dict[str, str]) -> dict:
+    """ASSET scoring per protocol §17.1 / §18.
+
+    REVIEW_REQUIRED is neither positive nor negative.  Binary TP/FP/FN/TN,
+    precision and recall use only items where BOTH the ground truth and the
+    automated output are determinate (ASSET_ACTION or UNAFFECTED).  GT
+    ASSET_ACTION + automated REVIEW_REQUIRED is not an FN; GT UNAFFECTED +
+    automated REVIEW_REQUIRED is not an FP.  Undefined ratios are None.
+    """
     if set(base_assets) != set(auto_assets):
         raise ValueError(f"ASSET sets differ: {sorted(set(base_assets) ^ set(auto_assets))}")
-    tp = fp = fn = tn = 0
-    matrix = Counter()
-    rows = []
-    for p in sorted(base_assets):
-        b, a = base_assets[p], auto_assets[p]
-        matrix[(b, a)] += 1
-        bp, ap = b == "ASSET_ACTION", a == "ASSET_ACTION"
-        tp += bp and ap
-        fp += (not bp) and ap
-        fn += bp and not ap
-        tn += (not bp) and not ap
-        rows.append({"asset_path": p, "baseline": b, "automated": a, "agree": a == b})
-    determinate = [p for p, s in base_assets.items() if s != "REVIEW_REQUIRED"]
-    d_tp = sum(base_assets[p] == "ASSET_ACTION" and auto_assets[p] == "ASSET_ACTION" for p in determinate)
-    d_fp = sum(base_assets[p] == "UNAFFECTED" and auto_assets[p] == "ASSET_ACTION" for p in determinate)
-    d_fn = sum(base_assets[p] == "ASSET_ACTION" and auto_assets[p] != "ASSET_ACTION" for p in determinate)
-    assets = {
-        "n": len(base_assets),
-        "exact_status_agreement": sum(r["agree"] for r in rows),
-        "binary_asset_action_vs_not": {
-            "TP": tp, "FP": fp, "FN": fn, "TN": tn,
-            "precision": _ratio(tp, tp + fp), "recall": _ratio(tp, tp + fn),
-        },
-        "protocol_17_1": {
-            "ground_truth_determinate": len(determinate),
-            "ground_truth_review_required": len(base_assets) - len(determinate),
-            "automated_review_required": sum(s == "REVIEW_REQUIRED" for s in auto_assets.values()),
-            "TP": d_tp, "FP": d_fp, "FN": d_fn,
-            "precision": _ratio(d_tp, d_tp + d_fp), "recall": _ratio(d_tp, d_tp + d_fn),
-            "automated_review_rate": _ratio(sum(s == "REVIEW_REQUIRED" for s in auto_assets.values()), len(auto_assets)),
-            "coverage": _ratio(sum(s != "REVIEW_REQUIRED" for s in auto_assets.values()), len(auto_assets)),
-        },
-        "confusion_baseline_to_automated": {f"{b} -> {a}": n for (b, a), n in sorted(matrix.items())},
-        "rows": rows,
-    }
-
-    base_files = {c["source_path"]: c for c in baseline["code"]}
-    auto_files = {c["source_path"]: c for c in report["code"]}
-    fm = Counter((base_files[p]["file_status"], auto_files[p]["file_status"]) for p in base_files if p in auto_files)
-    code = {
-        "baseline_units": len(base_files),
-        "automated_units": len(auto_files),
-        "same_unit_set": set(base_files) == set(auto_files),
-        "exact_file_status_agreement": sum(n for (b, a), n in fm.items() if a == b),
-        "confusion_baseline_to_automated": {f"{b} -> {a}": n for (b, a), n in sorted(fm.items())},
-    }
-
-    def rels(files):
-        return {(p, r["related_asset"]): r["relationship_status"] for p, c in files.items() for r in (c.get("relationships") or [])}
-
-    br, ar = rels(base_files), rels(auto_files)
-    rm = Counter((br[k], ar[k]) for k in br if k in ar)
-    relationships = {
-        "baseline": len(br),
-        "automated": len(ar),
-        "same_pair_set": set(br) == set(ar),
-        "missing_in_automated": sorted(set(br) - set(ar)),
-        "extra_in_automated": sorted(set(ar) - set(br)),
-        "exact_status_agreement": sum(n for (b, a), n in rm.items() if a == b),
-        "downstream_traceability_pairs_found": len(set(br) & set(ar)),
-        "confusion_baseline_to_automated": {f"{b} -> {a}": n for (b, a), n in sorted(rm.items())},
-        "code_action": {
-            "baseline": sum(v == "CODE_ACTION" for v in br.values()),
-            "automated": sum(v == "CODE_ACTION" for v in ar.values()),
-        },
-    }
+    det = ("ASSET_ACTION", "UNAFFECTED")
+    keys = sorted(base_assets)
+    pairs = [(base_assets[k], auto_assets[k]) for k in keys]
+    both_det = [(g, a) for g, a in pairs if g in det and a in det]
+    tp = sum(g == "ASSET_ACTION" and a == "ASSET_ACTION" for g, a in both_det)
+    fp = sum(g == "UNAFFECTED" and a == "ASSET_ACTION" for g, a in both_det)
+    fn = sum(g == "ASSET_ACTION" and a == "UNAFFECTED" for g, a in both_det)
+    tn = sum(g == "UNAFFECTED" and a == "UNAFFECTED" for g, a in both_det)
+    n = len(keys)
+    gt_rr = sum(g == "REVIEW_REQUIRED" for g, _ in pairs)
+    auto_rr = sum(a == "REVIEW_REQUIRED" for _, a in pairs)
     return {
-        "provider": {k: report["provider"].get(k) for k in ("name", "model", "available")},
+        "n": n,
+        "exact_status_agreement": sum(g == a for g, a in pairs),
+        "confusion_matrix": _matrix(pairs, ASSET_STATUSES),
+        "ground_truth_determinate": n - gt_rr,
+        "ground_truth_review_required": gt_rr,
+        "matcha_review_required": auto_rr,
+        "matcha_review_required_on_gt_determinate": sum(g in det and a == "REVIEW_REQUIRED" for g, a in pairs),
+        "scored_binary_items": len(both_det),
+        "TP": tp, "FP": fp, "FN": fn, "TN": tn,
+        "precision": _ratio(tp, tp + fp),
+        "recall": _ratio(tp, tp + fn),
+        "ground_truth_review_rate": _ratio(gt_rr, n),
+        "matcha_review_rate": _ratio(auto_rr, n),
+        "coverage": _ratio(n - auto_rr, n),
+        "coverage_percent": None if not n else round(100 * (n - auto_rr) / n, 2),
+        "rows": [{"asset_path": k, "baseline": g, "automated": a, "agree": g == a} for k, (g, a) in zip(keys, pairs)],
+    }
+
+
+def score_code(base: dict, auto: dict) -> dict:
+    """File- or relationship-level CODE scoring (§17.2), keys -> status dicts."""
+    common = sorted(set(base) & set(auto))
+    pairs = [(base[k], auto[k]) for k in common]
+    auto_ca = sum(a == "CODE_ACTION" for _, a in pairs)
+    correct_ca = sum(g == a == "CODE_ACTION" for g, a in pairs)
+    return {
+        "baseline": len(base),
+        "automated": len(auto),
+        "same_set": set(base) == set(auto),
+        "missing_in_automated": sorted(set(base) - set(auto)),
+        "extra_in_automated": sorted(set(auto) - set(base)),
+        "exact_status_agreement": sum(g == a for g, a in pairs),
+        "confusion_matrix": _matrix(pairs, CODE_STATUSES),
+        "correct_code_action": correct_ca,
+        "correct_downstream_usage": sum(g == a == "DOWNSTREAM_USAGE" for g, a in pairs),
+        "correct_review_required": sum(g == a == "REVIEW_REQUIRED" for g, a in pairs),
+        "incorrect_code_actions": sum(a == "CODE_ACTION" and g != "CODE_ACTION" for g, a in pairs),
+        "missed_code_actions": sum(g == "CODE_ACTION" and a in ("DOWNSTREAM_USAGE", "UNAFFECTED") for g, a in pairs),
+        "code_action_gt_automated_review_required": sum(g == "CODE_ACTION" and a == "REVIEW_REQUIRED" for g, a in pairs),
+        "incorrect_downstream": sum(a == "DOWNSTREAM_USAGE" and g in ("CODE_ACTION", "UNAFFECTED") for g, a in pairs),
+        "missed_downstream": sum(g == "DOWNSTREAM_USAGE" and a in ("CODE_ACTION", "UNAFFECTED") for g, a in pairs),
+        "downstream_gt_automated_review_required": sum(g == "DOWNSTREAM_USAGE" and a == "REVIEW_REQUIRED" for g, a in pairs),
+        "code_action_precision": _ratio(correct_ca, auto_ca),
+        "matcha_review_rate": _ratio(sum(a == "REVIEW_REQUIRED" for _, a in pairs), len(pairs)),
+        "coverage": _ratio(sum(a != "REVIEW_REQUIRED" for _, a in pairs), len(pairs)),
+    }
+
+
+def compare_report(report: dict, baseline: dict, test: Optional[str] = None) -> dict:
+    base_assets = {a["asset_path"]: a["status"] for a in baseline["assets"]}
+    auto_assets = {a["asset_path"]: a["status"] for a in report["assets"]}
+    assets = score_assets(base_assets, auto_assets)
+    assets["matcha_review_causes"] = dict(
+        Counter(a.get("review_cause") for a in report["assets"] if a["status"] == "REVIEW_REQUIRED")
+    )
+    base_files = {c["source_path"]: c["file_status"] for c in baseline["code"]}
+    auto_files = {c["source_path"]: c["file_status"] for c in report["code"]}
+
+    def rels(code):
+        return {(c["source_path"], r["related_asset"]): r["relationship_status"]
+                for c in code for r in (c.get("relationships") or [])}
+
+    br, ar = rels(baseline["code"]), rels(report["code"])
+    relationships = score_code(br, ar)
+    relationships["downstream_traceability_pairs_found"] = len(set(br) & set(ar))
+    relationships["missing_in_automated"] = [list(k) for k in relationships["missing_in_automated"]]
+    relationships["extra_in_automated"] = [list(k) for k in relationships["extra_in_automated"]]
+    prov = report["provider"]
+    return {
+        "test": test,
+        "provider": {k: prov.get(k) for k in ("name", "model", "state", "available")},
         "baseline_timing": baseline["timing"],
         "automated_timing": report["timing"],
         "assets": assets,
-        "code": code,
+        "code": score_code(base_files, auto_files),
         "relationships": relationships,
     }
 
@@ -279,24 +417,43 @@ def oracle_propagation(baseline: dict, fixture: Path = DEFAULT_FIXTURE, identifi
 
 # -------------------------------------------------------------------- CLI ----
 
-def _pairs_text(r: dict) -> str:
+def _fmt(v) -> str:
+    return "undefined" if v is None else str(v)
+
+
+def _validation_text(r: dict) -> str:
+    p, i, n, o, f = r["pairs"], r["evidence_identity"], r["evidence_identity_normalized"], r["evidence_occurrence"], r["field_agreement"]
     lines = [
-        f"pairs: inventory {r['inventory_pairs']}, discovered {r['discovered_pairs']}, "
-        f"exact {r['exact_pairs']}/{r['inventory_pairs']}, extra {len(r['extra_pairs'])}, missing {len(r['missing_pairs'])}"
+        f"[{p['result']}] pairs: inventory {p['inventory']}, discovered {p['discovered']}, exact {p['exact']}/{p['inventory']}, "
+        f"extra {len(p['extra'])}, missing {len(p['missing'])}"
     ]
-    lines += [f"  EXTRA   {p}" for p in r["extra_pairs"]] + [f"  MISSING {p}" for p in r["missing_pairs"]]
-    e = r["evidence"]
+    lines += [f"    EXTRA   {x}" for x in p["extra"]] + [f"    MISSING {x}" for x in p["missing"]]
     lines.append(
-        "evidence: inventory {inventory_items}, discovered {discovered_items}, identity-matched {identity_matched}, "
-        "occurrence-matched (identity+locator) {occurrence_matched}; of matched occurrences: context equal "
-        "{context_equal}, fingerprint equal {fingerprint_equal}, fact equal {fact_equal}".format(
-            **{k: e.get(k, 0) for k in ("inventory_items", "discovered_items", "identity_matched",
-                                        "occurrence_matched", "context_equal", "fingerprint_equal", "fact_equal")}
-        )
+        f"[{i['result']}] evidence identity (strict source_path+anchor_type+anchor): inventory {i['inventory_items']}, "
+        f"discovered {i['discovered_items']}, matched {i['matched']}, inventory-only {len(i['inventory_only'])}, "
+        f"discovered-only {len(i['discovered_only'])}"
     )
-    for m in r["evidence_mismatches"]:
-        lines.append(f"  EVIDENCE DIFF {m['pair']} @ {m['locator']}: discovered={m['discovered']} inventory={m['inventory']}")
-    lines.append("RESULT: " + ("PASS (pairs exact)" if r["pairs_ok"] else "FAIL (pair mismatch)"))
+    lines += [f"    INVENTORY-ONLY  {x['pair']} {x['identity']}" for x in i["inventory_only"]]
+    lines += [f"    DISCOVERED-ONLY {x['pair']} {x['identity']}" for x in i["discovered_only"]]
+    lines.append(
+        f"[{o['result']}] evidence occurrence: inventory {o['inventory_occurrences']}, discovered "
+        f"{o['discovered_occurrences']}, aligned {o['aligned']}, unaligned inventory {len(o['unaligned_inventory'])}, "
+        f"unaligned discovered {len(o['unaligned_discovered'])}, duplicate occurrence identities "
+        f"{len(o['duplicate_occurrence_identity'])}"
+    )
+    lines.append(
+        f"[{f['result']}] field agreement over {f['aligned']} aligned occurrences: anchor {f['anchor_equal']}, "
+        f"anchor_type {f['anchor_type_equal']}, context {f['context_equal']}, fingerprint {f['fingerprint_equal']}, "
+        f"fact {f['fact_equal']} ({len(f['differences'])} field differences)"
+    )
+    for d in f["differences"]:
+        if d["field"] in ("anchor", "anchor_type"):
+            lines.append(f"    {d['field'].upper()} DIFF {d['pair']} @ {d['locator']}: inventory={d['inventory']!r} discovered={d['discovered']!r}")
+    lines.append(
+        f"[info: {n['result']}] evidence identity after documented anchor_type normalization: matched {n['matched']}, "
+        f"inventory-only {len(n['inventory_only'])}, discovered-only {len(n['discovered_only'])}"
+    )
+    lines.append(f"OVERALL: {r['overall']} (exit code {r['exit_code']}: 1=pairs 2=identity 4=occurrence 8=fields)")
     return "\n".join(lines)
 
 
@@ -327,15 +484,18 @@ def main(argv=None) -> int:
         inv = load_inventory(a.worksheet)
         disc = discovered_from_report(json.loads(a.report.read_text())) if a.report else discovered_from_fixture(a.fixture)
         r = compare_inventory(disc, inv)
-        print(_pairs_text(r))
+        print(_validation_text(r))
         if a.json_out:
             a.json_out.write_text(json.dumps(r, indent=2, default=list) + "\n")
-        return 0 if r["pairs_ok"] else 1
+        return r["exit_code"]
 
     report = json.loads(a.report.read_text())
-    res = compare_report(report, load_test(a.worksheet, a.test))
+    res = compare_report(report, load_test(a.worksheet, a.test), test=a.test)
     print(json.dumps({k: v for k, v in res.items() if k != "assets"} | {"assets": {k: v for k, v in res["assets"].items() if k != "rows"}}, indent=2, default=str))
-    print("\nper-asset:")
+    s_ = res["assets"]
+    print(f"\nasset precision: {_fmt(s_['precision'])}; recall: {_fmt(s_['recall'])}; "
+          f"Matcha review rate: {_fmt(s_['matcha_review_rate'])}; coverage: {_fmt(s_['coverage'])}")
+    print("per-asset:")
     for row in res["assets"]["rows"]:
         print(f"  {'=' if row['agree'] else 'x'} {row['asset_path']}: baseline {row['baseline']} / automated {row['automated']}")
     if a.json_out:

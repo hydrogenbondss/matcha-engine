@@ -16,6 +16,15 @@ without a directory, when it equals the asset's file name.  Dynamically
 composed names (``"prefix_" + attr + ".png"``) and name similarity are never
 used.  One relationship per CODE unit x ASSET pair; repeated occurrences go
 into that relationship's evidence list.
+
+Dynamic references (concatenated / formatted paths, ``show expression``,
+image-loading calls with non-literal arguments, and calls with non-literal
+arguments to helper functions whose bodies build image paths dynamically)
+never create relationships.  Each becomes a structured unresolved item
+(``kind: dynamic_reference``) with its source path, locator, snippet,
+reasons, and the scored assets it *might* match by literal prefix/suffix.
+Assets named as such candidates are recorded so they are never presented
+as simply unreferenced.
 """
 
 from __future__ import annotations
@@ -26,7 +35,16 @@ from typing import Optional
 
 from matcha.impact.fixture import Fixture
 from matcha.impact.model import AssetUnit, CodeUnit, Evidence, Relationship
-from matcha.impact.renpy_scan import Declaration, Line, ScanResult, literal_anchor_type, scan_unit
+import re
+
+from matcha.impact.renpy_scan import (
+    Declaration,
+    DynamicRef,
+    Line,
+    ScanResult,
+    literal_anchor_type,
+    scan_unit,
+)
 
 
 @dataclass
@@ -37,6 +55,8 @@ class ImpactGraph:
     eligible_code: list[CodeUnit]
     out_of_scope_code: list[CodeUnit]
     unresolved: list[dict] = field(default_factory=list)
+    dynamic_refs: list[dict] = field(default_factory=list)
+    dynamic_candidates: dict[str, list[str]] = field(default_factory=dict)  # asset -> locators
 
     def relationships_for(self, source_path: str) -> list[Relationship]:
         rels = [r for (s, _), r in self.relationships.items() if s == source_path]
@@ -162,6 +182,7 @@ def build_graph(fx: Fixture) -> ImpactGraph:
             if name.split()[0] in scored_tags:
                 unresolved.append(
                     {
+                        "kind": "unresolved_image_name",
                         "item": (
                             f"Image name '{name}' is used but no exact image declaration was found "
                             "in the fixture; the usage is not attributed to a scored asset."
@@ -174,6 +195,7 @@ def build_graph(fx: Fixture) -> ImpactGraph:
         if len({tuple(sorted(a.fixture_path for a in h)) for _, h in entries}) > 1:
             unresolved.append(
                 {
+                    "kind": "conflicting_declaration",
                     "item": (
                         f"Image name '{name}' has conflicting declarations mapping to "
                         f"{sorted(targets)}; not attributed."
@@ -209,6 +231,7 @@ def build_graph(fx: Fixture) -> ImpactGraph:
                 if len(hits) > 1:
                     unresolved.append(
                         {
+                            "kind": "ambiguous_literal",
                             "item": f"Literal '{s.value}' matches several scored assets by file name; not attributed.",
                             "evidence": [_ev(s.line, at, f"The source contains the literal {s.value}.", occ).to_dict()],
                         }
@@ -244,7 +267,10 @@ def build_graph(fx: Fixture) -> ImpactGraph:
     out_scope = [u for u in fx.code_candidates if u not in eligible]
     for sr in scans.values():
         for w in sr.warnings:
-            unresolved.append({"item": w, "evidence": []})
+            unresolved.append({"kind": "scanner_limitation", "item": w, "evidence": []})
+
+    dyn_items, dyn_candidates = _dynamic_items(scans, fx.assets, occ)
+    unresolved.extend(dyn_items)
     return ImpactGraph(
         fixture=fx,
         scans=scans,
@@ -252,4 +278,88 @@ def build_graph(fx: Fixture) -> ImpactGraph:
         eligible_code=eligible,
         out_of_scope_code=out_scope,
         unresolved=unresolved,
+        dynamic_refs=dyn_items,
+        dynamic_candidates=dyn_candidates,
     )
+
+
+def _candidates(prefixes: list[str], suffixes: list[str], assets: list[AssetUnit]) -> list[AssetUnit]:
+    hits: list[AssetUnit] = []
+    for p in prefixes:
+        v = normalise_literal(p)
+        for a in assets:
+            gp = a.game_path or ""
+            ok = gp.startswith(v) if "/" in v else (a.basename.startswith(v) or gp.startswith(v))
+            if ok and all(gp.lower().endswith(normalise_literal(sfx).lower()) or a.basename.lower().endswith(sfx.lower()) for sfx in suffixes):
+                if a not in hits:
+                    hits.append(a)
+    return hits
+
+
+def _dynamic_items(scans: dict[str, ScanResult], assets: list[AssetUnit], occ: "_OccurrenceIndex"):
+    """Structured unresolved items for dynamic references (flag only)."""
+    found: list[DynamicRef] = []
+    for sr in scans.values():
+        found.extend(sr.dynamic)
+    # helpers whose body builds image paths dynamically (defined anywhere in the fixture)
+    helpers = sorted({d.line.function for d in found if d.line.function})
+    if helpers:
+        call_re = re.compile(
+            r"(?<![\w.])(" + "|".join(re.escape(h) for h in helpers) + r")\s*\(\s*(?!(?:True|False|None)\b)([A-Za-z_][\w\.]*)\s*[,)]"
+        )
+        seen = {(d.line.source_path, d.line.fixture_line) for d in found}
+        for sr in scans.values():
+            for ln in sr.lines:
+                if not ln.code or ln.code.startswith("def "):
+                    continue
+                m = call_re.search(ln.bare)
+                if not m:
+                    continue
+                reason = (
+                    f"call to {m.group(1)}(), whose body builds image paths dynamically, "
+                    f"with the non-literal argument '{m.group(2)}'"
+                )
+                key = (ln.source_path, ln.fixture_line)
+                if key in seen:
+                    for d in found:
+                        if (d.line.source_path, d.line.fixture_line) == key and reason not in d.reasons:
+                            d.reasons.append(reason)
+                    continue
+                seen.add(key)
+                found.append(DynamicRef(line=ln, reasons=[reason]))
+
+    items: list[dict] = []
+    by_asset: dict[str, list[str]] = {}
+    for d in sorted(found, key=lambda d: (d.line.source_path, d.line.fixture_line)):
+        cands = _candidates(d.prefixes, d.suffixes, assets)
+        for a in cands:
+            by_asset.setdefault(a.fixture_path, []).append(d.line.locator)
+        ev = _ev(
+            d.line,
+            literal_anchor_type(d.line),
+            "The source builds an image/file reference dynamically; it is not resolved statically.",
+            occ,
+        )
+        items.append(
+            {
+                "kind": "dynamic_reference",
+                "item": (
+                    f"{d.line.locator}: dynamic image/file reference not resolved to a scored asset "
+                    f"({'; '.join(d.reasons)})."
+                ),
+                "source_path": d.line.source_path,
+                "locator": d.line.locator,
+                "snippet": d.line.code,
+                "reasons": list(d.reasons),
+                "literal_prefixes": list(d.prefixes),
+                "literal_suffixes": list(d.suffixes),
+                "candidate_assets": [a.fixture_path for a in cands],
+                "candidate_basis": (
+                    "scored assets whose path or file name starts with a literal prefix of the expression"
+                    if d.prefixes
+                    else "no literal prefix; candidates cannot be narrowed"
+                ),
+                "evidence": [ev.to_dict()],
+            }
+        )
+    return items, by_asset

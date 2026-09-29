@@ -1084,7 +1084,6 @@ def impact(
         help="Vision provider: auto | unavailable | ollama | ollama:<model>. auto = a local Ollama vision model if discovery finds one, else unavailable",
     ),
     summary: Optional[Path] = typer.Option(None, "--summary", help="Also write a markdown summary here"),
-    test_case: Optional[str] = typer.Option(None, "--test-case", help="Optional label copied into each record (e.g. A)"),
     confidence_threshold: float = typer.Option(
         0.7, "--confidence-threshold", help="Provider verdicts below this confidence become REVIEW_REQUIRED"
     ),
@@ -1113,7 +1112,6 @@ def impact(
             output=output,
             provider=provider,
             summary=summary,
-            test_case=test_case,
             confidence_threshold=confidence_threshold,
             identifier_policy=identifier_policy,
         )
@@ -1124,11 +1122,13 @@ def impact(
     p = report["provider"]
     typer.echo(
         f"provider: {p['name']}" + (f" ({p['model']})" if p.get("model") else "")
+        + f" [state {p['state']}]"
         + ("" if p["available"] else " — provider unavailable, all assets REVIEW_REQUIRED")
     )
     typer.echo(f"assets: {c['assets']} {c['asset_status']}")
     typer.echo(f"code units: {c['code_units']} {c['file_status']}")
     typer.echo(f"relationships: {c['relationships']} {c['relationship_status']}")
+    typer.echo(f"unresolved: {c['unresolved_items']} {c['unresolved_by_kind']}")
     typer.echo(f"elapsed: {report['timing']['elapsed']}")
     typer.echo(f"wrote {output}" + (f" and {summary}" if summary else ""))
 

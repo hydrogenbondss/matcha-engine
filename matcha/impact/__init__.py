@@ -19,7 +19,9 @@ Pipeline:
     report.py       JSON report + markdown summary
     engine.py       orchestration used by ``matcha impact``
 
-Nothing in this package reads experiment worksheets or ground truth.
+This package reads only the fixture and the change request.  It has no
+notion of evaluation labels, human classifications or scoring; the
+evaluator in scripts/ owns all of that.
 """
 
 __all__ = ["run_impact"]

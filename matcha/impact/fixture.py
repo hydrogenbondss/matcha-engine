@@ -4,7 +4,7 @@ Scored-set derivation (generic, data-driven; no file names are hard-coded):
 
 * **ASSET candidates** are manifest items whose ``type`` starts with
   ``image/`` and whose ``direct_production_file`` is true, i.e. image files
-  that are the production-baseline bytes rather than review copies or
+  that are the frozen production bytes rather than review copies or
   approval references.  Other images (``direct_production_file: false``)
   are evidence-only.
 * **CODE candidates** are every text file under the fixture's ``game/``
