@@ -14,12 +14,15 @@ This worksheet is the blank recording form for condition **H (human alone)** def
 
 ## Blinding reminder (condition H)
 
-While performing this baseline, the human receives only the frozen test request and the frozen Kite fixture, and independently performs the impact investigation. The human must NOT receive or use:
+While performing this baseline, the human receives only the frozen test request, the frozen Kite fixture and the fixed experiment scope (the 15 scored ASSET units and 8 eligible CODE units listed below, with the protocol's record schemas and status definitions), and independently performs the impact investigation, including independently discovering the CODE/ASSET relationships. The human must NOT receive or use:
 
 - ChatGPT classification help;
 - Grok Bot classification help;
 - Matcha output (any Matcha report, summary or classification);
-- Experiment 1 answers (the classifications, reasons, evidence and unresolved items recorded in `docs/experiments/EXPERIMENT-01-HUMAN-BASELINE.md`).
+- Experiment 1 answers (the classifications, reasons, evidence and unresolved items recorded in `docs/experiments/EXPERIMENT-01-HUMAN-BASELINE.md`);
+- the Experiment 1 structural relationship inventory (in the same Experiment 1 worksheet).
+
+Execution order (design §7): H is performed for Test A → Test B → Test C before any Matcha exposure, and the completed H baseline is frozen before any Matcha run. The same participant later performs H+M (design §5).
 
 ## Human-only fields
 
@@ -82,7 +85,7 @@ relationships:
 
 - Each test section contains 15 blank ASSET records (protocol §4.1) and 8 blank CODE records (protocol §4.3), in the same record structure as the Experiment 1 worksheet.
 - The `relationships` field of each CODE record is left blank. The human records one relationship per CODE unit × scored ASSET pair that the human establishes from the frozen fixture (protocol Decision 4, §5.3), using the relationship item structure above.
-- This worksheet does not reproduce the structural relationship inventory from the Experiment 1 worksheet, because that file also contains the Experiment 1 answers, which condition H must not receive.
+- This worksheet does not add or reproduce the structural relationship inventory from the Experiment 1 worksheet. Giving H that engineered inventory would precompute part of the dependency-discovery work that Matcha is intended to reduce (design §6.1.1); H discovers the relationships from the frozen fixture.
 - Timing: start when the human receives the exact frozen test request and the frozen fixture. Stop when all required classifications and relationships for that test are complete. Record `elapsed_time` as `HH:MM:SS`.
 - `work_notes` is optional: a description of the work the human had to perform (what was inspected, what had to be resolved).
 

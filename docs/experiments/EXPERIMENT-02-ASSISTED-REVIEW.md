@@ -14,8 +14,11 @@ This worksheet is the blank recording form for condition **H+M (human with Match
 
 ## Condition reminder (H+M)
 
-- The Matcha output for a test is frozen (condition M) before the human receives it.
-- The human then receives the frozen Matcha report for that test and verifies/corrects it to produce the final production-impact answer.
+- Participant: the same human participant who completed H (design §5).
+- Execution order (design §7): H (A → B → C) is completed and frozen; then M (A → B → C); then all three Matcha reports are frozen; then H+M (A → B → C). Conditions are not interleaved by case.
+- The participant receives the frozen Matcha report for each test and verifies/corrects it to produce the final production-impact answer.
+- Key question (design §1, §12): "How much human investigative work remains after Matcha produces its first-pass impact analysis, and what errors, omissions, false positives, or unresolved cases does human verification uncover?"
+- The most important evidence recorded here is the actual work remaining after Matcha: corrections, missed impacts, unnecessary impacts removed, `REVIEW_REQUIRED` remaining, and what the human had to inspect or resolve, not merely elapsed time. Because the participant has prior exposure to each case from H, H vs H+M elapsed time is descriptive evidence only (design §14, limitation 3).
 - Human verification time is recorded here. Matcha machine runtime is recorded under condition M and is never added to, or combined with, the human verification time.
 
 ## Human-only fields
@@ -65,7 +68,7 @@ relationships:
 
 ## How to use this worksheet
 
-- **Matcha report reference:** copy from the frozen Matcha report for that test. The fields correspond to the report's `provenance` block (`engine`, `fixture`, `reference`, `provider`, `vision_prompt`).
+- **Matcha report reference:** copy from the frozen Matcha report for that test. Live benchmark reports are written outside the Git repository under `<external-experiment-02-output-dir>/` (design §10); record the report and summary paths under that directory. The provenance fields correspond to the report's `provenance` block (`engine`, `fixture`, `reference`, `provider`, `vision_prompt`); record the values exactly as the report gives them. If a report is later archived into the experiment branch, that is a separate archival action: record its archived path and archival commit separately, and do not confuse the archival commit with the engine commit (`engine.git_commit`) recorded in the run provenance.
 - **Timing:** `verification_start_time` when the human receives the frozen Matcha report for the test; `verification_end_time` when the final verified ASSET and CODE records for that test are complete. Record `verification_elapsed_time` as `HH:MM:SS`.
 - **Corrections to Matcha:** every item whose final verified value differs from Matcha's output (ASSET status, CODE file_status, or a relationship's relationship_status), one entry per corrected item.
 - **Missed impacts discovered by the human:** impacts (affected assets, or dependencies/relationships) that the Matcha output did not identify and the human added.
@@ -88,8 +91,10 @@ Question:
 
 ```yaml
 matcha_report:
-  report_path:
-  summary_path:
+  report_path: <external-experiment-02-output-dir>/
+  summary_path: <external-experiment-02-output-dir>/
+  archived_report_path:
+  archival_commit:
   engine:
     git_commit:
     git_worktree_dirty:
@@ -443,8 +448,10 @@ Question:
 
 ```yaml
 matcha_report:
-  report_path:
-  summary_path:
+  report_path: <external-experiment-02-output-dir>/
+  summary_path: <external-experiment-02-output-dir>/
+  archived_report_path:
+  archival_commit:
   engine:
     git_commit:
     git_worktree_dirty:
@@ -798,8 +805,10 @@ Question:
 
 ```yaml
 matcha_report:
-  report_path:
-  summary_path:
+  report_path: <external-experiment-02-output-dir>/
+  summary_path: <external-experiment-02-output-dir>/
+  archived_report_path:
+  archival_commit:
   engine:
     git_commit:
     git_worktree_dirty:
