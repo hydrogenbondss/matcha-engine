@@ -21,7 +21,7 @@ python3 tools/experiment-02-human-audit/serve.py --output-dir <local-experiment-
   the printed `http://127.0.0.1:<port>/` URL. Stop with Ctrl+C.
 - `--output-dir` is required and must be **outside** this Git repository (the
   tool refuses the repository, `fixtures/`, `docs/`, and any other worktree of the
-  same repository). It is created if missing.
+  same repository). It is created if missing. One output directory = one run.
 
 ## What it reads
 
@@ -29,16 +29,49 @@ python3 tools/experiment-02-human-audit/serve.py --output-dir <local-experiment-
   A/B/C request and question lines (verbatim from protocol §9), the 15 scored ASSET
   paths, the 8 scored CODE paths, the record ids (`H-<case>-ASSET-NN`,
   `H-<case>-CODE-NN`), and its "Allowed values" lines (checked at start-up).
-- `fixtures/kite-production/`: only the 15 scored ASSET images and the 8 scored
-  CODE source files, served read-only and byte-for-byte through an exact-match
-  whitelist (`/fixture/<fixture-relative-path>`). Anything else returns 404.
+- `fixtures/kite-production/` only, read-only and byte-for-byte:
+  - Record view: the 15 scored ASSET images and 8 scored CODE files
+    (`/fixture/<fixture-relative-path>`, exact-match whitelist).
+  - **Fixture evidence** view: every frozen image and text file in the fixture
+    (`/evidence/<fixture-relative-path>`), see below.
 - `git rev-parse HEAD`, `git status --porcelain`, `git rev-parse
-  HEAD:fixtures/kite-production`: export provenance only.
+  HEAD:fixtures/kite-production`: export provenance only. `git ls-tree -r
+  HEAD:fixtures/kite-production`: the evidence whitelist.
+
+Anything not in a whitelist returns 404. Lookups are by exact whitelist key; no
+request path is ever joined onto a directory.
+
+## Fixture evidence view
+
+Protocol §14 permits the human to inspect frozen fixture images, evidence-only
+metadata and frozen fixture game source. The separate **Fixture evidence** view
+lists, in plain path order with only the path and type (image / text):
+
+- all files of `HEAD:fixtures/kite-production` (from `git ls-tree`) that are
+  regular files, are not symlinks, resolve inside the fixture root, and whose
+  on-disk bytes equal the committed blob;
+- of type image (`.png`, `.jpg`, `.jpeg`, `.webp`, `.gif`; shown as images) or
+  text (`.rpy`, `.txt`, `.md`, `.json`, `.yaml`, `.yml`; shown as raw text).
+
+At the frozen fixture (`c1364f4`) this is all 31 files: the 15 scored ASSET images,
+`reference/KEEP_kite_male.png` and `reference/kite_male_bust_neutral_credits_v19g.png`
+(evidence-only, protocol Decision 1 and §8), the three `metadata/` files
+(evidence-only, §8), and the 11 `game/` files: the 8 scored CODE units plus the
+evidence-only `game/characters.rpy`, `game/options.rpy.excerpt.txt` and
+`game/screens.rpy.excerpt.txt` (§4.3, §8).
+
+Not listed: video and audio (excluded by protocol §19 and
+`docs/experiments/KITE-FIXTURE-01.md` §4; none are in the fixture) and any other
+file type; and anything outside `fixtures/kite-production/`, including
+`docs/experiments/KITE-FIXTURE-01.md` (a repository document, not fixture material).
+If git is unavailable, the whitelist is built by a filesystem walk with the same
+symlink and realpath checks.
 
 ## Ordering
 
 ASSET and CODE units are shown in the fixed order in which the frozen protocol
-(§4.1, §4.3) and the Experiment 2 H worksheet list them. No other ordering is used.
+(§4.1, §4.3) and the Experiment 2 H worksheet list them. The evidence view uses
+plain path (alphabetical) order. No other ordering is used.
 
 ## Allowed options
 
@@ -52,17 +85,41 @@ The selects start blank and offer exactly the values defined in
   `assignment`, `config`, `excerpt_header`, `asset`, `metadata`.
 - Relationship `related_asset`: the 15 scored ASSET paths, same fixed order.
 
-## Use
+## Case order and finalize (A → B → C)
 
-- One test at a time, A → B → C. Only the case you navigate to is shown.
-- **Investigation** timer and a separate **Documentation** timer. Each Start/Stop
-  pair is one segment (ISO 8601 timestamps with UTC offset, from the browser's
-  clock). Documentation time is never added to investigation time. The two timers
-  are independent.
-- Every change is saved to the browser (`localStorage`) at once and to
-  `<output-dir>/H-<case>.state.json` shortly after. On reload, the newer copy wins.
-- **Export H-<case>.yaml** writes `<output-dir>/H-<case>.yaml`. Stop the timers
-  first; an open segment is exported without an end time and is not counted.
+- Test A is always unlocked. Test B unlocks only when Test A is finalized; Test C
+  only when Test B is finalized. The server enforces this: case data, state reads,
+  saves and exports for a locked case are rejected (HTTP 423).
+- **Export and finalize Test X** writes `<output-dir>/H-X.yaml` and
+  `<output-dir>/H-X.finalized.json` (`case`, `finalized_at`, `export_file`,
+  `export_sha256`, `tool_version`). A case is finalized when both files exist and
+  the recorded `export_sha256` matches `H-X.yaml`. There are no semantic or
+  correctness checks; any allowed values (including blanks) can be finalized.
+- Finalize is refused while a timer is running (stop it first).
+- A finalized case stays viewable but is **read-only**: the server rejects further
+  saves and exports for it.
+- On every start or reload the tool opens the earliest unlocked case that is not
+  finalized (Test A if all three are finalized). There is no "last case" memory.
+- The navigation shows each case as `open`, `finalized` or `locked`.
+
+## Timers
+
+- One **Investigation** timer and one separate **Documentation** timer. Each
+  Start/Stop pair is one segment (ISO 8601 timestamps with UTC offset, from the
+  browser's clock).
+- They never overlap: while one is running, the other's Start button is disabled
+  and marked "Start blocked"; neither timer is ever stopped automatically. The
+  server rejects any save in which two segments overlap or more than one segment
+  is open.
+- `elapsed_time` = sum of closed Investigation segments;
+  `documentation_elapsed_time` = sum of closed Documentation segments. They are
+  never added together.
+
+## Saving
+
+Every change is saved to the browser (`localStorage`, keyed by the run id in
+`<output-dir>/H-run.json`) at once and to `<output-dir>/H-<case>.state.json` shortly
+after. On reload the newer copy wins; for a finalized case the server copy is used.
 
 ## Export format
 
@@ -73,9 +130,8 @@ Field names follow the H worksheet records. Blank fields are empty; empty lists 
   including untracked; empty if unavailable), `export_timestamp`,
   `fixture_tree_at_head` (`git rev-parse HEAD:fixtures/kite-production`).
 - `test_case`, `start_time` (first investigation segment start), `end_time` (last
-  investigation segment end), `elapsed_time` (sum of closed investigation segments,
-  `HH:MM:SS`), `investigation_segments`, `documentation_segments`,
-  `documentation_elapsed_time`.
+  investigation segment end), `elapsed_time`, `investigation_segments`,
+  `documentation_segments`, `documentation_elapsed_time`.
 - `asset_records`: 15 records (`id`, `test_case`, `item_type`, `asset_path`,
   `status`, `reason`, `evidence`, `game_usage`).
 - `code_records`: 8 records (`id`, `test_case`, `item_type`, `source_path`,

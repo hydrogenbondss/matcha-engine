@@ -5,9 +5,13 @@ A repository inspector with an evidence ledger beside it. It records what the
 human enters and nothing else: it never classifies, suggests, infers, sorts by
 relevance or pre-fills anything.
 
-Standard library only. Binds to 127.0.0.1 only. Read-only access to exactly the
-15 scored ASSET files and 8 scored CODE files listed in the Experiment 2 H
-worksheet; all recorded data is written to an output directory that must be
+Standard library only. Binds to 127.0.0.1 only. Read-only access to the 15
+scored ASSET files and 8 scored CODE files listed in the Experiment 2 H
+worksheet, and (separate evidence view) to the frozen files inside
+fixtures/kite-production/ through an exact whitelist built at start-up. Cases
+unlock in order A -> B -> C; a case unlocks only after the previous one has been
+exported and finalized. The Investigation and Documentation timers never
+overlap. All recorded data is written to an output directory that must be
 outside this Git repository.
 
 Usage:
@@ -18,6 +22,7 @@ from __future__ import annotations
 
 import argparse
 import datetime as dt
+import hashlib
 import http.server
 import json
 import os
@@ -30,7 +35,7 @@ from pathlib import Path
 from typing import Any, Optional
 
 TOOL_NAME = "experiment-02-human-audit"
-TOOL_VERSION = "0.1.0"
+TOOL_VERSION = "0.2.0"
 
 TOOL_DIR = Path(__file__).resolve().parent
 STATIC_DIR = TOOL_DIR / "static"
@@ -53,6 +58,11 @@ _ALLOWED_LINES = (
     "- Allowed `anchor_type` values: `declaration`, `statement`, `function`, `label`, `assignment`, "
     "`config`, `excerpt_header`, `asset`, `metadata`.",
 )
+# Evidence browser: file types shown. Video and audio are never listed (protocol §19;
+# docs/experiments/KITE-FIXTURE-01.md §4). Anything else is not listed either.
+IMAGE_TYPES = {".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".webp": "image/webp",
+               ".gif": "image/gif"}
+TEXT_TYPES = {".rpy", ".txt", ".md", ".json", ".yaml", ".yml"}
 EVIDENCE_FIELDS = ("source_path", "anchor_type", "anchor", "context", "locator", "fingerprint", "fact")
 MAX_BODY = 8 * 1024 * 1024
 MAX_TEXT = 200_000
@@ -256,6 +266,25 @@ def _segments(v: Any, name: str) -> list[dict]:
     return out
 
 
+def _check_no_overlap(inv: list[dict], doc: list[dict]) -> None:
+    """Investigation and Documentation segments must never overlap: at most one
+    open segment in total, and no two intervals (open = still running) overlap.
+    Touching intervals (one ends when the next starts) are allowed."""
+    far = dt.datetime.max.replace(tzinfo=dt.timezone.utc)
+    iv = []
+    for name, segs in (("investigation", inv), ("documentation", doc)):
+        for s in segs:
+            a = dt.datetime.fromisoformat(s["start"])
+            b = far if s["end"] is None else dt.datetime.fromisoformat(s["end"])
+            iv.append((a, b, name))
+    if sum(1 for s in inv + doc if s["end"] is None) > 1:
+        raise ValueError("timers overlap: more than one timer is running")
+    iv.sort(key=lambda x: (x[0], x[1]))
+    for (a1, b1, n1), (a2, b2, n2) in zip(iv, iv[1:]):
+        if a2 < b1:
+            raise ValueError(f"timers overlap: {n2} segment starts before {n1} segment ends")
+
+
 def empty_state(case: str, ws: dict) -> dict:
     return {
         "case": case,
@@ -278,6 +307,7 @@ def validate_state(case: str, raw: Any, ws: dict) -> dict:
     out["updated_at"] = _ts(st.get("updated_at"), "updated_at", True)
     out["investigation_segments"] = _segments(st.get("investigation_segments", []), "investigation_segments")
     out["documentation_segments"] = _segments(st.get("documentation_segments", []), "documentation_segments")
+    _check_no_overlap(out["investigation_segments"], out["documentation_segments"])
     assets = _obj(st.get("assets", {}), tuple(ws["assets"]), "assets")
     for p, rec in assets.items():
         rec = _obj(rec, ("status", "reason", "evidence", "game_usage"), f"assets[{p}]")
@@ -430,7 +460,75 @@ def export_text(data: dict) -> str:
     return head + to_yaml(data) + "\n"
 
 
+# --------------------------------------------------------------------------- evidence whitelist
+def _git_blob_id(data: bytes, oid_len: int) -> str:
+    h = hashlib.sha256 if oid_len == 64 else hashlib.sha1
+    return h(b"blob %d\0" % len(data) + data).hexdigest()
+
+
+def _evidence_type(rel: str) -> Optional[str]:
+    ext = os.path.splitext(rel)[1].lower()
+    if ext in IMAGE_TYPES:
+        return "image"
+    if ext in TEXT_TYPES:
+        return "text"
+    return None
+
+
+def build_evidence_whitelist() -> tuple[dict[str, dict], list[dict], str]:
+    """Exact whitelist of frozen fixture files (fixture-relative path -> entry).
+    Source: `git ls-tree -r HEAD:fixtures/kite-production` (regular files only),
+    each checked on disk: not a symlink, resolves inside the fixture root, and
+    its bytes equal the committed blob. Fallback when git is unavailable: a
+    filesystem walk with the same symlink / realpath checks."""
+    root = FIXTURE_ROOT.resolve()
+    listing = _git("ls-tree", "-r", "-z", "HEAD:fixtures/kite-production")
+    entries: list[tuple[str, Optional[str]]] = []
+    skipped: list[dict] = []
+    if listing is not None:
+        source = "git ls-tree -r HEAD:fixtures/kite-production"
+        for rec in filter(None, listing.split("\0")):
+            meta, rel = rec.split("\t", 1)
+            mode, otype, oid = meta.split()
+            if otype != "blob" or mode not in ("100644", "100755"):
+                skipped.append({"path": rel, "reason": f"not a regular file in HEAD (mode {mode})"})
+                continue
+            entries.append((rel, oid))
+    else:
+        source = "filesystem walk (git unavailable)"
+        for dirpath, dirnames, filenames in os.walk(root, followlinks=False):
+            for fn in filenames:
+                full = Path(dirpath) / fn
+                entries.append((full.relative_to(root).as_posix(), None))
+    whitelist: dict[str, dict] = {}
+    for rel, oid in sorted(entries):
+        kind = _evidence_type(rel)
+        if kind is None:
+            skipped.append({"path": rel, "reason": "not an image or text file (video/audio and other types are not listed)"})
+            continue
+        p = root / rel
+        if p.is_symlink() or not p.is_file():
+            skipped.append({"path": rel, "reason": "symlink or not a regular file on disk"})
+            continue
+        real = p.resolve()
+        if not _is_within(real, root):
+            skipped.append({"path": rel, "reason": "resolves outside the fixture"})
+            continue
+        data = real.read_bytes()
+        if oid is not None and _git_blob_id(data, len(oid)) != oid:
+            skipped.append({"path": rel, "reason": "on-disk bytes differ from the committed fixture"})
+            continue
+        whitelist[rel] = {"path": rel, "type": kind, "bytes": len(data), "file": real, "disk": p,
+                          "sha256": hashlib.sha256(data).hexdigest(),
+                          "ctype": IMAGE_TYPES.get(os.path.splitext(rel)[1].lower(), "text/plain; charset=utf-8")}
+    return whitelist, skipped, source
+
+
 # --------------------------------------------------------------------------- server
+class Locked(Exception):
+    pass
+
+
 class App:
     def __init__(self, output_dir: Path):
         self.ws = load_worksheet()
@@ -439,10 +537,57 @@ class App:
         self.files: dict[str, Path] = {}
         for rel in list(self.ws["assets"]) + list(self.ws["code"]):
             p = (FIXTURE_ROOT / rel).resolve()
-            if not _is_within(p, FIXTURE_ROOT.resolve()) or not p.is_file():
+            if not _is_within(p, FIXTURE_ROOT.resolve()) or not p.is_file() or (FIXTURE_ROOT / rel).is_symlink():
                 raise SystemExit(f"scored fixture file missing: {rel}")
             self.files[rel] = p
+        self.evidence, self.evidence_skipped, self.evidence_source = build_evidence_whitelist()
+        missing = [rel for rel in self.files if rel not in self.evidence]
+        if missing:
+            raise SystemExit(f"scored files not in the fixture evidence whitelist: {missing}")
+        run = self.output_dir / "H-run.json"
+        if not run.exists():
+            run.write_text(json.dumps({"run_id": os.urandom(8).hex(),
+                                       "created_at": dt.datetime.now().astimezone().isoformat(timespec="seconds")},
+                                      indent=2) + "\n", encoding="utf-8")
+        self.run_id = json.loads(run.read_text(encoding="utf-8"))["run_id"]
 
+    # ---- finalize / lock (mechanical: no semantic checks)
+    def _final_paths(self, case: str) -> tuple[Path, Path]:
+        return self.output_dir / f"H-{case}.yaml", self.output_dir / f"H-{case}.finalized.json"
+
+    def finalized(self, case: str) -> Optional[dict]:
+        y, f = self._final_paths(case)
+        if not (y.is_file() and f.is_file()):
+            return None
+        try:
+            rec = json.loads(f.read_text(encoding="utf-8"))
+        except (ValueError, OSError):
+            return None
+        if rec.get("case") != case or rec.get("export_sha256") != hashlib.sha256(y.read_bytes()).hexdigest():
+            return None
+        return rec
+
+    def unlocked(self, case: str) -> bool:
+        i = CASES.index(case)
+        return all(self.finalized(c) for c in CASES[:i])
+
+    def status(self) -> dict:
+        cases = {}
+        for c in CASES:
+            rec = self.finalized(c)
+            cases[c] = {"unlocked": self.unlocked(c), "finalized": rec is not None,
+                        "finalized_at": rec.get("finalized_at") if rec else None}
+        resume = next((c for c in CASES if cases[c]["unlocked"] and not cases[c]["finalized"]), CASES[0])
+        return {"run_id": self.run_id, "cases": cases, "resume": resume}
+
+    def require(self, case: str, *, editable: bool) -> None:
+        if not self.unlocked(case):
+            prev = CASES[CASES.index(case) - 1]
+            raise Locked(f"Test {case} is locked until Test {prev} is exported and finalized")
+        if editable and self.finalized(case):
+            raise Locked(f"Test {case} is finalized and read-only")
+
+    # ---- state
     def state_path(self, case: str) -> Path:
         return self.output_dir / f"H-{case}.state.json"
 
@@ -455,25 +600,37 @@ class App:
     def save_state(self, case: str, raw: Any) -> dict:
         st = validate_state(case, raw, self.ws)
         with self.lock:
+            self.require(case, editable=True)
             p = self.state_path(case)
             tmp = p.with_suffix(".json.tmp")
             tmp.write_text(json.dumps(st, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
             os.replace(tmp, p)
         return st
 
-    def export(self, case: str) -> tuple[Path, str]:
+    def finalize(self, case: str) -> tuple[Path, str, dict]:
+        """Export H-<case>.yaml and write H-<case>.finalized.json. Refused while a
+        timer is running. After this the case is read-only and the next case unlocks."""
         with self.lock:
+            self.require(case, editable=True)
             st = self.load_state(case)
+            if any(s["end"] is None for s in st["investigation_segments"] + st["documentation_segments"]):
+                raise ValueError("stop the running timer before exporting and finalizing")
             text = export_text(build_export(case, st, self.ws, tool_provenance()))
-            p = self.output_dir / f"H-{case}.yaml"
-            tmp = p.with_suffix(".yaml.tmp")
+            y, f = self._final_paths(case)
+            tmp = y.with_suffix(".yaml.tmp")
             tmp.write_text(text, encoding="utf-8")
-            os.replace(tmp, p)
-        return p, text
+            os.replace(tmp, y)
+            rec = {"case": case, "finalized_at": dt.datetime.now().astimezone().isoformat(timespec="seconds"),
+                   "export_file": y.name, "export_sha256": hashlib.sha256(text.encode("utf-8")).hexdigest(),
+                   "tool_version": TOOL_VERSION}
+            tmp = f.with_suffix(".json.tmp")
+            tmp.write_text(json.dumps(rec, indent=2) + "\n", encoding="utf-8")
+            os.replace(tmp, f)
+        return y, text, rec
 
 
 CSP = ("default-src 'self'; img-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self'; "
-       "object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'")
+       "object-src 'none'; media-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'")
 
 
 def make_handler(app: App, port_ref: list[int]):
@@ -520,16 +677,29 @@ def make_handler(app: App, port_ref: list[int]):
                     "anchor_types": list(ANCHOR_TYPES),
                     "evidence_fields": list(EVIDENCE_FIELDS),
                 })
+            if path == "/api/status":
+                return self._json(200, app.status())
+            if path == "/api/evidence":
+                return self._json(200, {"source": app.evidence_source,
+                                        "files": [{"path": e["path"], "type": e["type"], "bytes": e["bytes"]}
+                                                  for e in app.evidence.values()]})
             m = re.fullmatch(r"/api/case/([ABC])", path)
             if m:
+                try:
+                    app.require(m.group(1), editable=False)
+                except Locked as e:
+                    return self._json(423, {"error": str(e)})
                 c = app.ws["cases"][m.group(1)]
                 return self._json(200, {"case": m.group(1), "title": c["title"], "request": c["request"],
                                         "question": c["question"], "asset_ids": c["asset_ids"],
-                                        "code_ids": c["code_ids"]})
+                                        "code_ids": c["code_ids"], "finalized": app.finalized(m.group(1))})
             m = re.fullmatch(r"/api/state/([ABC])", path)
             if m:
                 try:
+                    app.require(m.group(1), editable=False)
                     return self._json(200, app.load_state(m.group(1)))
+                except Locked as e:
+                    return self._json(423, {"error": str(e)})
                 except (ValueError, json.JSONDecodeError) as e:
                     return self._json(500, {"error": f"saved state unreadable: {e}"})
             if path.startswith("/fixture/"):
@@ -539,6 +709,18 @@ def make_handler(app: App, port_ref: list[int]):
                     return self._json(404, {"error": "not in the scored-file whitelist"})
                 ctype = "image/png" if rel.endswith(".png") else "text/plain; charset=utf-8"
                 return self._send(200, f.read_bytes(), ctype)
+            if path.startswith("/evidence/"):
+                rel = urllib.parse.unquote(path[len("/evidence/"):])
+                e = app.evidence.get(rel)  # exact whitelist key lookup only; no path joining
+                if e is None:
+                    return self._json(404, {"error": "not in the fixture evidence whitelist"})
+                # re-check at serve time: still no symlink, same real path, same frozen bytes
+                if e["disk"].is_symlink() or e["disk"].resolve() != e["file"]:
+                    return self._json(404, {"error": "not in the fixture evidence whitelist"})
+                data = e["file"].read_bytes()
+                if hashlib.sha256(data).hexdigest() != e["sha256"]:
+                    return self._json(404, {"error": "fixture file changed since start-up"})
+                return self._send(200, data, e["ctype"])
             return self._json(404, {"error": "not found"})
 
         def _static(self, name: str):
@@ -569,16 +751,20 @@ def make_handler(app: App, port_ref: list[int]):
             if m:
                 try:
                     st = app.save_state(m.group(1), json.loads(body.decode("utf-8")))
+                except Locked as e:
+                    return self._json(423, {"error": str(e)})
                 except (ValueError, json.JSONDecodeError, UnicodeDecodeError) as e:
                     return self._json(400, {"error": str(e)})
                 return self._json(200, {"saved": True, "updated_at": st["updated_at"]})
-            m = re.fullmatch(r"/api/export/([ABC])", path)
+            m = re.fullmatch(r"/api/(?:export|finalize)/([ABC])", path)
             if m:
                 try:
-                    p, text = app.export(m.group(1))
+                    p, text, rec = app.finalize(m.group(1))
+                except Locked as e:
+                    return self._json(423, {"error": str(e)})
                 except (ValueError, json.JSONDecodeError) as e:
                     return self._json(400, {"error": str(e)})
-                return self._json(200, {"written": str(p), "yaml": text})
+                return self._json(200, {"written": str(p), "yaml": text, "finalized": rec})
             return self._json(404, {"error": "not found"})
 
     return Handler
