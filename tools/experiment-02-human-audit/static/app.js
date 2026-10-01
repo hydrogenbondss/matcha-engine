@@ -292,7 +292,7 @@ async function renderEvidence(main) {
   };
   draw();
   main.append(el("section", { class: "case" }, el("h1", { text: "Fixture evidence (read-only)" }),
-    el("div", { class: "label", text: "Files inside fixtures/kite-production/ only. Timers keep their state while this view is open." })),
+    el("div", { class: "label", text: "The evidence browser exposes the permitted static-production evidence. metadata/fixture-manifest.json is intentionally not exposed because it contains precomputed relationship/game-usage information. metadata/KITE_ASSET_MASTERLIST.md is intentionally not exposed because it describes excluded video material. These exclusions are experiment-interface protections and do not modify the frozen fixture. Timers keep their state while this view is open." })),
     el("div", { class: "work evidence" }, list, viewer));
   if (EVSEL) {
     const f = EVIDENCE.files.find(x => x.path === EVSEL);

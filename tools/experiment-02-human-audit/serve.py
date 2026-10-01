@@ -7,12 +7,13 @@ relevance or pre-fills anything.
 
 Standard library only. Binds to 127.0.0.1 only. Read-only access to the 15
 scored ASSET files and 8 scored CODE files listed in the Experiment 2 H
-worksheet, and (separate evidence view) to the frozen files inside
-fixtures/kite-production/ through an exact whitelist built at start-up. Cases
-unlock in order A -> B -> C; a case unlocks only after the previous one has been
-exported and finalized. The Investigation and Documentation timers never
-overlap. All recorded data is written to an output directory that must be
-outside this Git repository.
+worksheet, and (separate evidence view) to the permitted static-production
+evidence inside fixtures/kite-production/ through an exact whitelist built at
+start-up. metadata/fixture-manifest.json and metadata/KITE_ASSET_MASTERLIST.md
+are not on that whitelist. Cases unlock in order A -> B -> C; a case unlocks
+only after the previous one has been exported and finalized. The Investigation
+and Documentation timers never overlap. All recorded data is written to an
+output directory that must be outside this Git repository.
 
 Usage:
     python3 tools/experiment-02-human-audit/serve.py --output-dir <local-experiment-02-human-output>
@@ -63,6 +64,15 @@ _ALLOWED_LINES = (
 IMAGE_TYPES = {".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".webp": "image/webp",
                ".gif": "image/gif"}
 TEXT_TYPES = {".rpy", ".txt", ".md", ".json", ".yaml", ".yml"}
+# Named fixture paths withheld from the evidence browser. Exact relative paths
+# only: no content inspection. They stay in the frozen fixture; withholding them
+# is an experiment-interface protection.
+# - metadata/fixture-manifest.json: precomputed relationship / game-usage info
+# - metadata/KITE_ASSET_MASTERLIST.md: describes excluded video material
+EVIDENCE_EXCLUDED = frozenset({
+    "metadata/fixture-manifest.json",
+    "metadata/KITE_ASSET_MASTERLIST.md",
+})
 EVIDENCE_FIELDS = ("source_path", "anchor_type", "anchor", "context", "locator", "fingerprint", "fact")
 MAX_BODY = 8 * 1024 * 1024
 MAX_TEXT = 200_000
@@ -476,11 +486,13 @@ def _evidence_type(rel: str) -> Optional[str]:
 
 
 def build_evidence_whitelist() -> tuple[dict[str, dict], list[dict], str]:
-    """Exact whitelist of frozen fixture files (fixture-relative path -> entry).
-    Source: `git ls-tree -r HEAD:fixtures/kite-production` (regular files only),
-    each checked on disk: not a symlink, resolves inside the fixture root, and
-    its bytes equal the committed blob. Fallback when git is unavailable: a
-    filesystem walk with the same symlink / realpath checks."""
+    """Exact whitelist of permitted static-production evidence (fixture-relative
+    path -> entry). Source: `git ls-tree -r HEAD:fixtures/kite-production`
+    (regular files only), each checked on disk: not a symlink, resolves inside
+    the fixture root, and its bytes equal the committed blob. Paths in
+    EVIDENCE_EXCLUDED are omitted by name. Fallback when git is unavailable: a
+    filesystem walk with the same symlink / realpath checks and the same
+    named exclusions."""
     root = FIXTURE_ROOT.resolve()
     listing = _git("ls-tree", "-r", "-z", "HEAD:fixtures/kite-production")
     entries: list[tuple[str, Optional[str]]] = []
@@ -502,6 +514,9 @@ def build_evidence_whitelist() -> tuple[dict[str, dict], list[dict], str]:
                 entries.append((full.relative_to(root).as_posix(), None))
     whitelist: dict[str, dict] = {}
     for rel, oid in sorted(entries):
+        if rel in EVIDENCE_EXCLUDED:
+            skipped.append({"path": rel, "reason": "intentionally not exposed by the evidence browser"})
+            continue
         kind = _evidence_type(rel)
         if kind is None:
             skipped.append({"path": rel, "reason": "not an image or text file (video/audio and other types are not listed)"})

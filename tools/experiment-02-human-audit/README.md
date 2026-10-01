@@ -32,8 +32,9 @@ python3 tools/experiment-02-human-audit/serve.py --output-dir <local-experiment-
 - `fixtures/kite-production/` only, read-only and byte-for-byte:
   - Record view: the 15 scored ASSET images and 8 scored CODE files
     (`/fixture/<fixture-relative-path>`, exact-match whitelist).
-  - **Fixture evidence** view: every frozen image and text file in the fixture
-    (`/evidence/<fixture-relative-path>`), see below.
+  - **Fixture evidence** view: the permitted static-production evidence
+    (`/evidence/<fixture-relative-path>`), see below. Not every fixture file
+    is listed.
 - `git rev-parse HEAD`, `git status --porcelain`, `git rev-parse
   HEAD:fixtures/kite-production`: export provenance only. `git ls-tree -r
   HEAD:fixtures/kite-production`: the evidence whitelist.
@@ -43,29 +44,37 @@ request path is ever joined onto a directory.
 
 ## Fixture evidence view
 
-Protocol §14 permits the human to inspect frozen fixture images, evidence-only
-metadata and frozen fixture game source. The separate **Fixture evidence** view
-lists, in plain path order with only the path and type (image / text):
+The **Fixture evidence** view exposes the permitted static-production evidence.
+It lists, in plain path order with only the path and type (image / text), files
+of `HEAD:fixtures/kite-production` (from `git ls-tree`) that are regular files,
+are not symlinks, resolve inside the fixture root, whose on-disk bytes equal
+the committed blob, and that are not named in the exclusion list below:
 
-- all files of `HEAD:fixtures/kite-production` (from `git ls-tree`) that are
-  regular files, are not symlinks, resolve inside the fixture root, and whose
-  on-disk bytes equal the committed blob;
-- of type image (`.png`, `.jpg`, `.jpeg`, `.webp`, `.gif`; shown as images) or
+- image (`.png`, `.jpg`, `.jpeg`, `.webp`, `.gif`; shown as images) or
   text (`.rpy`, `.txt`, `.md`, `.json`, `.yaml`, `.yml`; shown as raw text).
 
-At the frozen fixture (`c1364f4`) this is all 31 files: the 15 scored ASSET images,
-`reference/KEEP_kite_male.png` and `reference/kite_male_bust_neutral_credits_v19g.png`
-(evidence-only, protocol Decision 1 and §8), the three `metadata/` files
-(evidence-only, §8), and the 11 `game/` files: the 8 scored CODE units plus the
-evidence-only `game/characters.rpy`, `game/options.rpy.excerpt.txt` and
+At the frozen fixture (`c1364f4`) the evidence browser exposes 29 files: the 15
+scored ASSET images, `reference/KEEP_kite_male.png` and
+`reference/kite_male_bust_neutral_credits_v19g.png` (evidence-only, protocol
+Decision 1 and §8), `metadata/INSTALL_REPORT_MALEKITE_V19G.json`, and the 11
+`game/` files: the 8 scored CODE units plus the evidence-only
+`game/characters.rpy`, `game/options.rpy.excerpt.txt` and
 `game/screens.rpy.excerpt.txt` (§4.3, §8).
+
+Intentionally not exposed. These exclusions are experiment-interface protections
+and do not modify the frozen fixture:
+
+- `metadata/fixture-manifest.json` is intentionally not exposed because it
+  contains precomputed relationship/game-usage information.
+- `metadata/KITE_ASSET_MASTERLIST.md` is intentionally not exposed because it
+  describes excluded video material.
 
 Not listed: video and audio (excluded by protocol §19 and
 `docs/experiments/KITE-FIXTURE-01.md` §4; none are in the fixture) and any other
 file type; and anything outside `fixtures/kite-production/`, including
 `docs/experiments/KITE-FIXTURE-01.md` (a repository document, not fixture material).
 If git is unavailable, the whitelist is built by a filesystem walk with the same
-symlink and realpath checks.
+symlink and realpath checks and the same two named exclusions.
 
 ## Ordering
 
