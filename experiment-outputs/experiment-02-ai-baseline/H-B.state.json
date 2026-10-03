@@ -1,0 +1,814 @@
+{
+  "case": "B",
+  "updated_at": "2026-10-01T16:30:34+08:00",
+  "investigation_segments": [
+    {
+      "start": "2026-10-01T16:20:23+08:00",
+      "end": "2026-10-01T16:23:58+08:00"
+    }
+  ],
+  "documentation_segments": [
+    {
+      "start": "2026-10-01T16:24:01+08:00",
+      "end": "2026-10-01T16:30:34+08:00"
+    }
+  ],
+  "assets": {
+    "reference/kite_male_neutral.png": {
+      "status": "ASSET_ACTION",
+      "reason": "Full stand visibly depicts Kite's canonical black collared long-sleeve shirt and black apron with bib, straps and front pocket; a materially different outfit changes these pixels.",
+      "evidence": [
+        {
+          "source_path": "reference/kite_male_neutral.png",
+          "anchor_type": "asset",
+          "anchor": "black collared shirt, long sleeves, apron bib and straps with front pocket",
+          "context": "full front-facing stand; head through lower apron/upper thighs visible",
+          "locator": "image pixels: torso center and lower half",
+          "fingerprint": "",
+          "fact": "Pixels show a black buttoned collar shirt under a black apron with two shoulder straps and a large front pocket; sleeves are long and rolled at the forearms."
+        }
+      ],
+      "game_usage": [
+        "game/route_kite.rpy:17, 72; game/credits.rpy:117-120; game/route_friendships.rpy:62,159,247,345,652; game/route_neo.rpy:2614"
+      ]
+    },
+    "assets/kite_male_crossed_arms.png": {
+      "status": "ASSET_ACTION",
+      "reason": "Full stand shows the canonical black collared shirt plus apron, so this sprite depicts the outfit changed by Test B.",
+      "evidence": [
+        {
+          "source_path": "assets/kite_male_crossed_arms.png",
+          "anchor_type": "asset",
+          "anchor": "black collared long-sleeve shirt under black apron with straps and bib",
+          "context": "full standing portrait; crossed forearms; head through bottom apron visible",
+          "locator": "image pixels: torso and lower body",
+          "fingerprint": "",
+          "fact": "Pixels visibly show black button-up collar, long sleeves and the apron bib/straps; arms cross over the apron."
+        }
+      ],
+      "game_usage": [
+        "game/route_kite.rpy:27 declaration and 4011,4065,4183 shows"
+      ]
+    },
+    "assets/kite_male_dark.png": {
+      "status": "UNAFFECTED",
+      "reason": "Dark henley portrait has no apron or bib, so it does not depict the canonical apron outfit.",
+      "evidence": [
+        {
+          "source_path": "assets/kite_male_dark.png",
+          "anchor_type": "asset",
+          "anchor": "dark long-sleeve henley shirt with short placket; no apron",
+          "context": "front-facing upper-body crop to upper thighs; hands in pockets",
+          "locator": "image pixels: chest, waist and hands",
+          "fingerprint": "",
+          "fact": "Pixels show a dark henley-style shirt and dark pants; no collar, apron straps or apron bib is visible."
+        }
+      ],
+      "game_usage": [
+        "no direct .rpy reference in fixture manifest; asset remains an unreferenced production plate"
+      ]
+    },
+    "assets/kite_male_dark_relaxed.png": {
+      "status": "UNAFFECTED",
+      "reason": "Relaxed dark-plate portrait visibly wears a henley without apron, unlike the canonical bartender outfit.",
+      "evidence": [
+        {
+          "source_path": "assets/kite_male_dark_relaxed.png",
+          "anchor_type": "asset",
+          "anchor": "dark henley shirt; no apron",
+          "context": "front-facing upper-body/upper-thigh crop; hands in pockets",
+          "locator": "image pixels: torso and lower crop",
+          "fingerprint": "",
+          "fact": "Pixels show a dark henley with short button placket and no apron bib or straps."
+        }
+      ],
+      "game_usage": [
+        "no direct .rpy reference in fixture manifest; unreferenced dark family"
+      ]
+    },
+    "assets/kite_male_dark_withdrawn.png": {
+      "status": "UNAFFECTED",
+      "reason": "Withdrawn dark-plate portrait shows the off-duty henley and no apron, so the changed canonical apron outfit is absent.",
+      "evidence": [
+        {
+          "source_path": "assets/kite_male_dark_withdrawn.png",
+          "anchor_type": "asset",
+          "anchor": "dark henley shirt; no apron",
+          "context": "front-facing upper-body/upper-thigh crop; hands in pockets",
+          "locator": "image pixels: torso and hands",
+          "fingerprint": "",
+          "fact": "Pixels show a dark henley-style top with short placket and no apron or bib."
+        }
+      ],
+      "game_usage": [
+        "no direct .rpy reference in fixture manifest; unreferenced dark family"
+      ]
+    },
+    "assets/kite_male_gentle.png": {
+      "status": "ASSET_ACTION",
+      "reason": "Full standing portrait visibly depicts the canonical black collared shirt and black apron with bib and straps.",
+      "evidence": [
+        {
+          "source_path": "assets/kite_male_gentle.png",
+          "anchor_type": "asset",
+          "anchor": "black collared long-sleeve shirt and apron bib/straps",
+          "context": "front-facing stand from head through lower apron; hands in pockets",
+          "locator": "image pixels: collar, straps, torso and apron pocket",
+          "fingerprint": "",
+          "fact": "Pixels show buttoned black collar, long sleeves, two apron straps and the black apron front/pocket."
+        }
+      ],
+      "game_usage": [
+        "game/route_kite.rpy:18 declaration; not_touched install report line 60"
+      ]
+    },
+    "assets/kite_male_relaxed.png": {
+      "status": "ASSET_ACTION",
+      "reason": "Full standing portrait visibly depicts the canonical black collared shirt and apron; expression is relaxed but clothing matches.",
+      "evidence": [
+        {
+          "source_path": "assets/kite_male_relaxed.png",
+          "anchor_type": "asset",
+          "anchor": "black collared long-sleeve shirt under black apron with bib, straps and pocket",
+          "context": "front-facing stand; head through lower apron visible; hands in pockets",
+          "locator": "image pixels: upper torso and apron",
+          "fingerprint": "",
+          "fact": "Pixels show black buttoned collar, long sleeves, two shoulder straps and apron front/pocket."
+        }
+      ],
+      "game_usage": [
+        "game/route_kite.rpy:19 declaration and relaxed shows at 3157,3174,3220,3242,3250,3258,3275,3291,3350,3403,3589,3657,3763"
+      ]
+    },
+    "assets/kite_male_smoking.png": {
+      "status": "ASSET_ACTION",
+      "reason": "Front-facing stand shows the canonical black collared shirt and apron while one hand holds a cigarette.",
+      "evidence": [
+        {
+          "source_path": "assets/kite_male_smoking.png",
+          "anchor_type": "asset",
+          "anchor": "black collared shirt, apron strap/bib and apron pocket",
+          "context": "front-facing full stand; smoking gesture; head through lower apron",
+          "locator": "image pixels: collar, right strap and apron front",
+          "fingerprint": "",
+          "fact": "Pixels show black long sleeves, buttoned collar, apron strap/bib and large apron pocket; cigarette gesture is incidental."
+        }
+      ],
+      "game_usage": [
+        "game/route_kite.rpy:20 declaration and smoking show at 2920"
+      ]
+    },
+    "assets/kite_male_soft.png": {
+      "status": "ASSET_ACTION",
+      "reason": "Full standing portrait shows the same canonical black collared shirt and apron, with a soft expression.",
+      "evidence": [
+        {
+          "source_path": "assets/kite_male_soft.png",
+          "anchor_type": "asset",
+          "anchor": "black collared long-sleeve shirt and apron bib/straps",
+          "context": "front-facing stand; hands in pockets; head through bottom apron",
+          "locator": "image pixels: collar, straps and apron",
+          "fingerprint": "",
+          "fact": "Pixels show black buttoned collar, long sleeves, two apron straps and apron front/pocket."
+        }
+      ],
+      "game_usage": [
+        "game/route_kite.rpy:21 declaration and soft shows at 351,414,442,455,1243,1282,1420,1495,2655,2678"
+      ]
+    },
+    "assets/kite_male_stressed.png": {
+      "status": "ASSET_ACTION",
+      "reason": "Full standing portrait visibly includes the canonical black collared shirt and apron; facial stress does not change the garments.",
+      "evidence": [
+        {
+          "source_path": "assets/kite_male_stressed.png",
+          "anchor_type": "asset",
+          "anchor": "black collared shirt with long sleeves and apron bib/straps",
+          "context": "front-facing stand; hands in pockets; lower apron visible",
+          "locator": "image pixels: torso and apron",
+          "fingerprint": "",
+          "fact": "Pixels show black buttoned collar, long sleeves, apron straps and apron front/pocket."
+        }
+      ],
+      "game_usage": [
+        "game/route_kite.rpy:22 declaration and stressed shows at 1429,1447,1454,1502,1532,1548,3055,4161,4276,4537,4761,5840,6563,6596"
+      ]
+    },
+    "assets/kite_male_tired.png": {
+      "status": "ASSET_ACTION",
+      "reason": "Full standing portrait visibly includes the canonical black collared shirt and apron; tired expression is incidental.",
+      "evidence": [
+        {
+          "source_path": "assets/kite_male_tired.png",
+          "anchor_type": "asset",
+          "anchor": "black collared shirt with long sleeves and apron bib/straps",
+          "context": "front-facing stand; hands in pockets; lower apron visible",
+          "locator": "image pixels: collar, straps and apron",
+          "fingerprint": "",
+          "fact": "Pixels show black buttoned collar, long sleeves, apron bib/straps and apron front/pocket."
+        }
+      ],
+      "game_usage": [
+        "game/route_kite.rpy:23 declaration and tired shows at 1663,1669,2206,3773,3795,3848,5786,6433,6475"
+      ]
+    },
+    "assets/kite_male_warm.png": {
+      "status": "ASSET_ACTION",
+      "reason": "Full standing portrait visibly depicts the canonical black collared shirt and apron; warm expression is incidental.",
+      "evidence": [
+        {
+          "source_path": "assets/kite_male_warm.png",
+          "anchor_type": "asset",
+          "anchor": "black collared shirt with long sleeves and apron bib/straps",
+          "context": "front-facing stand; hands in pockets; lower apron visible",
+          "locator": "image pixels: collar, straps, torso and apron",
+          "fingerprint": "",
+          "fact": "Pixels show black buttoned collar, long sleeves, two apron straps and apron front/pocket."
+        }
+      ],
+      "game_usage": [
+        "game/route_kite.rpy:24 declaration and warm shows at 359,398,887,1473,2080,2288,2430,2489,2674,2700"
+      ]
+    },
+    "assets/kite_male_withdrawn.png": {
+      "status": "ASSET_ACTION",
+      "reason": "Full standing portrait visibly depicts the canonical black collared shirt and apron; withdrawn expression is incidental.",
+      "evidence": [
+        {
+          "source_path": "assets/kite_male_withdrawn.png",
+          "anchor_type": "asset",
+          "anchor": "black collared shirt with long sleeves and apron bib/straps",
+          "context": "front-facing stand; hands in pockets; lower apron visible",
+          "locator": "image pixels: collar, straps and apron",
+          "fingerprint": "",
+          "fact": "Pixels show black buttoned collar, long sleeves, apron straps/bib and apron front/pocket."
+        }
+      ],
+      "game_usage": [
+        "game/route_kite.rpy:25 declaration and withdrawn shows at 3061,4888"
+      ]
+    },
+    "assets/kite_tattoo.png": {
+      "status": "UNAFFECTED",
+      "reason": "Close crop is bare skin with a tattoo and shows no clothing or apron pixels to change.",
+      "evidence": [
+        {
+          "source_path": "assets/kite_tattoo.png",
+          "anchor_type": "asset",
+          "anchor": "bare skin and tattoo crop; no garment visible",
+          "context": "extreme close-up crop of torso/back skin; no head or full body",
+          "locator": "image pixels: center tattoo and surrounding skin",
+          "fingerprint": "",
+          "fact": "Pixels show a black tattoo on bare skin with water droplets; no shirt, collar, sleeves or apron is visible."
+        }
+      ],
+      "game_usage": [
+        "game/route_kite.rpy:10 evidence declaration only; no show statement found"
+      ]
+    },
+    "assets/side_kite_male.png": {
+      "status": "ASSET_ACTION",
+      "reason": "Circular side portrait visibly shows the canonical collar, long sleeves and apron straps/bib at the shoulders.",
+      "evidence": [
+        {
+          "source_path": "assets/side_kite_male.png",
+          "anchor_type": "asset",
+          "anchor": "black collared shirt, long sleeves and apron shoulder straps/bib",
+          "context": "side portrait crop from hair through shoulders; circular crop, lower torso omitted",
+          "locator": "image pixels: collar and both apron straps",
+          "fingerprint": "",
+          "fact": "Pixels show a buttoned black collar, sleeve shoulders and two apron straps/bib within the circular crop."
+        }
+      ],
+      "game_usage": [
+        "metadata/INSTALL_REPORT_MALEKITE_V19G.json lines 39-46; game/side_portraits.rpy:24"
+      ]
+    }
+  },
+  "code": {
+    "game/route_kite.rpy": {
+      "file_status": "DOWNSTREAM_USAGE",
+      "reason": "The file declares and shows multiple Kite sprite identifiers; outfit changes alter referenced image pixels, but the source identifiers and show statements remain valid. No clothing text requires code editing.",
+      "evidence": [
+        {
+          "source_path": "game/route_kite.rpy",
+          "anchor_type": "statement",
+          "anchor": "## Jul-21: relief he's playing down — warm, still apron (relaxed is henley).",
+          "context": "route_kite clothing comment versus inspected relaxed plate pixels",
+          "locator": "game/route_kite.rpy:1471",
+          "fingerprint": "",
+          "fact": "The source comment says relaxed is henley, but the inspected assets/kite_male_relaxed.png pixels visibly show the same collared shirt and apron as canonical; this is a text/visual mismatch, not a required runtime edit."
+        }
+      ],
+      "relationships": [
+        {
+          "related_asset": "reference/kite_male_neutral.png",
+          "relationship_status": "DOWNSTREAM_USAGE",
+          "reason": "The source references this specific scored asset and remains valid without source edits when the image pixels change.",
+          "evidence": [
+            {
+              "source_path": "game/route_kite.rpy",
+              "anchor_type": "declaration",
+              "anchor": "image kite_male neutral = _kite_sprite(\"kite_male_neutral.png\")",
+              "context": "male Kite sprite declaration in the live route",
+              "locator": "game/route_kite.rpy:17",
+              "fingerprint": "",
+              "fact": "The declaration binds the named image identifier to the scored asset filename."
+            }
+          ]
+        },
+        {
+          "related_asset": "assets/kite_male_gentle.png",
+          "relationship_status": "DOWNSTREAM_USAGE",
+          "reason": "The source references this specific scored asset and remains valid without source edits when the image pixels change.",
+          "evidence": [
+            {
+              "source_path": "game/route_kite.rpy",
+              "anchor_type": "declaration",
+              "anchor": "image kite_male gentle = _kite_sprite(\"kite_male_gentle.png\")",
+              "context": "male Kite sprite declaration in the live route",
+              "locator": "game/route_kite.rpy:18",
+              "fingerprint": "",
+              "fact": "The declaration binds the named image identifier to the scored asset filename."
+            }
+          ]
+        },
+        {
+          "related_asset": "assets/kite_male_relaxed.png",
+          "relationship_status": "DOWNSTREAM_USAGE",
+          "reason": "The source references this specific scored asset and remains valid without source edits when the image pixels change.",
+          "evidence": [
+            {
+              "source_path": "game/route_kite.rpy",
+              "anchor_type": "declaration",
+              "anchor": "image kite_male relaxed = _kite_sprite(\"kite_male_relaxed.png\")",
+              "context": "male Kite sprite declaration in the live route",
+              "locator": "game/route_kite.rpy:19",
+              "fingerprint": "",
+              "fact": "The declaration binds the named image identifier to the scored asset filename."
+            }
+          ]
+        },
+        {
+          "related_asset": "assets/kite_male_smoking.png",
+          "relationship_status": "DOWNSTREAM_USAGE",
+          "reason": "The source references this specific scored asset and remains valid without source edits when the image pixels change.",
+          "evidence": [
+            {
+              "source_path": "game/route_kite.rpy",
+              "anchor_type": "declaration",
+              "anchor": "image kite_male smoking = _kite_sprite(\"kite_male_smoking.png\")",
+              "context": "male Kite sprite declaration in the live route",
+              "locator": "game/route_kite.rpy:20",
+              "fingerprint": "",
+              "fact": "The declaration binds the named image identifier to the scored asset filename."
+            }
+          ]
+        },
+        {
+          "related_asset": "assets/kite_male_soft.png",
+          "relationship_status": "DOWNSTREAM_USAGE",
+          "reason": "The source references this specific scored asset and remains valid without source edits when the image pixels change.",
+          "evidence": [
+            {
+              "source_path": "game/route_kite.rpy",
+              "anchor_type": "declaration",
+              "anchor": "image kite_male soft = _kite_sprite(\"kite_male_soft.png\")",
+              "context": "male Kite sprite declaration in the live route",
+              "locator": "game/route_kite.rpy:21",
+              "fingerprint": "",
+              "fact": "The declaration binds the named image identifier to the scored asset filename."
+            }
+          ]
+        },
+        {
+          "related_asset": "assets/kite_male_stressed.png",
+          "relationship_status": "DOWNSTREAM_USAGE",
+          "reason": "The source references this specific scored asset and remains valid without source edits when the image pixels change.",
+          "evidence": [
+            {
+              "source_path": "game/route_kite.rpy",
+              "anchor_type": "declaration",
+              "anchor": "image kite_male stressed = _kite_sprite(\"kite_male_stressed.png\")",
+              "context": "male Kite sprite declaration in the live route",
+              "locator": "game/route_kite.rpy:22",
+              "fingerprint": "",
+              "fact": "The declaration binds the named image identifier to the scored asset filename."
+            }
+          ]
+        },
+        {
+          "related_asset": "assets/kite_male_tired.png",
+          "relationship_status": "DOWNSTREAM_USAGE",
+          "reason": "The source references this specific scored asset and remains valid without source edits when the image pixels change.",
+          "evidence": [
+            {
+              "source_path": "game/route_kite.rpy",
+              "anchor_type": "declaration",
+              "anchor": "image kite_male tired = _kite_sprite(\"kite_male_tired.png\")",
+              "context": "male Kite sprite declaration in the live route",
+              "locator": "game/route_kite.rpy:23",
+              "fingerprint": "",
+              "fact": "The declaration binds the named image identifier to the scored asset filename."
+            }
+          ]
+        },
+        {
+          "related_asset": "assets/kite_male_warm.png",
+          "relationship_status": "DOWNSTREAM_USAGE",
+          "reason": "The source references this specific scored asset and remains valid without source edits when the image pixels change.",
+          "evidence": [
+            {
+              "source_path": "game/route_kite.rpy",
+              "anchor_type": "declaration",
+              "anchor": "image kite_male warm = _kite_sprite(\"kite_male_warm.png\")",
+              "context": "male Kite sprite declaration in the live route",
+              "locator": "game/route_kite.rpy:24",
+              "fingerprint": "",
+              "fact": "The declaration binds the named image identifier to the scored asset filename."
+            }
+          ]
+        },
+        {
+          "related_asset": "assets/kite_male_withdrawn.png",
+          "relationship_status": "DOWNSTREAM_USAGE",
+          "reason": "The source references this specific scored asset and remains valid without source edits when the image pixels change.",
+          "evidence": [
+            {
+              "source_path": "game/route_kite.rpy",
+              "anchor_type": "declaration",
+              "anchor": "image kite_male withdrawn = _kite_sprite(\"kite_male_withdrawn.png\")",
+              "context": "male Kite sprite declaration in the live route",
+              "locator": "game/route_kite.rpy:25",
+              "fingerprint": "",
+              "fact": "The declaration binds the named image identifier to the scored asset filename."
+            }
+          ]
+        },
+        {
+          "related_asset": "assets/kite_tattoo.png",
+          "relationship_status": "DOWNSTREAM_USAGE",
+          "reason": "The source references this specific scored asset and remains valid without source edits when the image pixels change.",
+          "evidence": [
+            {
+              "source_path": "game/route_kite.rpy",
+              "anchor_type": "declaration",
+              "anchor": "image evidence kite_tattoo = \"images/evidence/kite_tattoo.png\"",
+              "context": "male Kite sprite declaration in the live route",
+              "locator": "game/route_kite.rpy:10",
+              "fingerprint": "",
+              "fact": "The declaration binds the named image identifier to the scored asset filename."
+            }
+          ]
+        },
+        {
+          "related_asset": "assets/kite_male_crossed_arms.png",
+          "relationship_status": "DOWNSTREAM_USAGE",
+          "reason": "The source references this specific scored asset and remains valid without source edits when the image pixels change.",
+          "evidence": [
+            {
+              "source_path": "game/route_kite.rpy",
+              "anchor_type": "declaration",
+              "anchor": "image kite_male crossed_arms = _kite_sprite(\"kite_male_crossed_arms.png\")",
+              "context": "male Kite sprite declaration in the live route",
+              "locator": "game/route_kite.rpy:27",
+              "fingerprint": "",
+              "fact": "The declaration binds the named image identifier to the scored asset filename."
+            }
+          ]
+        }
+      ]
+    },
+    "game/li_sprite_normalization.rpy": {
+      "file_status": "DOWNSTREAM_USAGE",
+      "reason": "Normalization aliases and side-circle lookup reference specific Kite plates but only route existing image names; no source edit is needed for an outfit pixel change.",
+      "evidence": [
+        {
+          "source_path": "game/li_sprite_normalization.rpy",
+          "anchor_type": "statement",
+          "anchor": "return \"images/side_treated/side_kite_male.png\"",
+          "context": "Kite side-circle path helper",
+          "locator": "game/li_sprite_normalization.rpy:166",
+          "fingerprint": "",
+          "fact": "The fixture source visibly contains this anchor and it references the listed scored asset relationship(s); the source remains valid when outfit pixels change."
+        }
+      ],
+      "relationships": [
+        {
+          "related_asset": "assets/kite_male_smoking.png",
+          "relationship_status": "DOWNSTREAM_USAGE",
+          "reason": "Alias maps the smoking expression to this affected plate; lookup remains valid.",
+          "evidence": [
+            {
+              "source_path": "game/li_sprite_normalization.rpy",
+              "anchor_type": "assignment",
+              "anchor": "(\"kite_male\", \"smoking\"): \"kite_male_smoking.png\",",
+              "context": "LI_EXPR_ALIAS exact entry",
+              "locator": "game/li_sprite_normalization.rpy:187",
+              "fingerprint": "",
+              "fact": "The alias returns the scored smoking filename."
+            }
+          ]
+        },
+        {
+          "related_asset": "assets/kite_male_soft.png",
+          "relationship_status": "DOWNSTREAM_USAGE",
+          "reason": "Alias maps the soft expression to this affected plate; lookup remains valid.",
+          "evidence": [
+            {
+              "source_path": "game/li_sprite_normalization.rpy",
+              "anchor_type": "assignment",
+              "anchor": "(\"kite_male\", \"soft\"): \"kite_male_soft.png\",",
+              "context": "LI_EXPR_ALIAS exact entry",
+              "locator": "game/li_sprite_normalization.rpy:188",
+              "fingerprint": "",
+              "fact": "The alias returns the scored soft filename."
+            }
+          ]
+        },
+        {
+          "related_asset": "assets/kite_male_crossed_arms.png",
+          "relationship_status": "DOWNSTREAM_USAGE",
+          "reason": "Alias maps crossed_arms to this affected plate; lookup remains valid.",
+          "evidence": [
+            {
+              "source_path": "game/li_sprite_normalization.rpy",
+              "anchor_type": "assignment",
+              "anchor": "(\"kite_male\", \"crossed_arms\"): \"kite_male_crossed_arms.png\",",
+              "context": "LI_EXPR_ALIAS exact entry",
+              "locator": "game/li_sprite_normalization.rpy:190",
+              "fingerprint": "",
+              "fact": "The alias returns the scored crossed-arms filename."
+            }
+          ]
+        },
+        {
+          "related_asset": "reference/kite_male_neutral.png",
+          "relationship_status": "DOWNSTREAM_USAGE",
+          "reason": "Alias maps angry to the neutral scored plate; lookup remains valid.",
+          "evidence": [
+            {
+              "source_path": "game/li_sprite_normalization.rpy",
+              "anchor_type": "assignment",
+              "anchor": "(\"kite_male\", \"angry\"): \"kite_male_neutral.png\",",
+              "context": "LI_EXPR_ALIAS exact entry",
+              "locator": "game/li_sprite_normalization.rpy:189",
+              "fingerprint": "",
+              "fact": "The alias returns the scored neutral filename."
+            }
+          ]
+        },
+        {
+          "related_asset": "assets/side_kite_male.png",
+          "relationship_status": "DOWNSTREAM_USAGE",
+          "reason": "Side-circle helper resolves male Kite names to the existing side portrait; no edit is needed because the path remains stable.",
+          "evidence": [
+            {
+              "source_path": "game/li_sprite_normalization.rpy",
+              "anchor_type": "statement",
+              "anchor": "return \"images/side_treated/side_kite_male.png\"",
+              "context": "_li_circle_path kite_male branch",
+              "locator": "game/li_sprite_normalization.rpy:166",
+              "fingerprint": "",
+              "fact": "The helper returns the existing treated side portrait path."
+            }
+          ]
+        }
+      ]
+    },
+    "game/side_portraits.rpy": {
+      "file_status": "DOWNSTREAM_USAGE",
+      "reason": "Defines the existing side Kite image name and path; downstream usage remains valid when portrait pixels change.",
+      "evidence": [
+        {
+          "source_path": "game/side_portraits.rpy",
+          "anchor_type": "statement",
+          "anchor": "image side kite_male = _li_circle_lock(\"images/side_treated/side_kite_male.png\")",
+          "context": "side portrait image declaration",
+          "locator": "game/side_portraits.rpy:24",
+          "fingerprint": "",
+          "fact": "The fixture source contains this stable anchor and only routes an existing scored asset; no edit is needed for an image-only outfit change."
+        }
+      ],
+      "relationships": [
+        {
+          "related_asset": "assets/side_kite_male.png",
+          "relationship_status": "DOWNSTREAM_USAGE",
+          "reason": "Declaration uses the existing side portrait path; the path/name need not change.",
+          "evidence": [
+            {
+              "source_path": "game/side_portraits.rpy",
+              "anchor_type": "declaration",
+              "anchor": "image side kite_male = _li_circle_lock(\"images/side_treated/side_kite_male.png\")",
+              "context": "side portrait declaration",
+              "locator": "game/side_portraits.rpy:24",
+              "fingerprint": "",
+              "fact": "Source defines side kite_male from the existing treated side portrait."
+            }
+          ]
+        }
+      ]
+    },
+    "game/credits.rpy.excerpt.txt": {
+      "file_status": "DOWNSTREAM_USAGE",
+      "reason": "Credits resolver selects existing warm, relaxed or neutral Kite plates; no source edit is required for changed pixels.",
+      "evidence": [
+        {
+          "source_path": "game/credits.rpy.excerpt.txt",
+          "anchor_type": "statement",
+          "anchor": "return _credits_first_ok([",
+          "context": "Kite credits sprite resolver",
+          "locator": "source game/credits.rpy:117-120",
+          "fingerprint": "",
+          "fact": "The fixture source contains this stable anchor and only routes an existing scored asset; no edit is needed for an image-only outfit change."
+        }
+      ],
+      "relationships": [
+        {
+          "related_asset": "assets/kite_male_warm.png",
+          "relationship_status": "DOWNSTREAM_USAGE",
+          "reason": "Resolver lists warm as first male candidate; usage remains valid.",
+          "evidence": [
+            {
+              "source_path": "game/credits.rpy.excerpt.txt",
+              "anchor_type": "statement",
+              "anchor": "\"images/kite_male_warm.png\",",
+              "context": "male branch",
+              "locator": "source game/credits.rpy:117",
+              "fingerprint": "",
+              "fact": "Credits tries the warm asset."
+            }
+          ]
+        },
+        {
+          "related_asset": "assets/kite_male_relaxed.png",
+          "relationship_status": "DOWNSTREAM_USAGE",
+          "reason": "Resolver lists relaxed as male fallback; usage remains valid.",
+          "evidence": [
+            {
+              "source_path": "game/credits.rpy.excerpt.txt",
+              "anchor_type": "statement",
+              "anchor": "\"images/kite_male_relaxed.png\",",
+              "context": "male branch",
+              "locator": "source game/credits.rpy:118",
+              "fingerprint": "",
+              "fact": "Credits tries the relaxed asset."
+            }
+          ]
+        },
+        {
+          "related_asset": "reference/kite_male_neutral.png",
+          "relationship_status": "DOWNSTREAM_USAGE",
+          "reason": "Resolver lists frozen neutral as male fallback; usage remains valid.",
+          "evidence": [
+            {
+              "source_path": "game/credits.rpy.excerpt.txt",
+              "anchor_type": "statement",
+              "anchor": "\"images/kite_male_neutral.png\",",
+              "context": "male branch",
+              "locator": "source game/credits.rpy:119",
+              "fingerprint": "",
+              "fact": "Credits tries the neutral asset."
+            }
+          ]
+        }
+      ]
+    },
+    "game/route_select.rpy.excerpt.txt": {
+      "file_status": "DOWNSTREAM_USAGE",
+      "reason": "Route-card selection uses the existing side Kite portrait path; no code edit is required.",
+      "evidence": [
+        {
+          "source_path": "game/route_select.rpy.excerpt.txt",
+          "anchor_type": "statement",
+          "anchor": "portrait = \"images/side_treated/side_kite_male.png\"",
+          "context": "male Kite route-card branch",
+          "locator": "source game/route_select.rpy:64",
+          "fingerprint": "",
+          "fact": "The fixture source contains this stable anchor and only routes an existing scored asset; no edit is needed for an image-only outfit change."
+        }
+      ],
+      "relationships": [
+        {
+          "related_asset": "assets/side_kite_male.png",
+          "relationship_status": "DOWNSTREAM_USAGE",
+          "reason": "Route card points to the existing side portrait path; path remains valid.",
+          "evidence": [
+            {
+              "source_path": "game/route_select.rpy.excerpt.txt",
+              "anchor_type": "statement",
+              "anchor": "portrait = \"images/side_treated/side_kite_male.png\"",
+              "context": "male else branch",
+              "locator": "source game/route_select.rpy:64",
+              "fingerprint": "",
+              "fact": "Route selection returns side Kite portrait."
+            }
+          ]
+        }
+      ]
+    },
+    "game/route_friendships.rpy.excerpt.txt": {
+      "file_status": "DOWNSTREAM_USAGE",
+      "reason": "Excerpt repeatedly shows kite_male neutral; downstream usage needs no source edit.",
+      "evidence": [
+        {
+          "source_path": "game/route_friendships.rpy.excerpt.txt",
+          "anchor_type": "statement",
+          "anchor": "show kite_male neutral at left",
+          "context": "male-kite friendship branches",
+          "locator": "source game/route_friendships.rpy:59-63,157-160,246-249,343-346,650-653",
+          "fingerprint": "",
+          "fact": "The fixture source contains this stable anchor and only routes an existing scored asset; no edit is needed for an image-only outfit change."
+        }
+      ],
+      "relationships": [
+        {
+          "related_asset": "reference/kite_male_neutral.png",
+          "relationship_status": "DOWNSTREAM_USAGE",
+          "reason": "Five shown neutral statements reference the existing neutral asset and remain valid.",
+          "evidence": [
+            {
+              "source_path": "game/route_friendships.rpy.excerpt.txt",
+              "anchor_type": "statement",
+              "anchor": "show kite_male neutral at left",
+              "context": "occurrences at source lines 62,159,247,345,652",
+              "locator": "source game/route_friendships.rpy:62,159,247,345,652",
+              "fingerprint": "",
+              "fact": "Excerpt shows kite_male neutral at left in five male branches."
+            }
+          ]
+        }
+      ]
+    },
+    "game/route_neo.rpy.excerpt.txt": {
+      "file_status": "DOWNSTREAM_USAGE",
+      "reason": "Neo-route cameo shows existing neutral Kite identifier; remains valid.",
+      "evidence": [
+        {
+          "source_path": "game/route_neo.rpy.excerpt.txt",
+          "anchor_type": "statement",
+          "anchor": "show kite_male neutral at left",
+          "context": "single Kite cameo",
+          "locator": "source game/route_neo.rpy:2614",
+          "fingerprint": "",
+          "fact": "The fixture source contains this stable anchor and only routes an existing scored asset; no edit is needed for an image-only outfit change."
+        }
+      ],
+      "relationships": [
+        {
+          "related_asset": "reference/kite_male_neutral.png",
+          "relationship_status": "DOWNSTREAM_USAGE",
+          "reason": "Cameo uses existing neutral identifier; no source edit required.",
+          "evidence": [
+            {
+              "source_path": "game/route_neo.rpy.excerpt.txt",
+              "anchor_type": "statement",
+              "anchor": "show kite_male neutral at left",
+              "context": "male Kite cameo",
+              "locator": "source game/route_neo.rpy:2614",
+              "fingerprint": "",
+              "fact": "Neo route shows kite_male neutral at left."
+            }
+          ]
+        }
+      ]
+    },
+    "game/minigames.rpy.excerpt.txt": {
+      "file_status": "DOWNSTREAM_USAGE",
+      "reason": "Gallery entry names existing relaxed Kite image; remains valid when pixels change.",
+      "evidence": [
+        {
+          "source_path": "game/minigames.rpy.excerpt.txt",
+          "anchor_type": "statement",
+          "anchor": "\"li\": \"kite_male relaxed\",",
+          "context": "Cocktail Time gallery entry",
+          "locator": "source game/minigames.rpy:5206",
+          "fingerprint": "",
+          "fact": "The fixture source contains this stable anchor and only routes an existing scored asset; no edit is needed for an image-only outfit change."
+        }
+      ],
+      "relationships": [
+        {
+          "related_asset": "assets/kite_male_relaxed.png",
+          "relationship_status": "DOWNSTREAM_USAGE",
+          "reason": "Gallery entry references existing relaxed asset; identifier remains valid.",
+          "evidence": [
+            {
+              "source_path": "game/minigames.rpy.excerpt.txt",
+              "anchor_type": "assignment",
+              "anchor": "\"li\": \"kite_male relaxed\",",
+              "context": "Cocktail Time gallery entry",
+              "locator": "source game/minigames.rpy:5206",
+              "fingerprint": "",
+              "fact": "Gallery entry uses kite_male relaxed."
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "unresolved_items": [
+    "Historical reference ambiguity: approved v19g neutral/KEEP material differs from frozen production neutral; classifications use frozen production pixels and route comments, while exact outfit declaration for every plate is not explicit."
+  ],
+  "work_notes": "AI-assisted exploratory baseline performed by an AI agent, not the H condition. Inspected fixture images in the browser and source/metadata. Fixture limitations: outfit per plate is not explicitly encoded (manifest UNKNOWN; route_kite comments are the clothing links); approved v19g reference differs from frozen neutral; some dark plates are unreferenced; several CODE files are excerpts; fixture source was not executed; videos/audio/backgrounds/UI/namebox/female/dev/archive material are excluded."
+}

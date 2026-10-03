@@ -1,0 +1,935 @@
+{
+  "case": "A",
+  "updated_at": "2026-10-01T16:19:21+08:00",
+  "investigation_segments": [
+    {
+      "start": "2026-10-01T16:12:56+08:00",
+      "end": "2026-10-01T16:15:25+08:00"
+    }
+  ],
+  "documentation_segments": [
+    {
+      "start": "2026-10-01T16:15:28+08:00",
+      "end": "2026-10-01T16:19:21+08:00"
+    }
+  ],
+  "assets": {
+    "reference/kite_male_neutral.png": {
+      "status": "ASSET_ACTION",
+      "reason": "The full neutral stand visibly depicts Kite with short dark hair ending above the ears in the upper head region; changing to shoulder length changes this depicted hair.",
+      "evidence": [
+        {
+          "source_path": "reference/kite_male_neutral.png",
+          "anchor_type": "asset",
+          "anchor": "Short dark cropped hair forms a compact cap above both ears on the full standing neutral portrait; head is unobscured in the upper quarter.",
+          "context": "Observed directly in the scored fixture image; hair visibility and crop are specific to this asset.",
+          "locator": "upper 20% of frame, head; 928x1232",
+          "fingerprint": "",
+          "fact": "Short dark cropped hair forms a compact cap above both ears on the full standing neutral portrait; head is unobscured in the upper quarter."
+        }
+      ],
+      "game_usage": [
+        "game/route_kite.rpy image kite_male neutral and show sites; game/route_friendships.rpy; game/route_neo.rpy; game/credits.rpy excerpt"
+      ]
+    },
+    "assets/kite_male_crossed_arms.png": {
+      "status": "ASSET_ACTION",
+      "reason": "The crossed-arms full stand shows the same short dark hair above the ears; shoulder-length hair would alter the visible head silhouette.",
+      "evidence": [
+        {
+          "source_path": "assets/kite_male_crossed_arms.png",
+          "anchor_type": "asset",
+          "anchor": "Crossed arms and apron fill the lower frame, while the unobscured head near the top has close-cropped dark hair ending above the ears.",
+          "context": "Observed directly in the scored fixture image; hair visibility and crop are specific to this asset.",
+          "locator": "upper 20% of frame, head",
+          "fingerprint": "",
+          "fact": "Crossed arms and apron fill the lower frame, while the unobscured head near the top has close-cropped dark hair ending above the ears."
+        }
+      ],
+      "game_usage": [
+        "game/route_kite.rpy:27,2148,2179,2242"
+      ]
+    },
+    "assets/kite_male_dark.png": {
+      "status": "ASSET_ACTION",
+      "reason": "This full standing dark-clothes plate visibly includes Kite’s short dark hair above the ears, so the requested longer hairstyle changes the image.",
+      "evidence": [
+        {
+          "source_path": "assets/kite_male_dark.png",
+          "anchor_type": "asset",
+          "anchor": "Dark shirt and trouser full-figure crop; the head is visible near the top and the short hair stays above the ears.",
+          "context": "Observed directly in the scored fixture image; hair visibility and crop are specific to this asset.",
+          "locator": "upper 20% of frame, head",
+          "fingerprint": "",
+          "fact": "Dark shirt and trouser full-figure crop; the head is visible near the top and the short hair stays above the ears."
+        }
+      ],
+      "game_usage": [
+        "No scored .rpy reference found; fixture limitation notes this production sprite is unreferenced."
+      ]
+    },
+    "assets/kite_male_dark_relaxed.png": {
+      "status": "ASSET_ACTION",
+      "reason": "The relaxed dark-clothes full stand depicts a short dark cap above the ears; shoulder-length hair changes the head area.",
+      "evidence": [
+        {
+          "source_path": "assets/kite_male_dark_relaxed.png",
+          "anchor_type": "asset",
+          "anchor": "Hands-in-pockets relaxed pose; head is fully visible in the upper quarter with short dark hair ending above the ears.",
+          "context": "Observed directly in the scored fixture image; hair visibility and crop are specific to this asset.",
+          "locator": "upper 20% of frame, head",
+          "fingerprint": "",
+          "fact": "Hands-in-pockets relaxed pose; head is fully visible in the upper quarter with short dark hair ending above the ears."
+        }
+      ],
+      "game_usage": [
+        "No scored .rpy reference found; fixture limitation notes this production sprite is unreferenced."
+      ]
+    },
+    "assets/kite_male_dark_withdrawn.png": {
+      "status": "ASSET_ACTION",
+      "reason": "The withdrawn dark-clothes full stand visibly uses short dark hair above the ears, which would be replaced by the requested length.",
+      "evidence": [
+        {
+          "source_path": "assets/kite_male_dark_withdrawn.png",
+          "anchor_type": "asset",
+          "anchor": "Downcast side-glance in a full-figure dark outfit; the unobscured top-of-frame head has cropped dark hair above the ears.",
+          "context": "Observed directly in the scored fixture image; hair visibility and crop are specific to this asset.",
+          "locator": "upper 20% of frame, head",
+          "fingerprint": "",
+          "fact": "Downcast side-glance in a full-figure dark outfit; the unobscured top-of-frame head has cropped dark hair above the ears."
+        }
+      ],
+      "game_usage": [
+        "No scored .rpy reference found; fixture limitation notes this production sprite is unreferenced."
+      ]
+    },
+    "assets/kite_male_gentle.png": {
+      "status": "ASSET_ACTION",
+      "reason": "The gentle apron stand visibly depicts short dark hair ending above the ears; the hairstyle change alters this plate.",
+      "evidence": [
+        {
+          "source_path": "assets/kite_male_gentle.png",
+          "anchor_type": "asset",
+          "anchor": "Gentle expression, apron and hands in pockets are visible; the head in the upper quarter has a compact cropped dark hairstyle.",
+          "context": "Observed directly in the scored fixture image; hair visibility and crop are specific to this asset.",
+          "locator": "upper 20% of frame, head",
+          "fingerprint": "",
+          "fact": "Gentle expression, apron and hands in pockets are visible; the head in the upper quarter has a compact cropped dark hairstyle."
+        }
+      ],
+      "game_usage": [
+        "game/route_kite.rpy:18,2207,2262,2265"
+      ]
+    },
+    "assets/kite_male_relaxed.png": {
+      "status": "ASSET_ACTION",
+      "reason": "The relaxed apron stand shows short dark hair above the ears, so a shoulder-length version requires a changed image.",
+      "evidence": [
+        {
+          "source_path": "assets/kite_male_relaxed.png",
+          "anchor_type": "asset",
+          "anchor": "Relaxed full standing apron pose with hands in pockets; hair is fully visible as a short dark cap at the top of the frame.",
+          "context": "Observed directly in the scored fixture image; hair visibility and crop are specific to this asset.",
+          "locator": "upper 20% of frame, head",
+          "fingerprint": "",
+          "fact": "Relaxed full standing apron pose with hands in pockets; hair is fully visible as a short dark cap at the top of the frame."
+        }
+      ],
+      "game_usage": [
+        "game/route_kite.rpy:19,1675-1810; game/credits.rpy excerpt:20-21; game/minigames.rpy excerpt:13"
+      ]
+    },
+    "assets/kite_male_smoking.png": {
+      "status": "ASSET_ACTION",
+      "reason": "The smoking plate visibly shows short dark hair above the ears; the cigarette hand occludes the lower face but not the hair.",
+      "evidence": [
+        {
+          "source_path": "assets/kite_male_smoking.png",
+          "anchor_type": "asset",
+          "anchor": "Full standing apron figure smoking; the head is near the top and the cropped dark hair is visible, with smoke/hand near the face.",
+          "context": "Observed directly in the scored fixture image; hair visibility and crop are specific to this asset.",
+          "locator": "upper 20% of frame, head",
+          "fingerprint": "",
+          "fact": "Full standing apron figure smoking; the head is near the top and the cropped dark hair is visible, with smoke/hand near the face."
+        }
+      ],
+      "game_usage": [
+        "game/route_kite.rpy:20,1550; game/li_sprite_normalization.rpy:187"
+      ]
+    },
+    "assets/kite_male_soft.png": {
+      "status": "ASSET_ACTION",
+      "reason": "The soft apron plate visibly depicts a short dark hairstyle above the ears, which changes under the requested shoulder-length design.",
+      "evidence": [
+        {
+          "source_path": "assets/kite_male_soft.png",
+          "anchor_type": "asset",
+          "anchor": "Soft-expression full standing apron portrait; hair is visible and unobscured in the upper head region as a close crop.",
+          "context": "Observed directly in the scored fixture image; hair visibility and crop are specific to this asset.",
+          "locator": "upper 20% of frame, head",
+          "fingerprint": "",
+          "fact": "Soft-expression full standing apron portrait; hair is visible and unobscured in the upper head region as a close crop."
+        }
+      ],
+      "game_usage": [
+        "game/route_kite.rpy:21,137,170,185,192,622,643,720,760,1160,1405,1417; game/li_sprite_normalization.rpy:188"
+      ]
+    },
+    "assets/kite_male_stressed.png": {
+      "status": "ASSET_ACTION",
+      "reason": "The stressed apron stand shows short dark hair above the ears; the new canonical length changes the depicted head.",
+      "evidence": [
+        {
+          "source_path": "assets/kite_male_stressed.png",
+          "anchor_type": "asset",
+          "anchor": "Furrowed-brow full stand with hands in apron pockets; hair is a clearly visible close-cropped dark cap at the top.",
+          "context": "Observed directly in the scored fixture image; hair visibility and crop are specific to this asset.",
+          "locator": "upper 20% of frame, head",
+          "fingerprint": "",
+          "fact": "Furrowed-brow full stand with hands in apron pockets; hair is a clearly visible close-cropped dark cap at the top."
+        }
+      ],
+      "game_usage": [
+        "game/route_kite.rpy:22,725,734,738,764,781,790,2231,2290,2435,2563,3180,3568,3586"
+      ]
+    },
+    "assets/kite_male_tired.png": {
+      "status": "ASSET_ACTION",
+      "reason": "The tired apron stand visibly includes short dark hair above the ears, so the requested longer hair alters the asset.",
+      "evidence": [
+        {
+          "source_path": "assets/kite_male_tired.png",
+          "anchor_type": "asset",
+          "anchor": "Sleepy-eyed full standing portrait; head is unobscured near the top and the short dark hair ends above the ears.",
+          "context": "Observed directly in the scored fixture image; hair visibility and crop are specific to this asset.",
+          "locator": "upper 20% of frame, head",
+          "fingerprint": "",
+          "fact": "Sleepy-eyed full standing portrait; head is unobscured near the top and the short dark hair ends above the ears."
+        }
+      ],
+      "game_usage": [
+        "game/route_kite.rpy:23,855,858,1155,1643,2013,2026,2056,3150,3498,3521"
+      ]
+    },
+    "assets/kite_male_warm.png": {
+      "status": "ASSET_ACTION",
+      "reason": "The warm apron stand visibly depicts short dark hair above the ears; shoulder-length hair changes this visual content.",
+      "evidence": [
+        {
+          "source_path": "assets/kite_male_warm.png",
+          "anchor_type": "asset",
+          "anchor": "Smiling full standing apron portrait; the hair is fully visible as a compact dark cap in the upper quarter.",
+          "context": "Observed directly in the scored fixture image; hair visibility and crop are specific to this asset.",
+          "locator": "upper 20% of frame, head",
+          "fingerprint": "",
+          "fact": "Smiling full standing apron portrait; the hair is fully visible as a compact dark cap in the upper quarter."
+        }
+      ],
+      "game_usage": [
+        "game/route_kite.rpy:24,141,162,423,748,1088,1201,1281,1314,1415,1429; game/credits.rpy excerpt:19"
+      ]
+    },
+    "assets/kite_male_withdrawn.png": {
+      "status": "ASSET_ACTION",
+      "reason": "The withdrawn apron stand visibly uses short dark hair above the ears, so the new hairstyle changes the plate.",
+      "evidence": [
+        {
+          "source_path": "assets/kite_male_withdrawn.png",
+          "anchor_type": "asset",
+          "anchor": "Averted-gaze full standing apron figure; the visible top-of-frame hair is short, dark and above the ears.",
+          "context": "Observed directly in the scored fixture image; hair visibility and crop are specific to this asset.",
+          "locator": "upper 20% of frame, head",
+          "fingerprint": "",
+          "fact": "Averted-gaze full standing apron figure; the visible top-of-frame hair is short, dark and above the ears."
+        }
+      ],
+      "game_usage": [
+        "game/route_kite.rpy:25,1625,2633"
+      ]
+    },
+    "assets/kite_tattoo.png": {
+      "status": "UNAFFECTED",
+      "reason": "This is a tight tattoo-on-skin crop with no head or hair visible; a hairstyle change does not alter the depicted content.",
+      "evidence": [
+        {
+          "source_path": "assets/kite_tattoo.png",
+          "anchor_type": "asset",
+          "anchor": "Close-up cropped skin/shoulder with black tattoo and water drops; the frame excludes the head and hair entirely.",
+          "context": "Observed directly in the scored fixture image; hair visibility and crop are specific to this asset.",
+          "locator": "full frame, torso/skin crop",
+          "fingerprint": "",
+          "fact": "Close-up cropped skin/shoulder with black tattoo and water drops; the frame excludes the head and hair entirely."
+        }
+      ],
+      "game_usage": [
+        "game/route_kite.rpy:10 declaration only; fixture notes no show statement found."
+      ]
+    },
+    "assets/side_kite_male.png": {
+      "status": "ASSET_ACTION",
+      "reason": "The circular side portrait clearly shows Kite’s short dark hair across the top, ending above the ears; shoulder-length hair changes the portrait.",
+      "evidence": [
+        {
+          "source_path": "assets/side_kite_male.png",
+          "anchor_type": "asset",
+          "anchor": "Circular bust crop on checkerboard transparency; face and collar are visible, and short dark hair is unobscured at the top of the circle.",
+          "context": "Observed directly in the scored fixture image; hair visibility and crop are specific to this asset.",
+          "locator": "upper 30% of circular frame, head",
+          "fingerprint": "",
+          "fact": "Circular bust crop on checkerboard transparency; face and collar are visible, and short dark hair is unobscured at the top of the circle."
+        }
+      ],
+      "game_usage": [
+        "game/side_portraits.rpy:24; game/route_select.rpy excerpt:13; game/li_sprite_normalization.rpy:149,166"
+      ]
+    }
+  },
+  "code": {
+    "game/route_kite.rpy": {
+      "file_status": "DOWNSTREAM_USAGE",
+      "reason": "The file declares Kite image identifiers and uses them in show statements; the source remains valid while the referenced plates change.",
+      "evidence": [
+        {
+          "source_path": "game/route_kite.rpy",
+          "anchor_type": "declaration",
+          "anchor": "image kite_male neutral = _kite_sprite(\"kite_male_neutral.png\")",
+          "context": "Kite male image declaration block",
+          "locator": "game/route_kite.rpy:17",
+          "fingerprint": "",
+          "fact": "The frozen fixture maps the kite_male neutral identifier to the scored neutral asset filename."
+        }
+      ],
+      "relationships": [
+        {
+          "related_asset": "reference/kite_male_neutral.png",
+          "relationship_status": "DOWNSTREAM_USAGE",
+          "reason": "The declaration maps the neutral identifier to kite_male_neutral.png; repeated show kite_male neutral statements at lines 72,113,131,177,568,698,798,861,1088,1585,1607,2591,2625,3131,3200,3428,3510 remain valid downstream uses.",
+          "evidence": [
+            {
+              "source_path": "game/route_kite.rpy",
+              "anchor_type": "statement",
+              "anchor": "image kite_male neutral = _kite_sprite(\"kite_male_neutral.png\")",
+              "context": "Declaration and show sites for this Kite expression",
+              "locator": "game/route_kite.rpy:17; show occurrences: 72,113,131,177,568,698,798,861,1088,1585,1607,2591,2625,3131,3200,3428,3510",
+              "fingerprint": "",
+              "fact": "The declaration maps the neutral identifier to kite_male_neutral.png; repeated show kite_male neutral statements at lines 72,113,131,177,568,698,798,861,1088,1585,1607,2591,2625,3131,3200,3428,3510 remain valid downstream uses."
+            }
+          ]
+        },
+        {
+          "related_asset": "assets/kite_male_gentle.png",
+          "relationship_status": "DOWNSTREAM_USAGE",
+          "reason": "The declaration and show statements reference the affected gentle plate but no source edit is required when its pixels change.",
+          "evidence": [
+            {
+              "source_path": "game/route_kite.rpy",
+              "anchor_type": "statement",
+              "anchor": "image kite_male gentle = _kite_sprite(\"kite_male_gentle.png\")",
+              "context": "Declaration and show sites for this Kite expression",
+              "locator": "game/route_kite.rpy:18; show occurrences: 2207,2262,2265",
+              "fingerprint": "",
+              "fact": "The declaration and show statements reference the affected gentle plate but no source edit is required when its pixels change."
+            }
+          ]
+        },
+        {
+          "related_asset": "assets/kite_male_relaxed.png",
+          "relationship_status": "DOWNSTREAM_USAGE",
+          "reason": "The relaxed identifier maps to the affected plate; downstream show statements remain valid.",
+          "evidence": [
+            {
+              "source_path": "game/route_kite.rpy",
+              "anchor_type": "statement",
+              "anchor": "image kite_male relaxed = _kite_sprite(\"kite_male_relaxed.png\")",
+              "context": "Declaration and show sites for this Kite expression",
+              "locator": "game/route_kite.rpy:19; show occurrences: 1675,1684,1710,1722,1726,1730,1740,1749,1781,1810,1913,1952,2008",
+              "fingerprint": "",
+              "fact": "The relaxed identifier maps to the affected plate; downstream show statements remain valid."
+            }
+          ]
+        },
+        {
+          "related_asset": "assets/kite_male_smoking.png",
+          "relationship_status": "DOWNSTREAM_USAGE",
+          "reason": "The smoking identifier maps to an affected plate; the source contract does not change.",
+          "evidence": [
+            {
+              "source_path": "game/route_kite.rpy",
+              "anchor_type": "statement",
+              "anchor": "image kite_male smoking = _kite_sprite(\"kite_male_smoking.png\")",
+              "context": "Declaration and show sites for this Kite expression",
+              "locator": "game/route_kite.rpy:20; show occurrence: 1550",
+              "fingerprint": "",
+              "fact": "The smoking identifier maps to an affected plate; the source contract does not change."
+            }
+          ]
+        },
+        {
+          "related_asset": "assets/kite_male_soft.png",
+          "relationship_status": "DOWNSTREAM_USAGE",
+          "reason": "The soft identifier and its show statements reference an affected image, but no code edit is needed for a pixel change.",
+          "evidence": [
+            {
+              "source_path": "game/route_kite.rpy",
+              "anchor_type": "statement",
+              "anchor": "image kite_male soft = _kite_sprite(\"kite_male_soft.png\")",
+              "context": "Declaration and show sites for this Kite expression",
+              "locator": "game/route_kite.rpy:21; show occurrences: 137,170,185,192,622,643,720,760,1160,1405,1417",
+              "fingerprint": "",
+              "fact": "The soft identifier and its show statements reference an affected image, but no code edit is needed for a pixel change."
+            }
+          ]
+        },
+        {
+          "related_asset": "assets/kite_male_stressed.png",
+          "relationship_status": "DOWNSTREAM_USAGE",
+          "reason": "The stressed identifier maps to the affected plate; all uses remain valid downstream references.",
+          "evidence": [
+            {
+              "source_path": "game/route_kite.rpy",
+              "anchor_type": "statement",
+              "anchor": "image kite_male stressed = _kite_sprite(\"kite_male_stressed.png\")",
+              "context": "Declaration and show sites for this Kite expression",
+              "locator": "game/route_kite.rpy:22; show occurrences: 725,734,738,764,781,790,2231,2290,2435,2563,3180,3568,3586",
+              "fingerprint": "",
+              "fact": "The stressed identifier maps to the affected plate; all uses remain valid downstream references."
+            }
+          ]
+        },
+        {
+          "related_asset": "assets/kite_male_tired.png",
+          "relationship_status": "DOWNSTREAM_USAGE",
+          "reason": "The tired identifier maps to the affected plate; source statements need no edit merely because its pixels change.",
+          "evidence": [
+            {
+              "source_path": "game/route_kite.rpy",
+              "anchor_type": "statement",
+              "anchor": "image kite_male tired = _kite_sprite(\"kite_male_tired.png\")",
+              "context": "Declaration and show sites for this Kite expression",
+              "locator": "game/route_kite.rpy:23; show occurrences: 855,858,1155,1643,2013,2026,2056,3150,3498,3521",
+              "fingerprint": "",
+              "fact": "The tired identifier maps to the affected plate; source statements need no edit merely because its pixels change."
+            }
+          ]
+        },
+        {
+          "related_asset": "assets/kite_male_warm.png",
+          "relationship_status": "DOWNSTREAM_USAGE",
+          "reason": "The warm identifier maps to the affected plate; the show statements are downstream usage only.",
+          "evidence": [
+            {
+              "source_path": "game/route_kite.rpy",
+              "anchor_type": "statement",
+              "anchor": "image kite_male warm = _kite_sprite(\"kite_male_warm.png\")",
+              "context": "Declaration and show sites for this Kite expression",
+              "locator": "game/route_kite.rpy:24; show occurrences: 141,162,423,748,1088,1201,1281,1314,1415,1429",
+              "fingerprint": "",
+              "fact": "The warm identifier maps to the affected plate; the show statements are downstream usage only."
+            }
+          ]
+        },
+        {
+          "related_asset": "assets/kite_male_withdrawn.png",
+          "relationship_status": "DOWNSTREAM_USAGE",
+          "reason": "The withdrawn identifier maps to the affected plate; no source edit is required for the image change.",
+          "evidence": [
+            {
+              "source_path": "game/route_kite.rpy",
+              "anchor_type": "statement",
+              "anchor": "image kite_male withdrawn = _kite_sprite(\"kite_male_withdrawn.png\")",
+              "context": "Declaration and show sites for this Kite expression",
+              "locator": "game/route_kite.rpy:25; show occurrences: 1625,2633",
+              "fingerprint": "",
+              "fact": "The withdrawn identifier maps to the affected plate; no source edit is required for the image change."
+            }
+          ]
+        },
+        {
+          "related_asset": "assets/kite_male_crossed_arms.png",
+          "relationship_status": "DOWNSTREAM_USAGE",
+          "reason": "The crossed-arms declaration and show statements point to the affected plate; they remain valid downstream uses.",
+          "evidence": [
+            {
+              "source_path": "game/route_kite.rpy",
+              "anchor_type": "statement",
+              "anchor": "image kite_male crossed_arms = _kite_sprite(\"kite_male_crossed_arms.png\")",
+              "context": "Declaration and show sites for this Kite expression",
+              "locator": "game/route_kite.rpy:27; show occurrences: 2148,2179,2242",
+              "fingerprint": "",
+              "fact": "The crossed-arms declaration and show statements point to the affected plate; they remain valid downstream uses."
+            }
+          ]
+        },
+        {
+          "related_asset": "assets/kite_tattoo.png",
+          "relationship_status": "UNAFFECTED",
+          "reason": "The tattoo evidence declaration is unaffected by a hairstyle change and has no show statement in the fixture.",
+          "evidence": [
+            {
+              "source_path": "game/route_kite.rpy",
+              "anchor_type": "statement",
+              "anchor": "image evidence kite_tattoo = \"images/evidence/kite_tattoo.png\"",
+              "context": "Declaration and show sites for this Kite expression",
+              "locator": "game/route_kite.rpy:10",
+              "fingerprint": "",
+              "fact": "The tattoo evidence declaration is unaffected by a hairstyle change and has no show statement in the fixture."
+            }
+          ]
+        }
+      ]
+    },
+    "game/li_sprite_normalization.rpy": {
+      "file_status": "DOWNSTREAM_USAGE",
+      "reason": "Normalization and fallback tables reference multiple scored Kite plates and the side portrait; the mappings stay valid when pixels change.",
+      "evidence": [
+        {
+          "source_path": "game/li_sprite_normalization.rpy",
+          "anchor_type": "function",
+          "anchor": "if name.startswith(\"kite_male\") or name.startswith(\"kite \"):",
+          "context": "Kite normalization path and mapping logic",
+          "locator": "game/li_sprite_normalization.rpy:165",
+          "fingerprint": "",
+          "fact": "The normalization function routes Kite identifiers through the existing image path conventions."
+        }
+      ],
+      "relationships": [
+        {
+          "related_asset": "assets/kite_male_gentle.png",
+          "relationship_status": "DOWNSTREAM_USAGE",
+          "reason": "This normalization entry references the affected asset path; it remains valid without a source edit when the image changes.",
+          "evidence": [
+            {
+              "source_path": "game/li_sprite_normalization.rpy",
+              "anchor_type": "assignment",
+              "anchor": "\"kite_male_gentle.png\": (1.011, -8),",
+              "context": "Kite normalization mapping",
+              "locator": "game/li_sprite_normalization.rpy:101",
+              "fingerprint": "",
+              "fact": "The mapping references assets/kite_male_gentle.png as downstream image usage."
+            }
+          ]
+        },
+        {
+          "related_asset": "assets/kite_male_relaxed.png",
+          "relationship_status": "DOWNSTREAM_USAGE",
+          "reason": "This normalization entry references the affected asset path; it remains valid without a source edit when the image changes.",
+          "evidence": [
+            {
+              "source_path": "game/li_sprite_normalization.rpy",
+              "anchor_type": "assignment",
+              "anchor": "\"kite_male_relaxed.png\": (1.002, -2),",
+              "context": "Kite normalization mapping",
+              "locator": "game/li_sprite_normalization.rpy:102",
+              "fingerprint": "",
+              "fact": "The mapping references assets/kite_male_relaxed.png as downstream image usage."
+            }
+          ]
+        },
+        {
+          "related_asset": "assets/kite_male_warm.png",
+          "relationship_status": "DOWNSTREAM_USAGE",
+          "reason": "This normalization entry references the affected asset path; it remains valid without a source edit when the image changes.",
+          "evidence": [
+            {
+              "source_path": "game/li_sprite_normalization.rpy",
+              "anchor_type": "assignment",
+              "anchor": "\"kite_male_warm.png\": (0.998, 2),",
+              "context": "Kite normalization mapping",
+              "locator": "game/li_sprite_normalization.rpy:103",
+              "fingerprint": "",
+              "fact": "The mapping references assets/kite_male_warm.png as downstream image usage."
+            }
+          ]
+        },
+        {
+          "related_asset": "assets/kite_male_stressed.png",
+          "relationship_status": "DOWNSTREAM_USAGE",
+          "reason": "This normalization entry references the affected asset path; it remains valid without a source edit when the image changes.",
+          "evidence": [
+            {
+              "source_path": "game/li_sprite_normalization.rpy",
+              "anchor_type": "assignment",
+              "anchor": "\"kite_male_stressed.png\": (0.996, 3),",
+              "context": "Kite normalization mapping",
+              "locator": "game/li_sprite_normalization.rpy:104",
+              "fingerprint": "",
+              "fact": "The mapping references assets/kite_male_stressed.png as downstream image usage."
+            }
+          ]
+        },
+        {
+          "related_asset": "assets/kite_male_withdrawn.png",
+          "relationship_status": "DOWNSTREAM_USAGE",
+          "reason": "This normalization entry references the affected asset path; it remains valid without a source edit when the image changes.",
+          "evidence": [
+            {
+              "source_path": "game/li_sprite_normalization.rpy",
+              "anchor_type": "assignment",
+              "anchor": "\"kite_male_withdrawn.png\": (0.975, 19),",
+              "context": "Kite normalization mapping",
+              "locator": "game/li_sprite_normalization.rpy:105",
+              "fingerprint": "",
+              "fact": "The mapping references assets/kite_male_withdrawn.png as downstream image usage."
+            }
+          ]
+        },
+        {
+          "related_asset": "assets/kite_male_tired.png",
+          "relationship_status": "DOWNSTREAM_USAGE",
+          "reason": "This normalization entry references the affected asset path; it remains valid without a source edit when the image changes.",
+          "evidence": [
+            {
+              "source_path": "game/li_sprite_normalization.rpy",
+              "anchor_type": "assignment",
+              "anchor": "\"kite_male_tired.png\": (0.971, 22),",
+              "context": "Kite normalization mapping",
+              "locator": "game/li_sprite_normalization.rpy:106",
+              "fingerprint": "",
+              "fact": "The mapping references assets/kite_male_tired.png as downstream image usage."
+            }
+          ]
+        },
+        {
+          "related_asset": "assets/side_kite_male.png",
+          "relationship_status": "DOWNSTREAM_USAGE",
+          "reason": "This normalization entry references the affected asset path; it remains valid without a source edit when the image changes.",
+          "evidence": [
+            {
+              "source_path": "game/li_sprite_normalization.rpy",
+              "anchor_type": "assignment",
+              "anchor": "\"side_kite_male.png\": (0.92, 1.0),",
+              "context": "Kite normalization mapping",
+              "locator": "game/li_sprite_normalization.rpy:149",
+              "fingerprint": "",
+              "fact": "The mapping references assets/side_kite_male.png as downstream image usage."
+            }
+          ]
+        },
+        {
+          "related_asset": "assets/kite_male_smoking.png",
+          "relationship_status": "DOWNSTREAM_USAGE",
+          "reason": "This normalization entry references the affected asset path; it remains valid without a source edit when the image changes.",
+          "evidence": [
+            {
+              "source_path": "game/li_sprite_normalization.rpy",
+              "anchor_type": "assignment",
+              "anchor": "(\"kite_male\", \"smoking\"): \"kite_male_smoking.png\",",
+              "context": "Kite normalization mapping",
+              "locator": "game/li_sprite_normalization.rpy:187",
+              "fingerprint": "",
+              "fact": "The mapping references assets/kite_male_smoking.png as downstream image usage."
+            }
+          ]
+        },
+        {
+          "related_asset": "assets/kite_male_soft.png",
+          "relationship_status": "DOWNSTREAM_USAGE",
+          "reason": "This normalization entry references the affected asset path; it remains valid without a source edit when the image changes.",
+          "evidence": [
+            {
+              "source_path": "game/li_sprite_normalization.rpy",
+              "anchor_type": "assignment",
+              "anchor": "(\"kite_male\", \"soft\"): \"kite_male_soft.png\",",
+              "context": "Kite normalization mapping",
+              "locator": "game/li_sprite_normalization.rpy:188",
+              "fingerprint": "",
+              "fact": "The mapping references assets/kite_male_soft.png as downstream image usage."
+            }
+          ]
+        },
+        {
+          "related_asset": "reference/kite_male_neutral.png",
+          "relationship_status": "DOWNSTREAM_USAGE",
+          "reason": "This normalization entry references the affected asset path; it remains valid without a source edit when the image changes.",
+          "evidence": [
+            {
+              "source_path": "game/li_sprite_normalization.rpy",
+              "anchor_type": "assignment",
+              "anchor": "(\"kite_male\", \"angry\"): \"kite_male_neutral.png\",",
+              "context": "Kite normalization mapping",
+              "locator": "game/li_sprite_normalization.rpy:189",
+              "fingerprint": "",
+              "fact": "The mapping references reference/kite_male_neutral.png as downstream image usage."
+            }
+          ]
+        },
+        {
+          "related_asset": "assets/kite_male_crossed_arms.png",
+          "relationship_status": "DOWNSTREAM_USAGE",
+          "reason": "This normalization entry references the affected asset path; it remains valid without a source edit when the image changes.",
+          "evidence": [
+            {
+              "source_path": "game/li_sprite_normalization.rpy",
+              "anchor_type": "assignment",
+              "anchor": "(\"kite_male\", \"crossed_arms\"): \"kite_male_crossed_arms.png\",",
+              "context": "Kite normalization mapping",
+              "locator": "game/li_sprite_normalization.rpy:190",
+              "fingerprint": "",
+              "fact": "The mapping references assets/kite_male_crossed_arms.png as downstream image usage."
+            }
+          ]
+        }
+      ]
+    },
+    "game/side_portraits.rpy": {
+      "file_status": "DOWNSTREAM_USAGE",
+      "reason": "The file declares the circular side Kite portrait and remains valid when that asset is regenerated.",
+      "evidence": [
+        {
+          "source_path": "game/side_portraits.rpy",
+          "anchor_type": "declaration",
+          "anchor": "image side kite_male = _li_circle_lock(\"images/side_treated/side_kite_male.png\")",
+          "context": "Side portrait declaration",
+          "locator": "game/side_portraits.rpy:24",
+          "fingerprint": "",
+          "fact": "The source declares the side kite_male image path."
+        }
+      ],
+      "relationships": [
+        {
+          "related_asset": "assets/side_kite_male.png",
+          "relationship_status": "DOWNSTREAM_USAGE",
+          "reason": "This declaration references the affected side portrait; no source edit is required for a pixel change.",
+          "evidence": [
+            {
+              "source_path": "game/side_portraits.rpy",
+              "anchor_type": "declaration",
+              "anchor": "image side kite_male = _li_circle_lock(\"images/side_treated/side_kite_male.png\")",
+              "context": "Side portrait declaration",
+              "locator": "game/side_portraits.rpy:24",
+              "fingerprint": "",
+              "fact": "The source maps side kite_male to the side_kite_male.png portrait."
+            }
+          ]
+        }
+      ]
+    },
+    "game/credits.rpy.excerpt.txt": {
+      "file_status": "DOWNSTREAM_USAGE",
+      "reason": "The excerpt resolves Kite credits portraits from existing male sprite paths; those downstream paths remain valid when images change.",
+      "evidence": [
+        {
+          "source_path": "game/credits.rpy.excerpt.txt",
+          "anchor_type": "function",
+          "anchor": "def _credits_kite_sprite_path():",
+          "context": "Kite credits-polaroid sprite resolver",
+          "locator": "source game/credits.rpy:106-120; excerpt lines 9-22",
+          "fingerprint": "",
+          "fact": "The resolver chooses existing male Kite image paths for the credits polaroid."
+        }
+      ],
+      "relationships": [
+        {
+          "related_asset": "reference/kite_male_neutral.png",
+          "relationship_status": "DOWNSTREAM_USAGE",
+          "reason": "The credits resolver references this affected image path, but the resolver remains valid without a source edit.",
+          "evidence": [
+            {
+              "source_path": "game/credits.rpy.excerpt.txt",
+              "anchor_type": "statement",
+              "anchor": "\"images/kite_male_neutral.png\",",
+              "context": "Male Kite credits fallback list",
+              "locator": "excerpt lines 21; source game/credits.rpy:118",
+              "fingerprint": "",
+              "fact": "The excerpt contains the existing image path for reference/kite_male_neutral.png."
+            }
+          ]
+        },
+        {
+          "related_asset": "assets/kite_male_relaxed.png",
+          "relationship_status": "DOWNSTREAM_USAGE",
+          "reason": "The credits resolver references this affected image path, but the resolver remains valid without a source edit.",
+          "evidence": [
+            {
+              "source_path": "game/credits.rpy.excerpt.txt",
+              "anchor_type": "statement",
+              "anchor": "\"images/kite_male_relaxed.png\",",
+              "context": "Male Kite credits fallback list",
+              "locator": "excerpt lines 20; source game/credits.rpy:117",
+              "fingerprint": "",
+              "fact": "The excerpt contains the existing image path for assets/kite_male_relaxed.png."
+            }
+          ]
+        },
+        {
+          "related_asset": "assets/kite_male_warm.png",
+          "relationship_status": "DOWNSTREAM_USAGE",
+          "reason": "The credits resolver references this affected image path, but the resolver remains valid without a source edit.",
+          "evidence": [
+            {
+              "source_path": "game/credits.rpy.excerpt.txt",
+              "anchor_type": "statement",
+              "anchor": "\"images/kite_male_warm.png\",",
+              "context": "Male Kite credits fallback list",
+              "locator": "excerpt lines 19; source game/credits.rpy:116",
+              "fingerprint": "",
+              "fact": "The excerpt contains the existing image path for assets/kite_male_warm.png."
+            }
+          ]
+        }
+      ]
+    },
+    "game/route_select.rpy.excerpt.txt": {
+      "file_status": "DOWNSTREAM_USAGE",
+      "reason": "The excerpt selects the existing side Kite portrait path for the route card; it needs no source edit when the portrait pixels change.",
+      "evidence": [
+        {
+          "source_path": "game/route_select.rpy.excerpt.txt",
+          "anchor_type": "statement",
+          "anchor": "portrait = \"images/side_treated/side_kite_male.png\"",
+          "context": "Kite route-card portrait selection, male branch",
+          "locator": "source game/route_select.rpy:54-64; excerpt line 13",
+          "fingerprint": "",
+          "fact": "The male route branch selects the scored side_kite_male.png portrait."
+        }
+      ],
+      "relationships": [
+        {
+          "related_asset": "assets/side_kite_male.png",
+          "relationship_status": "DOWNSTREAM_USAGE",
+          "reason": "The route-card selection references the affected side portrait, but remains valid without source editing.",
+          "evidence": [
+            {
+              "source_path": "game/route_select.rpy.excerpt.txt",
+              "anchor_type": "statement",
+              "anchor": "portrait = \"images/side_treated/side_kite_male.png\"",
+              "context": "Kite route-card portrait selection",
+              "locator": "excerpt line 13; source game/route_select.rpy:58",
+              "fingerprint": "",
+              "fact": "The source path is the scored side_kite_male.png asset."
+            }
+          ]
+        }
+      ]
+    },
+    "game/route_friendships.rpy.excerpt.txt": {
+      "file_status": "DOWNSTREAM_USAGE",
+      "reason": "The excerpt contains repeated kite_male neutral show/hide statements; those statements remain valid when the referenced neutral plate changes.",
+      "evidence": [
+        {
+          "source_path": "game/route_friendships.rpy.excerpt.txt",
+          "anchor_type": "excerpt_header",
+          "anchor": "# limitation: Only the show/hide kite_male lines with 1-3 lines of context; surrounding friendship-route dialogue and logic omitted.",
+          "context": "Frozen excerpt scope",
+          "locator": "excerpt line 6; source ranges 59-63,157-160,220-223,246-249,307-310,343-346,507-510,650-653,931-934",
+          "fingerprint": "",
+          "fact": "The excerpt scope is limited to Kite show/hide occurrences."
+        }
+      ],
+      "relationships": [
+        {
+          "related_asset": "reference/kite_male_neutral.png",
+          "relationship_status": "DOWNSTREAM_USAGE",
+          "reason": "The excerpt shows and hides the neutral Kite identifier; no source edit is required for a hairstyle pixel change.",
+          "evidence": [
+            {
+              "source_path": "game/route_friendships.rpy.excerpt.txt",
+              "anchor_type": "statement",
+              "anchor": "show kite_male neutral at left",
+              "context": "male Kite branch show sites",
+              "locator": "source game/route_friendships.rpy:59-63,157-160,246-249,343-346,650-653; excerpt lines 12,17,27,37,47",
+              "fingerprint": "",
+              "fact": "The excerpt displays the kite_male neutral identifier at the listed friendship-route sites."
+            },
+            {
+              "source_path": "game/route_friendships.rpy.excerpt.txt",
+              "anchor_type": "statement",
+              "anchor": "hide kite_male",
+              "context": "friendship-route cleanup hides",
+              "locator": "source game/route_friendships.rpy:220-223,307-310,507-510,931-934; excerpt lines 22,32,42,52",
+              "fingerprint": "",
+              "fact": "The excerpt hides the kite_male tag at the listed cleanup sites."
+            }
+          ]
+        }
+      ]
+    },
+    "game/route_neo.rpy.excerpt.txt": {
+      "file_status": "DOWNSTREAM_USAGE",
+      "reason": "The excerpt captures one Kite cameo show/hide; the neutral identifier remains valid if the plate pixels change.",
+      "evidence": [
+        {
+          "source_path": "game/route_neo.rpy.excerpt.txt",
+          "anchor_type": "excerpt_header",
+          "anchor": "# limitation: Only the single Kite cameo show/hide in Neo’s route with context; rest of route_neo.rpy omitted.",
+          "context": "Frozen excerpt scope",
+          "locator": "excerpt line 6; source ranges 2610-2615,2670-2673",
+          "fingerprint": "",
+          "fact": "The excerpt is limited to the single Kite cameo show/hide."
+        }
+      ],
+      "relationships": [
+        {
+          "related_asset": "reference/kite_male_neutral.png",
+          "relationship_status": "DOWNSTREAM_USAGE",
+          "reason": "The cameo shows and then hides the neutral Kite identifier; the source remains valid without editing.",
+          "evidence": [
+            {
+              "source_path": "game/route_neo.rpy.excerpt.txt",
+              "anchor_type": "statement",
+              "anchor": "show kite_male neutral at left",
+              "context": "Neo route Kite cameo show",
+              "locator": "source game/route_neo.rpy:2610-2615; excerpt line 13",
+              "fingerprint": "",
+              "fact": "The source displays the neutral Kite identifier."
+            },
+            {
+              "source_path": "game/route_neo.rpy.excerpt.txt",
+              "anchor_type": "statement",
+              "anchor": "hide kite_male",
+              "context": "Neo route cameo cleanup",
+              "locator": "source game/route_neo.rpy:2670-2673; excerpt line 18",
+              "fingerprint": "",
+              "fact": "The source hides the kite_male tag after the cameo."
+            }
+          ]
+        }
+      ]
+    },
+    "game/minigames.rpy.excerpt.txt": {
+      "file_status": "DOWNSTREAM_USAGE",
+      "reason": "The excerpt’s Cocktail Time gallery entry names the existing kite_male relaxed identifier; it remains valid when that asset changes.",
+      "evidence": [
+        {
+          "source_path": "game/minigames.rpy.excerpt.txt",
+          "anchor_type": "excerpt_header",
+          "anchor": "# limitation: Only the Cocktail Time minigame gallery entry referencing kite_male relaxed; rest of minigames.rpy omitted.",
+          "context": "Frozen excerpt scope",
+          "locator": "excerpt line 6; source range 5202-5212",
+          "fingerprint": "",
+          "fact": "The excerpt scope contains the Cocktail Time gallery entry."
+        }
+      ],
+      "relationships": [
+        {
+          "related_asset": "assets/kite_male_relaxed.png",
+          "relationship_status": "DOWNSTREAM_USAGE",
+          "reason": "The gallery entry references the affected relaxed identifier; it is downstream usage and needs no source edit.",
+          "evidence": [
+            {
+              "source_path": "game/minigames.rpy.excerpt.txt",
+              "anchor_type": "statement",
+              "anchor": "\"li\": \"kite_male relaxed\",",
+              "context": "Cocktail Time gallery entry",
+              "locator": "excerpt line 13; source game/minigames.rpy:5202-5212",
+              "fingerprint": "",
+              "fact": "The gallery entry displays the kite_male relaxed identifier."
+            },
+            {
+              "source_path": "game/route_kite.rpy",
+              "anchor_type": "declaration",
+              "anchor": "image kite_male relaxed = _kite_sprite(\"kite_male_relaxed.png\")",
+              "context": "Fixture mapping declaration",
+              "locator": "game/route_kite.rpy:19",
+              "fingerprint": "",
+              "fact": "The fixture declaration proves the identifier maps to assets/kite_male_relaxed.png."
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "unresolved_items": [],
+  "work_notes": "AI-assisted exploratory baseline performed by an AI agent, not the H condition. Fixture limitations encountered: approved v19g reference differs from frozen production neutral; five working-tree-deleted sprites are evaluated from frozen HEAD; outfit metadata is UNKNOWN; some sprites are unreferenced; CODE evidence is excerpted; fixture source was not executed; videos/audio/backgrounds/UI/namebox/female/dev/archive material are excluded."
+}

@@ -1,0 +1,772 @@
+# Experiment 2, condition H, Test C: human-recorded export.
+# Written by tools/experiment-02-human-audit; contains only what the human entered.
+provenance:
+  tool_name: experiment-02-human-audit
+  tool_version: "0.2.0"
+  tool_source_commit: d6092e993672408a8235e9e9ac9a94f25e004ccb
+  tool_source_dirty: false
+  export_timestamp: "2026-10-01T16:41:56+08:00"
+  fixture_tree_at_head: "9f8fbe99affbfa0b55acb182fb89029d2eb30a11"
+test_case: C
+start_time: "2026-10-01T16:31:34+08:00"
+end_time: "2026-10-01T16:35:53+08:00"
+elapsed_time: "00:04:19"
+investigation_segments:
+- start: "2026-10-01T16:31:34+08:00"
+  end: "2026-10-01T16:35:53+08:00"
+documentation_segments:
+- start: "2026-10-01T16:35:57+08:00"
+  end: "2026-10-01T16:41:41+08:00"
+documentation_elapsed_time: "00:05:44"
+asset_records:
+- id: H-C-ASSET-01
+  test_case: C
+  item_type: ASSET
+  asset_path: reference/kite_male_neutral.png
+  status: ASSET_ACTION
+  reason: "Both ears are visible in the full-size frame and each shows the canonical small silver hoop; the accessory is depicted and a change alters this asset."
+  evidence:
+  - source_path: reference/kite_male_neutral.png
+    anchor_type: asset
+    anchor: "head/ear region: paired small silver hoops at viewer-left and viewer-right ears"
+    context: "Full-size image, zoomed into both ears"
+    locator: "928x1232 frame; viewer-left ear approx (414,370), viewer-right ear approx (578,350)"
+    fingerprint:
+    fact: "Pixels show both ears and a small silver hoop earring on each ear; neither ear is covered or out of frame."
+  game_usage:
+  - "game/route_kite.rpy:17, 72, 113, 131 (kite_male neutral)"
+- id: H-C-ASSET-02
+  test_case: C
+  item_type: ASSET
+  asset_path: assets/kite_male_crossed_arms.png
+  status: ASSET_ACTION
+  reason: "Both ears are visible in this full-size frame and the canonical small silver hoop accessory is actually depicted; a change alters this asset."
+  evidence:
+  - source_path: assets/kite_male_crossed_arms.png
+    anchor_type: asset
+    anchor: "head/ear region: paired small silver hoops at both ears"
+    context: "Full-size image, zoomed in on both ears"
+    locator: "928x1232 frame; ears near upper head, both in frame"
+    fingerprint:
+    fact: "Pixels show both ears and the same small silver hoops; the accessory is visible on each side of the head."
+  game_usage:
+  - "game/route_kite.rpy:27 (kite_male crossed_arms); game/li_sprite_normalization.rpy:190 (LI_EXPR_ALIAS)"
+- id: H-C-ASSET-03
+  test_case: C
+  item_type: ASSET
+  asset_path: assets/kite_male_dark.png
+  status: ASSET_ACTION
+  reason: "Both ears are visible in this full-size frame and the canonical small silver hoop accessory is actually depicted; a change alters this asset."
+  evidence:
+  - source_path: assets/kite_male_dark.png
+    anchor_type: asset
+    anchor: "head/ear region: paired small silver hoops at both ears"
+    context: "Full-size image, zoomed in on both ears"
+    locator: "928x1232 frame; upper head region"
+    fingerprint:
+    fact: "Pixels show the full head with both ears visible and a small silver hoop on each ear."
+  game_usage:
+  - "No scored .rpy usage traced in fixture (unreferenced production image)."
+- id: H-C-ASSET-04
+  test_case: C
+  item_type: ASSET
+  asset_path: assets/kite_male_dark_relaxed.png
+  status: ASSET_ACTION
+  reason: "Both ears are visible in this full-size frame and the canonical small silver hoop accessory is actually depicted; a change alters this asset."
+  evidence:
+  - source_path: assets/kite_male_dark_relaxed.png
+    anchor_type: asset
+    anchor: "head/ear region: paired small silver hoops at both ears"
+    context: "Full-size image, zoomed in on both ears"
+    locator: "928x1232 frame; upper head region"
+    fingerprint:
+    fact: "Pixels show both ears clearly and a small silver hoop earring on each ear."
+  game_usage:
+  - "No scored .rpy usage traced in fixture (unreferenced production image)."
+- id: H-C-ASSET-05
+  test_case: C
+  item_type: ASSET
+  asset_path: assets/kite_male_dark_withdrawn.png
+  status: ASSET_ACTION
+  reason: "Both ears are visible in this full-size frame and the canonical small silver hoop accessory is actually depicted; a change alters this asset."
+  evidence:
+  - source_path: assets/kite_male_dark_withdrawn.png
+    anchor_type: asset
+    anchor: "head/ear region: paired small silver hoops at both ears"
+    context: "Full-size image, zoomed in on both ears"
+    locator: "928x1232 frame; upper head region"
+    fingerprint:
+    fact: "Pixels show both ears clearly and a small silver hoop earring on each ear."
+  game_usage:
+  - "No scored .rpy usage traced in fixture (unreferenced production image)."
+- id: H-C-ASSET-06
+  test_case: C
+  item_type: ASSET
+  asset_path: assets/kite_male_gentle.png
+  status: ASSET_ACTION
+  reason: "Both ears are visible in this full-size frame and the canonical small silver hoop accessory is actually depicted; a change alters this asset."
+  evidence:
+  - source_path: assets/kite_male_gentle.png
+    anchor_type: asset
+    anchor: "head/ear region: paired small silver hoops at both ears"
+    context: "Full-size image, zoomed in on both ears"
+    locator: "928x1232 frame; upper head region"
+    fingerprint:
+    fact: "Pixels show both ears and the canonical small silver hoops on both sides."
+  game_usage:
+  - "game/route_kite.rpy:18; game/li_sprite_normalization.rpy:101"
+- id: H-C-ASSET-07
+  test_case: C
+  item_type: ASSET
+  asset_path: assets/kite_male_relaxed.png
+  status: ASSET_ACTION
+  reason: "Both ears are visible in this full-size frame and the canonical small silver hoop accessory is actually depicted; a change alters this asset."
+  evidence:
+  - source_path: assets/kite_male_relaxed.png
+    anchor_type: asset
+    anchor: "head/ear region: paired small silver hoops at both ears"
+    context: "Full-size image, zoomed in on both ears"
+    locator: "928x1232 frame; upper head region"
+    fingerprint:
+    fact: "Pixels show both ears clearly; a small silver hoop is visible on each ear."
+  game_usage:
+  - "game/route_kite.rpy:19; game/li_sprite_normalization.rpy:102; game/credits.rpy:117; game/minigames.rpy.excerpt.txt:13"
+- id: H-C-ASSET-08
+  test_case: C
+  item_type: ASSET
+  asset_path: assets/kite_male_smoking.png
+  status: ASSET_ACTION
+  reason: "Both ears are visible in this full-size frame and the canonical small silver hoop accessory is actually depicted; a change alters this asset."
+  evidence:
+  - source_path: assets/kite_male_smoking.png
+    anchor_type: asset
+    anchor: "head/ear region: paired small silver hoops at both ears"
+    context: "Full-size image, zoomed in on both ears"
+    locator: "928x1232 frame; upper head region"
+    fingerprint:
+    fact: "Pixels show both ears; both small silver hoops remain visible despite the smoke/hand pose."
+  game_usage:
+  - "game/route_kite.rpy:20; game/li_sprite_normalization.rpy:187"
+- id: H-C-ASSET-09
+  test_case: C
+  item_type: ASSET
+  asset_path: assets/kite_male_soft.png
+  status: ASSET_ACTION
+  reason: "Both ears are visible in this full-size frame and the canonical small silver hoop accessory is actually depicted; a change alters this asset."
+  evidence:
+  - source_path: assets/kite_male_soft.png
+    anchor_type: asset
+    anchor: "head/ear region: paired small silver hoops at both ears"
+    context: "Full-size image, zoomed in on both ears where applicable"
+    locator: "928x1232 frame; upper head region"
+    fingerprint:
+    fact: "Pixels show both ears clearly and a small silver hoop on each ear."
+  game_usage:
+  - "game/route_kite.rpy:21; game/li_sprite_normalization.rpy:188"
+- id: H-C-ASSET-10
+  test_case: C
+  item_type: ASSET
+  asset_path: assets/kite_male_stressed.png
+  status: ASSET_ACTION
+  reason: "Both ears are visible in this full-size frame and the canonical small silver hoop accessory is actually depicted; a change alters this asset."
+  evidence:
+  - source_path: assets/kite_male_stressed.png
+    anchor_type: asset
+    anchor: "head/ear region: paired small silver hoops at both ears"
+    context: "Full-size image, zoomed in on both ears where applicable"
+    locator: "928x1232 frame; upper head region"
+    fingerprint:
+    fact: "Pixels show both ears and both small silver hoops; the worried expression does not occlude the ears."
+  game_usage:
+  - "game/route_kite.rpy:22; game/li_sprite_normalization.rpy:104"
+- id: H-C-ASSET-11
+  test_case: C
+  item_type: ASSET
+  asset_path: assets/kite_male_tired.png
+  status: ASSET_ACTION
+  reason: "Both ears are visible in this full-size frame and the canonical small silver hoop accessory is actually depicted; a change alters this asset."
+  evidence:
+  - source_path: assets/kite_male_tired.png
+    anchor_type: asset
+    anchor: "head/ear region: paired small silver hoops at both ears"
+    context: "Full-size image, zoomed in on both ears where applicable"
+    locator: "928x1232 frame; upper head region"
+    fingerprint:
+    fact: "Pixels show both ears and both small silver hoops; the lowered eyelids do not occlude the ears."
+  game_usage:
+  - "game/route_kite.rpy:23; game/li_sprite_normalization.rpy:106"
+- id: H-C-ASSET-12
+  test_case: C
+  item_type: ASSET
+  asset_path: assets/kite_male_warm.png
+  status: ASSET_ACTION
+  reason: "Both ears are visible in this full-size frame and the canonical small silver hoop accessory is actually depicted; a change alters this asset."
+  evidence:
+  - source_path: assets/kite_male_warm.png
+    anchor_type: asset
+    anchor: "head/ear region: paired small silver hoops at both ears"
+    context: "Full-size image, zoomed in on both ears where applicable"
+    locator: "928x1232 frame; upper head region"
+    fingerprint:
+    fact: "Pixels show both ears clearly and a small silver hoop on each ear."
+  game_usage:
+  - "game/route_kite.rpy:24; game/li_sprite_normalization.rpy:103; game/credits.rpy:116"
+- id: H-C-ASSET-13
+  test_case: C
+  item_type: ASSET
+  asset_path: assets/kite_male_withdrawn.png
+  status: ASSET_ACTION
+  reason: "Both ears are visible in this full-size frame and the canonical small silver hoop accessory is actually depicted; a change alters this asset."
+  evidence:
+  - source_path: assets/kite_male_withdrawn.png
+    anchor_type: asset
+    anchor: "head/ear region: paired small silver hoops at both ears"
+    context: "Full-size image, zoomed in on both ears where applicable"
+    locator: "928x1232 frame; upper head region"
+    fingerprint:
+    fact: "Pixels show both ears and both small silver hoops; the turned gaze does not hide either ear."
+  game_usage:
+  - "game/route_kite.rpy:25; game/li_sprite_normalization.rpy:105"
+- id: H-C-ASSET-14
+  test_case: C
+  item_type: ASSET
+  asset_path: assets/kite_tattoo.png
+  status: UNAFFECTED
+  reason: "The full-size image is a torso/arm tattoo crop with no head or ears in frame, so it does not depict the affected accessory."
+  evidence:
+  - source_path: assets/kite_tattoo.png
+    anchor_type: asset
+    anchor: "full frame is a torso/upper-arm tattoo crop; head and ears are out of frame"
+    context: "Full-size image, zoomed in on both ears where applicable"
+    locator: "928x1232 frame; upper head region"
+    fingerprint:
+    fact: "Pixels show only torso/arm skin, water drops, and tattoo; no head or ear accessory is depicted."
+  game_usage:
+  - "game/route_kite.rpy:10 (declaration only; no show statement)"
+- id: H-C-ASSET-15
+  test_case: C
+  item_type: ASSET
+  asset_path: assets/side_kite_male.png
+  status: ASSET_ACTION
+  reason: "Both ears are visible in the zoomed circular portrait and the canonical small silver hoop accessory is actually depicted; a change alters this asset."
+  evidence:
+  - source_path: assets/side_kite_male.png
+    anchor_type: asset
+    anchor: "circular portrait head/ear region: paired small silver hoops at both ears"
+    context: "Full-size 400x400 image, zoomed in on both ears"
+    locator: "400x400 frame; circular portrait upper half"
+    fingerprint:
+    fact: "The zoomed circular portrait shows both ears and a small silver hoop on each ear; neither ear is covered or out of frame."
+  game_usage:
+  - "game/side_portraits.rpy:24; game/route_select.rpy.excerpt.txt:13"
+code_records:
+- id: H-C-CODE-01
+  test_case: C
+  item_type: CODE
+  source_path: game/route_kite.rpy
+  file_status: DOWNSTREAM_USAGE
+  reason: "The file maps and displays Kite image identifiers, including the affected male plates, but the accessory change is an image-pixel change; the existing identifiers and statements remain valid. The tattoo declaration is unaffected."
+  evidence:
+  - source_path: game/route_kite.rpy
+    anchor_type: declaration
+    anchor: "image kite_male neutral = _kite_sprite(\"kite_male_neutral.png\")"
+    context: "Male Kite image declarations and static image statements"
+    locator: "game/route_kite.rpy:17"
+    fingerprint:
+    fact: "The file declares the male Kite image identifier and maps it to the neutral PNG; the existing source identifier remains unchanged by an accessory pixel update."
+  relationships:
+  - related_asset: reference/kite_male_neutral.png
+    relationship_status: DOWNSTREAM_USAGE
+    reason: "The source maps kite_male neutral to the affected asset but the identifier and statement remain valid when pixels change."
+    evidence:
+    - source_path: game/route_kite.rpy
+      anchor_type: declaration
+      anchor: "image kite_male neutral = _kite_sprite(\"kite_male_neutral.png\")"
+      context: "Male Kite neutral image declaration"
+      locator: "game/route_kite.rpy:17"
+      fingerprint:
+      fact: "The declaration maps the kite_male neutral identifier to the scored reference neutral PNG."
+  - related_asset: assets/kite_male_crossed_arms.png
+    relationship_status: DOWNSTREAM_USAGE
+    reason: "The source maps and displays the affected crossed-arms plate; the path and image identifier remain valid after a pixel-only accessory change."
+    evidence:
+    - source_path: game/route_kite.rpy
+      anchor_type: declaration
+      anchor: "image kite_male crossed_arms = _kite_sprite(\"kite_male_crossed_arms.png\")"
+      context: "Kite male image declaration"
+      locator: "game/route_kite.rpy:27"
+      fingerprint:
+      fact: "The frozen source declaration establishes the exact image identifier-to-PNG relationship for this scored asset."
+  - related_asset: assets/kite_male_gentle.png
+    relationship_status: DOWNSTREAM_USAGE
+    reason: "The source maps and displays the affected gentle plate; no source edit is required when only the image pixels change."
+    evidence:
+    - source_path: game/route_kite.rpy
+      anchor_type: declaration
+      anchor: "image kite_male gentle = _kite_sprite(\"kite_male_gentle.png\")"
+      context: "Kite male image declaration"
+      locator: "game/route_kite.rpy:18"
+      fingerprint:
+      fact: "The frozen source declaration establishes the exact image identifier-to-PNG relationship for this scored asset."
+  - related_asset: assets/kite_male_relaxed.png
+    relationship_status: DOWNSTREAM_USAGE
+    reason: "The source maps and displays the affected relaxed plate; the existing reference remains valid."
+    evidence:
+    - source_path: game/route_kite.rpy
+      anchor_type: declaration
+      anchor: "image kite_male relaxed = _kite_sprite(\"kite_male_relaxed.png\")"
+      context: "Kite male image declaration"
+      locator: "game/route_kite.rpy:19"
+      fingerprint:
+      fact: "The frozen source declaration establishes the exact image identifier-to-PNG relationship for this scored asset."
+  - related_asset: assets/kite_male_smoking.png
+    relationship_status: DOWNSTREAM_USAGE
+    reason: "The source maps and displays the affected smoking plate; the existing image identifier remains valid."
+    evidence:
+    - source_path: game/route_kite.rpy
+      anchor_type: declaration
+      anchor: "image kite_male smoking = _kite_sprite(\"kite_male_smoking.png\")"
+      context: "Kite male image declaration"
+      locator: "game/route_kite.rpy:20"
+      fingerprint:
+      fact: "The frozen source declaration establishes the exact image identifier-to-PNG relationship for this scored asset."
+  - related_asset: assets/kite_male_soft.png
+    relationship_status: DOWNSTREAM_USAGE
+    reason: "The source maps and displays the affected soft plate; no code edit is needed for the pixel change."
+    evidence:
+    - source_path: game/route_kite.rpy
+      anchor_type: declaration
+      anchor: "image kite_male soft = _kite_sprite(\"kite_male_soft.png\")"
+      context: "Kite male image declaration"
+      locator: "game/route_kite.rpy:21"
+      fingerprint:
+      fact: "The frozen source declaration establishes the exact image identifier-to-PNG relationship for this scored asset."
+  - related_asset: assets/kite_male_stressed.png
+    relationship_status: DOWNSTREAM_USAGE
+    reason: "The source maps and displays the affected stressed plate; the existing path remains valid."
+    evidence:
+    - source_path: game/route_kite.rpy
+      anchor_type: declaration
+      anchor: "image kite_male stressed = _kite_sprite(\"kite_male_stressed.png\")"
+      context: "Kite male image declaration"
+      locator: "game/route_kite.rpy:22"
+      fingerprint:
+      fact: "The frozen source declaration establishes the exact image identifier-to-PNG relationship for this scored asset."
+  - related_asset: assets/kite_male_tired.png
+    relationship_status: DOWNSTREAM_USAGE
+    reason: "The source maps and displays the affected tired plate; the existing path remains valid."
+    evidence:
+    - source_path: game/route_kite.rpy
+      anchor_type: declaration
+      anchor: "image kite_male tired = _kite_sprite(\"kite_male_tired.png\")"
+      context: "Kite male image declaration"
+      locator: "game/route_kite.rpy:23"
+      fingerprint:
+      fact: "The frozen source declaration establishes the exact image identifier-to-PNG relationship for this scored asset."
+  - related_asset: assets/kite_male_warm.png
+    relationship_status: DOWNSTREAM_USAGE
+    reason: "The source maps and displays the affected warm plate; the existing path and identifier remain valid."
+    evidence:
+    - source_path: game/route_kite.rpy
+      anchor_type: declaration
+      anchor: "image kite_male warm = _kite_sprite(\"kite_male_warm.png\")"
+      context: "Kite male image declaration"
+      locator: "game/route_kite.rpy:24"
+      fingerprint:
+      fact: "The frozen source declaration establishes the exact image identifier-to-PNG relationship for this scored asset."
+  - related_asset: assets/kite_male_withdrawn.png
+    relationship_status: DOWNSTREAM_USAGE
+    reason: "The source maps and displays the affected withdrawn plate; no source edit is needed for a pixel-only accessory change."
+    evidence:
+    - source_path: game/route_kite.rpy
+      anchor_type: declaration
+      anchor: "image kite_male withdrawn = _kite_sprite(\"kite_male_withdrawn.png\")"
+      context: "Kite male image declaration"
+      locator: "game/route_kite.rpy:25"
+      fingerprint:
+      fact: "The frozen source declaration establishes the exact image identifier-to-PNG relationship for this scored asset."
+  - related_asset: assets/kite_tattoo.png
+    relationship_status: UNAFFECTED
+    reason: "The declaration points to a torso tattoo crop with no head or ear accessory; the requested change has no effect on this relationship."
+    evidence:
+    - source_path: game/route_kite.rpy
+      anchor_type: declaration
+      anchor: "image evidence kite_tattoo = \"images/evidence/kite_tattoo.png\""
+      context: "Kite male image declaration"
+      locator: "game/route_kite.rpy:10"
+      fingerprint:
+      fact: "The frozen source declaration establishes the exact image identifier-to-PNG relationship for this scored asset."
+- id: H-C-CODE-02
+  test_case: C
+  item_type: CODE
+  source_path: game/li_sprite_normalization.rpy
+  file_status: DOWNSTREAM_USAGE
+  reason: "The normalization helpers, alignment tables, aliases, and circle lock keep using existing asset identifiers/paths; the accessory change is in image pixels, so no source edit is required."
+  evidence:
+  - source_path: game/li_sprite_normalization.rpy
+    anchor_type: function
+    anchor: "def _kite_sprite(filename):"
+    context: "Kite normalization helper"
+    locator: "game/li_sprite_normalization.rpy:300"
+    fingerprint:
+    fact: "The _kite_sprite helper constructs the existing images/filename path and applies normalization only."
+  relationships:
+  - related_asset: assets/kite_male_gentle.png
+    relationship_status: DOWNSTREAM_USAGE
+    reason: "The normalization source references this affected asset identifier/path but remains valid; no code edit is required for the accessory pixel change."
+    evidence:
+    - source_path: game/li_sprite_normalization.rpy
+      anchor_type: assignment
+      anchor: "\"kite_male_gentle.png\": (1.011, -8),"
+      context: "Kite asset alignment/alias or circle-lock entry"
+      locator: "game/li_sprite_normalization.rpy:101"
+      fingerprint:
+      fact: "The frozen normalization table contains this exact scored asset filename/identifier."
+  - related_asset: assets/kite_male_relaxed.png
+    relationship_status: DOWNSTREAM_USAGE
+    reason: "The normalization source references this affected asset identifier/path but remains valid; no code edit is required for the accessory pixel change."
+    evidence:
+    - source_path: game/li_sprite_normalization.rpy
+      anchor_type: assignment
+      anchor: "\"kite_male_relaxed.png\": (1.002, -2),"
+      context: "Kite asset alignment/alias or circle-lock entry"
+      locator: "game/li_sprite_normalization.rpy:102"
+      fingerprint:
+      fact: "The frozen normalization table contains this exact scored asset filename/identifier."
+  - related_asset: assets/kite_male_warm.png
+    relationship_status: DOWNSTREAM_USAGE
+    reason: "The normalization source references this affected asset identifier/path but remains valid; no code edit is required for the accessory pixel change."
+    evidence:
+    - source_path: game/li_sprite_normalization.rpy
+      anchor_type: assignment
+      anchor: "\"kite_male_warm.png\": (0.998, 2),"
+      context: "Kite asset alignment/alias or circle-lock entry"
+      locator: "game/li_sprite_normalization.rpy:103"
+      fingerprint:
+      fact: "The frozen normalization table contains this exact scored asset filename/identifier."
+  - related_asset: assets/kite_male_stressed.png
+    relationship_status: DOWNSTREAM_USAGE
+    reason: "The normalization source references this affected asset identifier/path but remains valid; no code edit is required for the accessory pixel change."
+    evidence:
+    - source_path: game/li_sprite_normalization.rpy
+      anchor_type: assignment
+      anchor: "\"kite_male_stressed.png\": (0.996, 3),"
+      context: "Kite asset alignment/alias or circle-lock entry"
+      locator: "game/li_sprite_normalization.rpy:104"
+      fingerprint:
+      fact: "The frozen normalization table contains this exact scored asset filename/identifier."
+  - related_asset: assets/kite_male_withdrawn.png
+    relationship_status: DOWNSTREAM_USAGE
+    reason: "The normalization source references this affected asset identifier/path but remains valid; no code edit is required for the accessory pixel change."
+    evidence:
+    - source_path: game/li_sprite_normalization.rpy
+      anchor_type: assignment
+      anchor: "\"kite_male_withdrawn.png\": (0.975, 19),"
+      context: "Kite asset alignment/alias or circle-lock entry"
+      locator: "game/li_sprite_normalization.rpy:105"
+      fingerprint:
+      fact: "The frozen normalization table contains this exact scored asset filename/identifier."
+  - related_asset: assets/kite_male_tired.png
+    relationship_status: DOWNSTREAM_USAGE
+    reason: "The normalization source references this affected asset identifier/path but remains valid; no code edit is required for the accessory pixel change."
+    evidence:
+    - source_path: game/li_sprite_normalization.rpy
+      anchor_type: assignment
+      anchor: "\"kite_male_tired.png\": (0.971, 22),"
+      context: "Kite asset alignment/alias or circle-lock entry"
+      locator: "game/li_sprite_normalization.rpy:106"
+      fingerprint:
+      fact: "The frozen normalization table contains this exact scored asset filename/identifier."
+  - related_asset: assets/kite_male_smoking.png
+    relationship_status: DOWNSTREAM_USAGE
+    reason: "The normalization source references this affected asset identifier/path but remains valid; no code edit is required for the accessory pixel change."
+    evidence:
+    - source_path: game/li_sprite_normalization.rpy
+      anchor_type: assignment
+      anchor: "(\"kite_male\", \"smoking\"): \"kite_male_smoking.png\","
+      context: "Kite asset alignment/alias or circle-lock entry"
+      locator: "game/li_sprite_normalization.rpy:187"
+      fingerprint:
+      fact: "The frozen normalization table contains this exact scored asset filename/identifier."
+  - related_asset: assets/kite_male_soft.png
+    relationship_status: DOWNSTREAM_USAGE
+    reason: "The normalization source references this affected asset identifier/path but remains valid; no code edit is required for the accessory pixel change."
+    evidence:
+    - source_path: game/li_sprite_normalization.rpy
+      anchor_type: assignment
+      anchor: "(\"kite_male\", \"soft\"): \"kite_male_soft.png\","
+      context: "Kite asset alignment/alias or circle-lock entry"
+      locator: "game/li_sprite_normalization.rpy:188"
+      fingerprint:
+      fact: "The frozen normalization table contains this exact scored asset filename/identifier."
+  - related_asset: reference/kite_male_neutral.png
+    relationship_status: DOWNSTREAM_USAGE
+    reason: "The normalization source references this affected asset identifier/path but remains valid; no code edit is required for the accessory pixel change."
+    evidence:
+    - source_path: game/li_sprite_normalization.rpy
+      anchor_type: assignment
+      anchor: "(\"kite_male\", \"angry\"): \"kite_male_neutral.png\","
+      context: "Kite asset alignment/alias or circle-lock entry"
+      locator: "game/li_sprite_normalization.rpy:189"
+      fingerprint:
+      fact: "The frozen normalization table contains this exact scored asset filename/identifier."
+  - related_asset: assets/kite_male_crossed_arms.png
+    relationship_status: DOWNSTREAM_USAGE
+    reason: "The normalization source references this affected asset identifier/path but remains valid; no code edit is required for the accessory pixel change."
+    evidence:
+    - source_path: game/li_sprite_normalization.rpy
+      anchor_type: assignment
+      anchor: "(\"kite_male\", \"crossed_arms\"): \"kite_male_crossed_arms.png\","
+      context: "Kite asset alignment/alias or circle-lock entry"
+      locator: "game/li_sprite_normalization.rpy:190"
+      fingerprint:
+      fact: "The frozen normalization table contains this exact scored asset filename/identifier."
+  - related_asset: assets/side_kite_male.png
+    relationship_status: DOWNSTREAM_USAGE
+    reason: "The normalization source references this affected asset identifier/path but remains valid; no code edit is required for the accessory pixel change."
+    evidence:
+    - source_path: game/li_sprite_normalization.rpy
+      anchor_type: assignment
+      anchor: "\"side_kite_male.png\": (0.92, 1.0),"
+      context: "Kite asset alignment/alias or circle-lock entry"
+      locator: "game/li_sprite_normalization.rpy:149"
+      fingerprint:
+      fact: "The frozen normalization table contains this exact scored asset filename/identifier."
+- id: H-C-CODE-03
+  test_case: C
+  item_type: CODE
+  source_path: game/side_portraits.rpy
+  file_status: DOWNSTREAM_USAGE
+  reason: "The file defines the treated side portrait under the existing side kite_male identifier; the declaration remains valid when the image pixels change."
+  evidence:
+  - source_path: game/side_portraits.rpy
+    anchor_type: declaration
+    anchor: "image side kite_male = _li_circle_lock(\"images/side_treated/side_kite_male.png\")"
+    context: "Full file/excerpt read in the fixture evidence browser"
+    locator: "game/side_portraits.rpy:24"
+    fingerprint:
+    fact: "The side kite_male identifier maps to the treated side_kite_male PNG."
+  relationships:
+  - related_asset: assets/side_kite_male.png
+    relationship_status: DOWNSTREAM_USAGE
+    reason: "The source references the affected side portrait, but its existing identifier/path remains valid."
+    evidence:
+    - source_path: game/side_portraits.rpy
+      anchor_type: declaration
+      anchor: "image side kite_male = _li_circle_lock(\"images/side_treated/side_kite_male.png\")"
+      context: "side portrait declaration"
+      locator: "game/side_portraits.rpy:24"
+      fingerprint:
+      fact: "The source declares the scored side portrait path."
+- id: H-C-CODE-04
+  test_case: C
+  item_type: CODE
+  source_path: game/credits.rpy.excerpt.txt
+  file_status: DOWNSTREAM_USAGE
+  reason: "The excerpt resolves and places existing Kite male warm/relaxed/neutral image paths in the credits polaroid; these downstream paths remain valid after an accessory pixel change."
+  evidence:
+  - source_path: game/credits.rpy.excerpt.txt
+    anchor_type: excerpt_header
+    anchor: "# line_ranges: 106-120,164-176,668-678"
+    context: "Full file/excerpt read in the fixture evidence browser"
+    locator: "game/credits.rpy.excerpt.txt:5"
+    fingerprint:
+    fact: "The excerpt scope is limited to the Kite credits-polaroid resolver, caller, and hide statement."
+  relationships:
+  - related_asset: assets/kite_male_warm.png
+    relationship_status: DOWNSTREAM_USAGE
+    reason: "The credits resolver references the affected warm asset, but the existing path remains valid."
+    evidence:
+    - source_path: game/credits.rpy.excerpt.txt
+      anchor_type: assignment
+      anchor: "\"images/kite_male_warm.png\","
+      context: "male fallback list in _credits_kite_sprite_path"
+      locator: "game/credits.rpy:116"
+      fingerprint:
+      fact: "The credits resolver includes the scored warm PNG path."
+  - related_asset: assets/kite_male_relaxed.png
+    relationship_status: DOWNSTREAM_USAGE
+    reason: "The credits resolver references the affected relaxed asset, but the existing path remains valid."
+    evidence:
+    - source_path: game/credits.rpy.excerpt.txt
+      anchor_type: assignment
+      anchor: "\"images/kite_male_relaxed.png\","
+      context: "male fallback list in _credits_kite_sprite_path"
+      locator: "game/credits.rpy:117"
+      fingerprint:
+      fact: "The credits resolver includes the scored relaxed PNG path."
+  - related_asset: reference/kite_male_neutral.png
+    relationship_status: DOWNSTREAM_USAGE
+    reason: "The credits resolver references the affected neutral asset, but the existing path remains valid."
+    evidence:
+    - source_path: game/credits.rpy.excerpt.txt
+      anchor_type: assignment
+      anchor: "\"images/kite_male_neutral.png\","
+      context: "male fallback list in _credits_kite_sprite_path"
+      locator: "game/credits.rpy:118"
+      fingerprint:
+      fact: "The credits resolver includes the scored neutral PNG path."
+- id: H-C-CODE-05
+  test_case: C
+  item_type: CODE
+  source_path: game/route_select.rpy.excerpt.txt
+  file_status: DOWNSTREAM_USAGE
+  reason: "The excerpt selects the existing side_kite_male portrait path for the male Kite route card; no edit is needed for a pixel-only accessory change."
+  evidence:
+  - source_path: game/route_select.rpy.excerpt.txt
+    anchor_type: excerpt_header
+    anchor: "# line_ranges: 54-64"
+    context: "Full file/excerpt read in the fixture evidence browser"
+    locator: "game/route_select.rpy.excerpt.txt:5"
+    fingerprint:
+    fact: "The excerpt scope is limited to the Kite route-card portrait selection."
+  relationships:
+  - related_asset: assets/side_kite_male.png
+    relationship_status: DOWNSTREAM_USAGE
+    reason: "The route-card source references the affected side portrait, but the path remains valid."
+    evidence:
+    - source_path: game/route_select.rpy.excerpt.txt
+      anchor_type: statement
+      anchor: "portrait = \"images/side_treated/side_kite_male.png\""
+      context: "else branch for kite_variant == \"male\""
+      locator: "game/route_select.rpy:58"
+      fingerprint:
+      fact: "The male route-card branch selects the scored side portrait path."
+    - source_path: game/side_portraits.rpy
+      anchor_type: declaration
+      anchor: "image side kite_male = _li_circle_lock(\"images/side_treated/side_kite_male.png\")"
+      context: "fixture-proven side portrait mapping"
+      locator: "game/side_portraits.rpy:24"
+      fingerprint:
+      fact: "The side_portraits declaration maps the route-card path to the scored side portrait PNG."
+- id: H-C-CODE-06
+  test_case: C
+  item_type: CODE
+  source_path: game/route_friendships.rpy.excerpt.txt
+  file_status: DOWNSTREAM_USAGE
+  reason: "The excerpt contains repeated male-Kite neutral show statements; these are downstream uses of the affected neutral asset and remain valid without source edits."
+  evidence:
+  - source_path: game/route_friendships.rpy.excerpt.txt
+    anchor_type: excerpt_header
+    anchor: "# line_ranges: 59-63,157-160,220-223,246-249,307-310,343-346,507-510,650-653,931-934"
+    context: "Excerpt scope and limitation"
+    locator: "game/route_friendships.rpy.excerpt.txt:5"
+    fingerprint:
+    fact: "The excerpt header defines the nine source ranges and limits the evidence to show/hide kite_male lines with context."
+  relationships:
+  - related_asset: reference/kite_male_neutral.png
+    relationship_status: DOWNSTREAM_USAGE
+    reason: "Each male-branch show kite_male neutral statement is downstream usage of the affected neutral asset; the existing identifier and show statements remain valid."
+    evidence:
+    - source_path: game/route_friendships.rpy.excerpt.txt
+      anchor_type: statement
+      anchor: "show kite_male neutral at left"
+      context: "male branch first show"
+      locator: "game/route_friendships.rpy:62"
+      fingerprint:
+      fact: "The excerpt shows the kite_male neutral identifier in this distinct source occurrence."
+    - source_path: game/route_friendships.rpy.excerpt.txt
+      anchor_type: statement
+      anchor: "show kite_male neutral at left"
+      context: "male branch remy_phone_soft_open show"
+      locator: "game/route_friendships.rpy:159"
+      fingerprint:
+      fact: "The excerpt shows the kite_male neutral identifier in this distinct source occurrence."
+    - source_path: game/route_friendships.rpy.excerpt.txt
+      anchor_type: statement
+      anchor: "show kite_male neutral at left"
+      context: "male branch after drink show"
+      locator: "game/route_friendships.rpy:248"
+      fingerprint:
+      fact: "The excerpt shows the kite_male neutral identifier in this distinct source occurrence."
+    - source_path: game/route_friendships.rpy.excerpt.txt
+      anchor_type: statement
+      anchor: "show kite_male neutral at left"
+      context: "glancing-at-Neo scene show"
+      locator: "game/route_friendships.rpy:345"
+      fingerprint:
+      fact: "The excerpt shows the kite_male neutral identifier in this distinct source occurrence."
+    - source_path: game/route_friendships.rpy.excerpt.txt
+      anchor_type: statement
+      anchor: "show kite_male neutral at left"
+      context: "counter scene show"
+      locator: "game/route_friendships.rpy:652"
+      fingerprint:
+      fact: "The excerpt shows the kite_male neutral identifier in this distinct source occurrence."
+    - source_path: game/route_kite.rpy
+      anchor_type: declaration
+      anchor: "image kite_male neutral = _kite_sprite(\"kite_male_neutral.png\")"
+      context: "fixture-proven neutral identifier mapping"
+      locator: "game/route_kite.rpy:17"
+      fingerprint:
+      fact: "The route_kite declaration maps the repeated kite_male neutral usage to the scored neutral PNG."
+- id: H-C-CODE-07
+  test_case: C
+  item_type: CODE
+  source_path: game/route_neo.rpy.excerpt.txt
+  file_status: DOWNSTREAM_USAGE
+  reason: "The excerpt shows the existing kite_male neutral identifier in the Neo-route cameo; the source remains valid when the neutral pixels change."
+  evidence:
+  - source_path: game/route_neo.rpy.excerpt.txt
+    anchor_type: excerpt_header
+    anchor: "# line_ranges: 2610-2615,2670-2673"
+    context: "Full file/excerpt read in the fixture evidence browser"
+    locator: "game/route_neo.rpy.excerpt.txt:5"
+    fingerprint:
+    fact: "The excerpt contains the single Kite cameo show/hide only."
+  relationships:
+  - related_asset: reference/kite_male_neutral.png
+    relationship_status: DOWNSTREAM_USAGE
+    reason: "The cameo references the affected neutral asset, but the existing image identifier remains valid."
+    evidence:
+    - source_path: game/route_neo.rpy.excerpt.txt
+      anchor_type: statement
+      anchor: "show kite_male neutral at left"
+      context: "Kite cameo, male branch"
+      locator: "game/route_neo.rpy:2613"
+      fingerprint:
+      fact: "The cameo displays the kite_male neutral identifier, which maps to the scored neutral PNG."
+    - source_path: game/route_kite.rpy
+      anchor_type: declaration
+      anchor: "image kite_male neutral = _kite_sprite(\"kite_male_neutral.png\")"
+      context: "fixture-proven neutral identifier mapping"
+      locator: "game/route_kite.rpy:17"
+      fingerprint:
+      fact: "The route_kite declaration maps the cameo usage to the scored neutral PNG."
+- id: H-C-CODE-08
+  test_case: C
+  item_type: CODE
+  source_path: game/minigames.rpy.excerpt.txt
+  file_status: DOWNSTREAM_USAGE
+  reason: "The excerpt records the existing kite_male relaxed identifier in the Cocktail Time gallery entry; no source edit is needed for the image-pixel change."
+  evidence:
+  - source_path: game/minigames.rpy.excerpt.txt
+    anchor_type: excerpt_header
+    anchor: "# line_ranges: 5202-5212"
+    context: "Full file/excerpt read in the fixture evidence browser"
+    locator: "game/minigames.rpy.excerpt.txt:5"
+    fingerprint:
+    fact: "The excerpt is limited to the Cocktail Time gallery entry."
+  relationships:
+  - related_asset: assets/kite_male_relaxed.png
+    relationship_status: DOWNSTREAM_USAGE
+    reason: "The gallery source references the affected relaxed asset, but the existing identifier remains valid."
+    evidence:
+    - source_path: game/minigames.rpy.excerpt.txt
+      anchor_type: assignment
+      anchor: "\"li\": \"kite_male relaxed\","
+      context: "Cocktail Time gallery entry"
+      locator: "game/minigames.rpy:5206"
+      fingerprint:
+      fact: "The gallery entry references the kite_male relaxed identifier, mapped in the fixture to the scored relaxed PNG."
+    - source_path: game/route_kite.rpy
+      anchor_type: declaration
+      anchor: "image kite_male relaxed = _kite_sprite(\"kite_male_relaxed.png\")"
+      context: "fixture-proven relaxed identifier mapping"
+      locator: "game/route_kite.rpy:19"
+      fingerprint:
+      fact: "The route_kite declaration maps the gallery identifier to the scored relaxed PNG."
+unresolved_items:
+- item: "Textual fixture metadata and game comments do not explicitly name or locate the male earring; classification is settled from the actual zoomed image pixels. Approved v19g reference and frozen production neutral differ, but this did not create REVIEW_REQUIRED because the scored pixels clearly show the hoops."
+work_notes:
+- "AI-assisted exploratory baseline performed by an AI agent, not the H condition. Inspected only the local tool fixture and EVIDENCE-PROTOCOL-01.md. Limitations: female Kite, video/audio/background/UI assets and dev/archive/backup material are excluded; several excerpts are intentionally partial; fixture source was not executed; dark variants are unreferenced; kite_tattoo is declaration-only; approved v19g reference differs from frozen neutral. Full-size images were opened and ears zoomed."
