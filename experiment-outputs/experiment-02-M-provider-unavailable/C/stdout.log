@@ -1,0 +1,8 @@
+provider: unavailable [state UNAVAILABLE] — provider unavailable, all assets REVIEW_REQUIRED
+assets: 15 {'REVIEW_REQUIRED': 15}
+code units: 8 {'REVIEW_REQUIRED': 8}
+relationships: 30 {'REVIEW_REQUIRED': 30}
+unresolved: 23 {'provider_unavailable': 1, 'dynamic_reference': 19, 'no_static_relationship': 3}
+analysis completeness: INCOMPLETE (30 static relationships; 19 unresolved dependencies {'dynamic_reference': 19})
+elapsed: 00:00:00.860
+wrote /Users/jeffreytse/Desktop/matcha-engine-experiment-02-M-output/C/report.json and /Users/jeffreytse/Desktop/matcha-engine-experiment-02-M-output/C/summary.md

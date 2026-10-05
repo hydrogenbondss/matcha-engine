@@ -1,0 +1,10 @@
+worktree=/Users/jeffreytse/Projects/matcha-engine-e2-M-d6092e9
+HEAD=d6092e993672408a8235e9e9ac9a94f25e004ccb
+porcelain=[]
+fixture_tree=9f8fbe99affbfa0b55acb182fb89029d2eb30a11
+python=Python 3.12.4 /Users/jeffreytse/.pyenv/versions/3.12.4/bin/python3
+matcha_module_from_worktree_cwd=/Users/jeffreytse/Projects/matcha-engine-e2-M-d6092e9/matcha/__init__.py /Users/jeffreytse/Projects/matcha-engine-e2-M-d6092e9/matcha/impact/engine.py
+ollama_binary=/usr/local/bin/ollama
+ollama_local_manifests=qwen2.5/1.5b 
+ollama_server: curl: (7) Failed to connect to 127.0.0.1 port 11434 after 0 ms: Couldn't connect to server
+date=2026-10-03T16:32:32+0800

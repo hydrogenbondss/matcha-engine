@@ -1,0 +1,3 @@
+cwd: /Users/jeffreytse/Projects/matcha-engine-e2-M-d6092e9
+env: PYTHONDONTWRITEBYTECODE=1
+python3 -m matcha.cli impact --fixture /Users/jeffreytse/Projects/matcha-engine-e2-M-d6092e9/fixtures/kite-production --request Kite\'s\ canonical\ hairstyle\ changes\ from\ the\ current\ documented\ hairstyle\ to\ shoulder-length\ dark\ hair. --reference reference/kite_male_neutral.png --provider auto --output /Users/jeffreytse/Desktop/matcha-engine-experiment-02-M-output/A/report.json --summary /Users/jeffreytse/Desktop/matcha-engine-experiment-02-M-output/A/summary.md 

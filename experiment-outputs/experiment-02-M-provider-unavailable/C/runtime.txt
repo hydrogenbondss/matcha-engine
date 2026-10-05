@@ -1,0 +1,5 @@
+case=C
+start=2026-10-03T16:33:24+0800
+end=2026-10-03T16:33:29+0800
+wall_clock_seconds=4.342
+exit_code=0
