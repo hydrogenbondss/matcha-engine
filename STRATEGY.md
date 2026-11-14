@@ -131,6 +131,15 @@ full, one-time, itch.io + Gumroad** (prices verified on listings).
    ~80%+ gross margin on a $12 credit pack — but auth/billing/abuse burden is
    real. Defer.
 
+**Open-core / convenience-gated freemium (decision 2026-11-14):** the free
+CLI keeps full capability forever — no feature gates. Pro gates convenience
+only (installer, presets, one-command deploy, priority fixes). The
+usage-based freemium axis (free local vs paid hosted credits) is Phase 4.
+Feature-gating the CLI was considered and rejected: the deploy magic moment
+is the funnel, gating it guts conversion; the trust cost in an AI-skeptical
+market and the two-tier maintenance cost aren't justified at the honest
+revenue scale.
+
 **Honest revenue expectation:** year one on the itch.io path is hundreds to
 low thousands of dollars (**Likely** — inferred from itch.io earnings
 distributions). Portfolio side-bet, not a startup; the hosted version is the

@@ -15,6 +15,11 @@ spec unchanged; public outreach still deferred)_
 self-recon, competitor recon + review mining, north-star gap map.
 Phase 3 scope unchanged; audit feeds listing copy + Pro packaging only.
 
+2026-11-14: Phase 3 sequenced — Pro package specced (installer / PyPI /
+setup / presets / run wrapper), price locked at listing day, open-core
+convenience gating confirmed in STRATEGY §5, 4-point launch-readiness
+gate defined.
+
 ---
 
 ## Phase map (4 phases)
@@ -193,6 +198,43 @@ not an exit criterion.
 **Exit:** ≥1 paid sale (prefer actual sale over listing-only).
 
 **Out of scope:** auth/billing for cloud credits; marketing site/landing.
+
+**Pro package spec + pricing sequencing (decided 2026-11-14):**
+
+- **Pricing sequencing:** build Pro first; final price locked on listing
+  day. The ~$19–29 band is locked NOW as a scoping input only, not a price
+  commitment. Phase 3 exit criterion unchanged: ≥1 paid sale.
+- **Pro package contents:**
+  - PyInstaller standalone binary — Mac arm64 first (verifiable); Windows
+    x64 via GitHub Actions CI, honestly labelled beta (CI smoke-tested, not
+    verified on real hardware)
+  - PyPI release (`pip install matcha-engine`) + pyproject license /
+    classifiers cleanup
+  - `matcha setup` guided first-run checklist (ComfyUI reachability, model
+    placement, health-check → dry-run). NO bundled model weights — Fair AI
+    PL covers outputs, not weight redistribution. Ship a verified model
+    checklist instead.
+  - Preset library: 3 character YAMLs (distinct archetypes, look-sheet
+    outfit families done properly) + verified model checklist + one worked
+    sample-vn example
+  - `matcha run <yaml>`: health-check → preflight → generate → deploy as
+    one command (thin wrapper over existing commands; no new generation
+    logic)
+- **Free tier keeps every feature it has today; Pro sells convenience,
+  never capability.**
+
+**Launch-readiness gate (decided 2026-11-14):** ALL FOUR must pass before
+any listing goes live. This is the definition of "excellent" for this
+phase — anything beyond it is the polish trap and parks post-first-dollar:
+
+- [ ] Pro binary cold-installs on a fresh machine (no dev environment) and
+  reaches trusted first success unaided
+- [ ] All 3 presets run end-to-end against examples/sample-vn without
+  needing to re-read the README
+- [ ] Every known failure mode (ComfyUI down, wrong model name, Mac MPS
+  corruption) produces a clear error — never a silent one
+- [ ] Honest-limits docs ship in the box: platform support (Mac verified,
+  Windows beta) stated plainly in listing + README
 
 - [ ] Pro package (installer, presets, one-command deploy) ~$19–29
 - [ ] List on itch.io + Gumroad
