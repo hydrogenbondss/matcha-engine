@@ -1,0 +1,53 @@
+name: build
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install package + test deps
+        run: pip install -e . pytest
+      - name: Run test suite (fully mocked, no GPU)
+        run: python -m pytest tests/
+
+  build-macos-arm64:
+    needs: test
+    runs-on: macos-latest # arm64 runner
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install package + PyInstaller
+        run: pip install -e . pyinstaller
+      - name: Build single-file binary
+        run: pyinstaller packaging/matcha.spec --clean --noconfirm
+      - uses: actions/upload-artifact@v4
+        with:
+          name: matcha-macos-arm64
+          path: dist/matcha
+
+  # BETA: CI smoke-tested only, not verified on real Windows hardware.
+  build-windows-x64-beta:
+    needs: test
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install package + PyInstaller
+        run: pip install -e . pyinstaller
+      - name: Build single-file binary
+        run: pyinstaller packaging/matcha.spec --clean --noconfirm
+      - uses: actions/upload-artifact@v4
+        with:
+          name: matcha-windows-x64-BETA
+          path: dist/matcha.exe
