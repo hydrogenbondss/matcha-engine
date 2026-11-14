@@ -70,8 +70,8 @@ The zero-to-low-budget VN / indie 2D dev who cannot afford commissioned art.
 | **VNCCS** (ComfyUI ext., MIT, free) | **Genuinely consistent character across outfits/emotions/poses** | Raw node graphs: no CLI, no config file, no reproducible batch runs, **no Ren'Py export** (verified against README) |
 | Non-AI itch.io sprite assemblers | Consistency by construction | Fixed art style, fully manual |
 
-Star-count reports for VNCCS conflicted this session (~390 vs ~1.4k) — traction
-unverified; existence and active development verified
+VNCCS traction resolved high (verified 2026-11-14 via GitHub repo metadata):
+1,765 stars, 115 forks, active development confirmed (last push 2026-11-12)
 ([github.com/AHEKOT/ComfyUI_VNCCS](https://github.com/AHEKOT/ComfyUI_VNCCS)).
 
 **The gap:** nobody found does config → consistent sprite matrix → deploy into

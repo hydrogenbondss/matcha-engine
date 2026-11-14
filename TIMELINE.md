@@ -224,6 +224,7 @@ not an exit criterion.
 ## Open verification items (STRATEGY.md §8)
 
 - [x] `small_hours_style_v1` base — **SD1.5** (use `anythingV5PrtRE`, not SDXL)
-- [ ] VNCCS traction (conflicting star counts)
+- [x] VNCCS traction — resolved high 2026-11-14 (1,765★, 115 forks,
+  last push 2026-11-12)
 - [ ] Re-verify Lemma Soft commission price ranges before public quoting
 - [ ] "No one else does Ren'Py deploy" — searched, not exhaustively proven
