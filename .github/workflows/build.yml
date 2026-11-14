@@ -16,6 +16,10 @@ jobs:
         run: pip install -e . pytest
       - name: Run test suite (fully mocked, no GPU)
         run: python -m pytest tests/
+        env:
+          # CI has no TTY; rich wraps help output at the 80-col default and
+          # breaks literal flag-substring assertions in the tests.
+          COLUMNS: "200"
 
   build-macos-arm64:
     needs: test
