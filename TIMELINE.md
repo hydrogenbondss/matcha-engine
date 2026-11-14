@@ -11,6 +11,10 @@ _Last updated: 2026-08-23 (VNCCS same-face = Character Cloner from a
 sandbox `reference:`; Creator is fallback; MPS fail-preflight; Echo disk
 spec unchanged; public outreach still deferred)_
 
+2026-11-14: Three-stage audit committed (docs/AUDIT-2026-11-14.md) —
+self-recon, competitor recon + review mining, north-star gap map.
+Phase 3 scope unchanged; audit feeds listing copy + Pro packaging only.
+
 ---
 
 ## Phase map (4 phases)

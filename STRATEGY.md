@@ -65,7 +65,7 @@ The zero-to-low-budget VN / indie 2D dev who cannot afford commissioned art.
 |---|---|---|
 | **Scenario** (~$15–75/mo, cloud) | Custom-trained style/character models; Unity plugin | No Ren'Py, no local, credits per iteration |
 | **Leonardo / Layer** (cloud) | Style + reference-based face consistency | No pose×expression matrix, no engine deploy |
-| **TavernSprite** (cloud credits) | 28 expressions from one portrait | One pose only, ZIP download, "Ren'Py-ready" = PNG format only |
+| **TavernSprite** (one-time credit packs $6/$20/$60, credits last 1 year — verified 2026-11-14) | 28 expressions from one portrait | One pose only, ZIP download, "Ren'Py-ready" = PNG format only |
 | **PixelLab / Retro Diffusion** | Pixel art (Aseprite plugin) | Different niche entirely |
 | **VNCCS** (ComfyUI ext., MIT, free) | **Genuinely consistent character across outfits/emotions/poses** | Raw node graphs: no CLI, no config file, no reproducible batch runs, **no Ren'Py export** (verified against README) |
 | Non-AI itch.io sprite assemblers | Consistency by construction | Fixed art style, fully manual |
@@ -174,6 +174,8 @@ Phase 2/3, not a fifth phase and not a free-release gate.
   and need a real-browser read before public use.
 - Lemma Soft commission figures are search-snippet-level (forum 403'd).
 - "No one does Ren'Py deploy" — searched, not exhaustively provable.
-- VNCCS traction (conflicting star counts).
+- ~~VNCCS traction (conflicting star counts).~~ RESOLVED high: 1,765 stars,
+  115 forks on AHEKOT/ComfyUI_VNCCS; actively developed (last push
+  2026-11-12). Verified 2026-11-14 via GitHub repo metadata.
 - Which base model `small_hours_style_v1` LoRA was trained on (SD1.5 vs SDXL)
   — determines the correct checkpoint for the pipeline.
