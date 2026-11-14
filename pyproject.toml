@@ -7,11 +7,9 @@ name = "matcha-engine"
 version = "0.1.0"
 description = "Matcha Engine — AI game asset pipeline: YAML character configs to consistent sprite sets deployed into Ren'Py projects"
 requires-python = ">=3.10"
-# LICENSE file is absent from the repo root (flagged 2026-11-14). The project
-# is intended to be MIT; uncomment once a LICENSE file is added:
-# license = {text = "MIT"}
+license = {text = "MIT"}
 classifiers = [
-    # "License :: OSI Approved :: MIT License",  # pending LICENSE file
+    "License :: OSI Approved :: MIT License",
     "Environment :: Console",
     "Intended Audience :: Developers",
     "Operating System :: OS Independent",
