@@ -347,6 +347,11 @@ class TestCliGenerateLoop:
 
         result = CliRunner().invoke(app, ["character", "--help"])
         assert result.exit_code == 0
+        # Rich splits each dash into its own styled span when color is on
+        # (e.g. CI), so assert on the text with ANSI sequences stripped.
+        import re
+
+        plain = re.sub(r"\x1b\[[0-9;]*m", "", result.stdout)
         for flag in (
             "--poses",
             "--copy-only",
@@ -360,7 +365,7 @@ class TestCliGenerateLoop:
             "--vnccs-ref",
             "--vnccs-allow-mps",
         ):
-            assert flag in result.stdout
+            assert flag in plain
 
     def test_dry_run_poses_subset(self, tmp_path):
         from typer.testing import CliRunner

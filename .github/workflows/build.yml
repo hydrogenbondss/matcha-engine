@@ -14,8 +14,6 @@ jobs:
           python-version: "3.12"
       - name: Install package + test deps
         run: pip install -e . pytest
-      - name: DIAG — dump raw help output (temporary)
-        run: python -c "from typer.testing import CliRunner; from matcha.cli import app; r = CliRunner().invoke(app, ['character', '--help']); print(repr(r.stdout))"
       - name: Run test suite (fully mocked, no GPU)
         run: python -m pytest tests/
         env:
