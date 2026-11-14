@@ -171,7 +171,7 @@ Replace `<GITHUB_URL>` with the public repo URL before posting.
 5. [ ] Paste copy drafts; fill `<GITHUB_URL>`; skim for leftover “Match Engine”
 6. [ ] Post order (same day or close): **Civitai** (asset/home base) → **r/comfyui** → **Ren'Py Discord** → **Lemma Soft**
 7. [ ] Tick Phase 2 announce boxes in [TIMELINE.md](../TIMELINE.md) when posts are live
-8. [ ] Do **not** deploy announce characters into live LOVE32
+8. [ ] Do **not** deploy announce characters into your live game
 
 ### Capture now (after local generate)
 

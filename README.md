@@ -104,8 +104,9 @@ Character Cloner** from a sandbox copy of an approved sprite
 (`--backend vnccs` + `--reference` / YAML `reference:`). Text-only
 Character Creator is fallback, not the lock. Do **not** turn on
 IP-Adapter or `consistency_denoise < 1.0` on Mac MPS — they corrupt,
-and they are not the VNCCS path. Never drop a live Echo / LOVE32 PNG
-in as an IP-Adapter reference, and never point `reference:` at LOVE32.
+and they are not the VNCCS path. Never drop a live-game PNG
+in as an IP-Adapter reference, and never point `reference:` at your live
+game.
 Expect
 **several minutes per pose** on Mac MPS (four poses can take ~15–25+ minutes)
 — the CLI prints each pose name as it starts; it is not hung. After a heavy
@@ -140,21 +141,18 @@ off on MPS.
 If those nodes are missing, Matcha **errors** with install steps. It will
 not silently fall back to txt2img and call that consistent.
 
-### Approved sprite — hand-copy into `refs/` (never LOVE32)
+### Approved sprite — hand-copy into `refs/` (never your live game)
 
-Jeffrey already has the real Kite on disk. That path is on his Mac only —
-Matcha **cannot and must not** read or write the live game tree:
-
-`/Users/jeffreytse/Desktop/LOVE32/LOVE32/game/images/kite_male neutral.png`
-(1200×992, transparent, apron/bar).
-
-Echo copies that approved live PNG into the Matcha sandbox `refs/` folder
-**by hand**. Never `--project LOVE32`. Never point `reference:` or
-`--reference` at LOVE32 — Matcha refuses those paths before any read.
+If you already have an approved sprite inside a live game, that path stays
+out of Matcha — Matcha **cannot and must not** read or write the live game
+tree. Hand-copy the approved PNG out of your live game
+(`<your-live-game>/game/images/...`) into the Matcha sandbox `refs/` folder
+**by hand**. Never `--project` your live game. Never point `reference:` or
+`--reference` at it — Matcha refuses known live-game paths before any read.
 
 ```bash
 mkdir -p refs
-# After you have a hand-copied PNG (not the live LOVE32 path):
+# After you have a hand-copied PNG (not the live game path):
 cp "/path/to/hand-copied/kite_male neutral.png" refs/kite_male_neutral.png
 ```
 
@@ -190,9 +188,9 @@ KSampler txt2img and call it VNCCS. `--vnccs-allow-mps` queues the real
 Cloner / Creator nodes anyway (still not txt2img; GGUF / Impact / SAM
 may still fail at runtime).
 
-Jeffrey's Mac today has ComfyUI at `~/ComfyUI` with `ComfyUI_IPAdapter_plus`
-only. **VNCCS is not installed there yet.** IP-Adapter stays off. A CUDA
-ComfyUI is the honest same-face machine.
+On a typical Mac MPS dev box ComfyUI lives at `~/ComfyUI` — and if it has
+`ComfyUI_IPAdapter_plus` only, **VNCCS is not installed there yet.**
+IP-Adapter stays off. A CUDA ComfyUI is the honest same-face machine.
 
 ### Install VNCCS
 
@@ -260,8 +258,9 @@ Or scaffold your own tree: `.venv/bin/matcha init myproject`, then point
 **Do not** deploy into a live game you are polishing — Ren'Py auto-loads every
 `game/*.rpy`. Use `examples/sample-vn/` or a throwaway `sandbox-renpy/` /
 `sandbox-kite/` (gitignored). Matcha **refuses** `--project` paths that look
-like LOVE32. Echo already owns those `define` / `layeredimage` lines; hand-copy
-PNGs (or use `--copy-only`) instead of letting Matcha write the live script.
+like a known live game. The author's own VN project already owns those
+`define` / `layeredimage` lines; hand-copy PNGs (or use `--copy-only`)
+instead of letting Matcha write the live script.
 
 ## CLI overview
 
@@ -287,7 +286,8 @@ PNGs (or use `--copy-only`) instead of letting Matcha write the live script.
 `--deploy` writes `game/matcha_characters.rpy` — idempotent on re-run, never
 touches your hand-written scripts, but still dangerous in a live game.
 Only poses that actually generated get definitions; the CLI exits non-zero
-if any pose fails. For Echo last-mile copies, use `--copy-only` (below).
+if any pose fails. For last-mile copies into the author's own VN project,
+use `--copy-only` (below).
 
 ### Ren'Py scaffolding flags
 
@@ -313,7 +313,8 @@ mappings) so a bartender apron cannot paint onto `smoking`.
 Unknown pose names stay as plain wording (`crossed_arms` → `crossed arms`).
 They do **not** become `{pose} expression, {pose} pose`.
 
-Echo disk spec (live LOVE32 filenames — do **not** `--project` LOVE32) is
+The author's own VN project disk spec (live-game filenames — do **not**
+`--project` your live game) is
 [`configs/kite_male.yaml`](configs/kite_male.yaml):
 
 | Family | Outfit | Poses |
@@ -324,10 +325,10 @@ Echo disk spec (live LOVE32 filenames — do **not** `--project` LOVE32) is
 
 Ten files on disk: `kite_male <pose>.png` (space) for those names.
 `angry` is **not** a file — it aliases `stressed`. `crossed_arms` is still
-emitted as `kite_male crossed_arms.png` (apron family). Live Echo scales it
-1.39 because that file is 880×1184 vs other kite_male 1200×992 — display,
-not generate. Later `--canvas` copy-out should be one uniform size so Echo
-can drop that special case. Never `--project` LOVE32.
+emitted as `kite_male crossed_arms.png` (apron family). The live game scales
+it 1.39 because that file is 880×1184 vs other kite_male 1200×992 — display,
+not generate. Later `--canvas` copy-out should be one uniform size so the
+live game can drop that special case. Never `--project` your live game.
 
 ### Partial runs, `--poses`, rejects
 
@@ -354,10 +355,12 @@ instead.
 
 ### Copy-only deploy (no script writes)
 
-`--deploy` into a real game stays dangerous. For Echo, `--copy-only` writes
+`--deploy` into a real game stays dangerous. For the author's own VN
+project, `--copy-only` writes
 `kite_male <pose>.png` (space) into `game/images/` and does **not** write
 `Character()`, `layeredimage`, or `_kite_sprite`. Underscore names
-(`kite_male_smoking.png`, `kite_<pose>.png`) will not drop into live Echo.
+(`kite_male_smoking.png`, `kite_<pose>.png`) will not drop into the live
+game.
 
 ```bash
 .venv/bin/matcha character configs/kite_male.yaml --lora none --poses smoking \
@@ -368,17 +371,17 @@ instead.
 `configs/kite_male.yaml` sets `filename_template: "{name} {pose}.png"`.
 `--filename-template` overrides if needed. `--images-subdir characters` puts
 files under `game/images/characters/` instead. Later, one `--canvas` size
-for every kite_male pose lets Echo drop the live 1.39 `crossed_arms` scale.
-Never `--project` LOVE32.
+for every kite_male pose lets the live game drop the 1.39 `crossed_arms`
+scale. Never `--project` your live game.
 
 Optional extras (Pillow only, no rembg / GPU): `--knockout-black` turns
 near-black pixels transparent (grey/white studio cards stay opaque — a
 subject matte would need rembg, which we skipped). `--canvas 768x1024` pads
 an accepted 512×512 onto a larger canvas; it does **not** change generation
-resolution. Later Echo copy-out should use **one** canvas for every
-`kite_male` pose so live can drop the 1.39 `crossed_arms` scale (that file
-is 880×1184 vs 1200×992). **512×512 `--lora none` remains the trusted
-first-success default.** Never `--project` LOVE32.
+resolution. Later live-game copy-out should use **one** canvas for every
+`kite_male` pose so the live game can drop the 1.39 `crossed_arms` scale
+(that file is 880×1184 vs 1200×992). **512×512 `--lora none` remains the
+trusted first-success default.** Never `--project` your live game.
 
 ## Development
 
