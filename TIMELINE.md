@@ -20,6 +20,9 @@ setup / presets / run wrapper), price locked at listing day, open-core
 convenience gating confirmed in STRATEGY §5, 4-point launch-readiness
 gate defined.
 
+2026-11-14: STRATEGY §4 Later — GUI wrapper + Matcha MCP server explicitly
+parked post-first-dollar (Phase 3 scope unchanged).
+
 ---
 
 ## Phase map (4 phases)
