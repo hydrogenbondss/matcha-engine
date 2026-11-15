@@ -251,7 +251,9 @@ class TestVNCCSBackendFlag:
 
     def test_vnccs_dry_run_errors_when_nodes_missing(self, tmp_path):
         cfg = _write_char_yaml(tmp_path / "char.yaml", ["idle"])
-        with mock.patch.object(preflight, "_object_info", txt2img_only_object_info):
+        with mock.patch.object(preflight, "_object_info", txt2img_only_object_info), mock.patch.object(
+            preflight, "fetch_system_stats", return_value={"devices": [{"type": "cpu"}]}
+        ):
             result = CliRunner().invoke(
                 app, ["character", str(cfg), "--dry-run", "--backend", "vnccs"]
             )
