@@ -50,6 +50,9 @@ format for Ren'Py → deploy. See STRATEGY.md for positioning and roadmap.
 - SDK: <your-renpy-sdk>/renpy.sh (lint/compile after deploy)
 
 ## Local ComfyUI (Mac MPS)
+- Dev machine (2026-11-16): Intel MacBook Pro (x86_64), macOS 26.2 — the
+  arm64 CI binaries **cannot be executed locally**; install from source
+  (`pip install -e .`). MPS guidance in this section is unchanged.
 - Install: ~/ComfyUI (venv at ~/ComfyUI/venv)
 - Start (MPS-safe):
 

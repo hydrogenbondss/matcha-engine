@@ -38,6 +38,12 @@ delegates to the character flow (no reimplemented logic); --project =
 deploy, omitted = generate only; --lora / --layered / --side-image
 passthroughs. Pro `run` wrapper done.
 
+2026-11-16: Docs — README prebuilt-binary notes (macOS binary is arm64
+only; Intel Macs install from source, full capability; Gatekeeper
+quarantine workaround). Dev machine recorded as Intel MBP x86_64 /
+macOS 26.2; arm64 CI binaries not executable locally, MPS guidance
+unchanged.
+
 ---
 
 ## Phase map (4 phases)

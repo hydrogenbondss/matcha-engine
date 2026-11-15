@@ -19,6 +19,18 @@ python3.12 -m venv .venv
 
 Use `.venv/bin/matcha` (or `source .venv/bin/activate` first).
 
+### Prebuilt binaries
+
+CI builds a single-file `matcha` binary on every push (see the Actions
+artifacts). The macOS binary is **Apple Silicon (arm64) only**. Intel Mac
+(x86_64) users install from source with `pip install -e .` instead — full
+capability, no feature difference. The Windows x64 binary is **beta**
+(CI smoke-tested, not verified on real hardware).
+
+**Gatekeeper note:** browser-downloaded binaries carry a quarantine
+attribute. If macOS refuses to run the binary, either run
+`xattr -cr matcha` on it or right-click → **Open** once.
+
 ## ComfyUI + models (required for generation)
 
 Matcha is a thin CLI around **your** local ComfyUI. It does **not** install
