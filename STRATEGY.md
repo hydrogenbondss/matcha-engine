@@ -113,8 +113,19 @@ The paid wedge. Everything here exists because of a verified pain or risk:
    [itch thread](https://itch.io/t/4309690/generative-ai-disclosure-tagging), fetched).
    Turns the scariest market risk into a feature no competitor has.
 
-**Later:** backgrounds/CGs, simple GUI wrapper, preset character/style packs,
-Godot/Unity formatters, hosted version.
+**Later:**
+
+- Backgrounds/CGs
+- GUI wrapper — revisit only after Phase 3 first dollar; prioritise by
+  paying-user complaints, not founder taste. (decision 2026-11-14)
+- Preset character/style packs
+- Godot/Unity formatters
+- Hosted version
+- Matcha MCP server — candidate distribution play only once agentic
+  asset-generation workflows are proven in the market; NOT a Phase 3 /
+  first-dollar gate. AI-assistant discovery comes from crawlable web
+  presence (listings, Civitai, forum posts), not from shipping an MCP.
+  (decision 2026-11-14)
 
 ## 5. Business model
 

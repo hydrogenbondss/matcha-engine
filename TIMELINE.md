@@ -20,6 +20,9 @@ setup / presets / run wrapper), price locked at listing day, open-core
 convenience gating confirmed in STRATEGY §5, 4-point launch-readiness
 gate defined.
 
+2026-11-14: STRATEGY §4 Later — GUI wrapper + Matcha MCP server explicitly
+parked post-first-dollar (Phase 3 scope unchanged).
+
 2026-11-14: Pro packaging CI green — test + macOS-arm64 +
 Windows-x64-beta all pass; PyInstaller binaries build in CI;
 ANSI-fragile --help assertion fixed (strip styling before asserting).

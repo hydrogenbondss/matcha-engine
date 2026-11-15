@@ -98,13 +98,13 @@ REFERENCE_COPY_HINT = """\
 Same-face lock is Character Cloner from a sandbox copy of an approved
 sprite — not Character Creator from text, and not prompt+seed.
 
-Echo: hand-copy the live PNG into the Matcha refs folder. Never point
-reference: or --reference at LOVE32 (Matcha refuses to read that tree).
+To fix: hand-copy the approved PNG out of your live game into the Matcha
+refs folder. Never point reference: or --reference at the live game tree
+(Matcha refuses to read it).
 
   mkdir -p refs
-  # On Jeffrey's Mac the approved identity is:
-  #   /Users/jeffreytse/Desktop/LOVE32/LOVE32/game/images/kite_male\\ neutral.png
-  # (1200×992, transparent, apron/bar). Copy it; do not --project LOVE32.
+  # e.g. hand-copied from <your-live-game>/game/images/kite_male neutral.png
+  # Copy it; do not --project your live game.
   cp "/path/to/hand-copied/kite_male neutral.png" refs/kite_male_neutral.png
 
 Then: reference: ./refs/kite_male_neutral.png

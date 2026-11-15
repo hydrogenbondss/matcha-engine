@@ -64,8 +64,8 @@ Inspected without generating:
 Trigger word observed in training tags: `sh_style`.
 Checked-in example Ren'Py project for strangers: `examples/sample-vn/`
 (Placeholder art until `matcha character --deploy`). Local dogfood target:
-`sandbox-renpy/` (gitignored throwaway). Do **not** deploy into the live
-LOVE32 project while it is being polished — Ren'Py auto-loads every
+`sandbox-renpy/` (gitignored throwaway). Do **not** deploy into
+your live game project while it is being polished — Ren'Py auto-loads every
 `game/*.rpy` and matcha would inject characters into the real game.
 Optional later: hand-copy assets or deploy under a non-conflicting name
 when the user asks.
@@ -103,5 +103,5 @@ CUDA when available. Consistency on MPS stays prompt+seed for now.
 txt2img (no LoRA) produces half-static frames. Fully quit ComfyUI (or reboot)
 before the next clean run; do not rely on a soft restart alone.
 
-Not useful for matcha: `~/bentopdf` (unrelated client-side PDF toolkit).
+Not useful for matcha: unrelated local tooling on the author's machine.
 `~/kohya_ss` is only needed if retraining LoRAs.

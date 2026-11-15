@@ -17,10 +17,11 @@ format for Ren'Py → deploy. See STRATEGY.md for positioning and roadmap.
 - [x] LoRA base confirmed: small_hours_style_v1 is **SD1.5**; pair with
       anythingV5PrtRE (both present under ~/ComfyUI/models/)
 - [x] First real-GPU run (2026-07-23, Mac MPS) — 4/4 sakura poses
-- [x] Dogfood on LOVE32 + Ren'Py SDK lint clean for matcha script
+- [x] Dogfood on the author's own VN project + Ren'Py SDK lint clean for
+      matcha script
 - [!] small_hours_style_v1 NaNs/blacks on Mac MPS — interim: last.safetensors
 - [x] VNCCS wrap (`--backend vnccs`) — same-face = Character Cloner from
-      a sandbox `reference:` (LOVE32 paths refused). Creator is fallback.
+      a sandbox `reference:` (live-game paths refused). Creator is fallback.
       Missing install / MPS CUDA-oriented stack is an error (no
       prompt+seed fallback)
 
@@ -42,10 +43,11 @@ format for Ren'Py → deploy. See STRATEGY.md for positioning and roadmap.
 - Negative: base quality negatives + collage/reference-sheet guards
 
 ## Ren'Py Project
-- Path: ~/Desktop/LOVE32/LOVE32/
+- Path: `<your-live-game>/` on the author's machine only — deliberately not
+  recorded in this repo
 - Images: game/images/characters/
 - Script: game/matcha_characters.rpy (generated, idempotent per character)
-- SDK: ~/Desktop/renpy-8.5.2-sdk/renpy.sh (lint/compile after deploy)
+- SDK: <your-renpy-sdk>/renpy.sh (lint/compile after deploy)
 
 ## Local ComfyUI (Mac MPS)
 - Install: ~/ComfyUI (venv at ~/ComfyUI/venv)
@@ -59,9 +61,9 @@ format for Ren'Py → deploy. See STRATEGY.md for positioning and roadmap.
   ```
 
 - Do **not** use `--force-fp16` here — NaN → black PNGs
-- Useful local paths: ~/small_hours_lora, ~/SmallHours_LoRA_test,
-  ~/small_hours_dataset (train_config confirms SD1.5)
-- Not relevant to matcha: ~/bentopdf (PDF toolkit); ~/kohya_ss only for retrain
+- Useful local paths (author's machine only, home-relative): the LoRA
+  training + dataset dirs (`small_hours_*`; train_config confirms SD1.5)
+- Not relevant to matcha: unrelated local tooling; ~/kohya_ss only for retrain
 
 ## Decisions
 - Focus on Ren'Py first, Godot later
