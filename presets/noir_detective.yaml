@@ -1,0 +1,44 @@
+# Preset: noir detective (male). Trusted first-success path: lora: null,
+# 512×512, prompt+seed. Shared identity lives in `description`; outfits are
+# per-pose via outfit_families + pose_overrides.family so the trench coat
+# cannot paint onto the off-duty poses.
+name: ren_detective
+display_name: Ren
+color: "#8fa3bf"
+description: >-
+  1boy, short messy black hair, grey eyes, light stubble, tired but sharp
+  expression, visual novel style, cel shaded
+poses:
+  - neutral
+  - suspicious
+  - tired
+  - gentle
+  - thinking
+outfit_families:
+  trench: beige trench coat over white shirt with loosened black tie
+  off_duty: plain charcoal henley, sleeves pushed up, no tie
+pose_overrides:
+  neutral:
+    family: trench
+  suspicious:
+    family: trench
+  thinking:
+    family: trench
+    prompt: one hand raised to chin
+  tired:
+    family: off_duty
+  gentle:
+    family: off_duty
+
+checkpoint: anythingV5PrtRE.safetensors
+lora: null
+lora_strength: 0.7
+
+width: 512
+height: 512
+steps: 20
+seed: 42
+# Mac MPS: img2img chaining and IP-Adapter corrupt — keep both off.
+consistency_denoise: 1.0
+
+output_dir: ./output

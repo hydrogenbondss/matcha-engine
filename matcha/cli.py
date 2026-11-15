@@ -1070,5 +1070,24 @@ def disclose(
         typer.echo(doc)
 
 
+@app.command()
+def setup(
+    comfyui: str = typer.Option("127.0.0.1:8188", "--comfyui", help="ComfyUI server address"),
+    checkpoint: Optional[str] = typer.Option(
+        None,
+        "--checkpoint",
+        "-c",
+        help="Checkpoint to look for on the server (default: the sample YAML's)",
+    ),
+):
+    """Guided first-run checklist: server reachability, models, next steps.
+
+    Checks and guidance only — no downloads, no installs.
+    """
+    from matcha.setup import run_setup
+
+    raise typer.Exit(run_setup(comfyui, checkpoint))
+
+
 if __name__ == "__main__":
     app()

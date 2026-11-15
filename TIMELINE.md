@@ -28,6 +28,11 @@ Windows-x64-beta all pass; PyInstaller binaries build in CI;
 ANSI-fragile --help assertion fixed (strip styling before asserting).
 First Phase 3 engineering task done.
 
+2026-11-15: `matcha setup` guided first-run checklist (reachability /
+model inventory / placement table / trusted-first-success sequence),
+3 starter presets (presets/), verified model checklist
+(docs/verified-models.md). Phase 3 Pro contents landing.
+
 ---
 
 ## Phase map (4 phases)

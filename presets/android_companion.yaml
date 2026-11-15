@@ -1,0 +1,46 @@
+# Preset: android companion (androgynous). Trusted first-success path:
+# lora: null, 512×512, prompt+seed. Shared identity lives in `description`;
+# the field chassis and the maintenance overalls are separate families so
+# the armor cannot paint onto the workshop poses.
+name: unit_seven
+display_name: Seven
+color: "#7de8e0"
+description: >-
+  1other, androgynous android, sleek silver bob with glowing teal hairline
+  seams, pale synthetic skin, calm teal eyes with faint ring patterns,
+  visual novel style, cel shaded
+poses:
+  - standby
+  - curious
+  - alert
+  - smile
+  - damaged
+outfit_families:
+  field: matte white armored chassis with teal accent lines
+  maintenance: oversized grey workshop overalls, tools in chest pocket,
+    chassis seams visible at neck
+pose_overrides:
+  standby:
+    family: field
+  curious:
+    family: field
+    prompt: head tilted slightly
+  alert:
+    family: field
+  smile:
+    family: maintenance
+  damaged:
+    family: maintenance
+    prompt: small crack across one cheek plate, faint sparks at shoulder
+
+checkpoint: anythingV5PrtRE.safetensors
+lora: null
+lora_strength: 0.7
+
+width: 512
+height: 512
+steps: 20
+seed: 42
+consistency_denoise: 1.0
+
+output_dir: ./output

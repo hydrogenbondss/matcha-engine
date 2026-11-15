@@ -1,0 +1,47 @@
+# Preset: magical girl (female). Trusted first-success path: lora: null,
+# 512×512, prompt+seed. Shared identity lives in `description`; the
+# transformed outfit and the school uniform are separate families so the
+# battle dress cannot paint onto the classroom poses.
+name: hikari
+display_name: Hikari
+color: "#ffd75e"
+description: >-
+  1girl, twin-tails honey blonde hair with small star clips, amber eyes,
+  bright determined face, visual novel style, cel shaded
+poses:
+  - idle
+  - happy
+  - determined
+  - surprised
+  - worried
+  - transformed
+outfit_families:
+  uniform: cream school blazer with red ribbon, plaid skirt
+  battle: white and gold magical girl dress with star brooch, short cape,
+    gloves
+pose_overrides:
+  idle:
+    family: uniform
+  happy:
+    family: uniform
+  surprised:
+    family: uniform
+  worried:
+    family: uniform
+  determined:
+    family: battle
+  transformed:
+    family: battle
+    prompt: raising a glowing star wand overhead
+
+checkpoint: anythingV5PrtRE.safetensors
+lora: null
+lora_strength: 0.7
+
+width: 512
+height: 512
+steps: 20
+seed: 42
+consistency_denoise: 1.0
+
+output_dir: ./output
