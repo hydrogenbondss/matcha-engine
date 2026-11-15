@@ -33,6 +33,11 @@ model inventory / placement table / trusted-first-success sequence),
 3 starter presets (presets/), verified model checklist
 (docs/verified-models.md). Phase 3 Pro contents landing.
 
+2026-11-15: `matcha run <yaml>` one-command path — health-check gate →
+delegates to the character flow (no reimplemented logic); --project =
+deploy, omitted = generate only; --lora / --layered / --side-image
+passthroughs. Pro `run` wrapper done.
+
 ---
 
 ## Phase map (4 phases)

@@ -1089,5 +1089,74 @@ def setup(
     raise typer.Exit(run_setup(comfyui, checkpoint))
 
 
+@app.command()
+def run(
+    config: Path = typer.Argument(..., help="Path to character YAML config"),
+    project: Optional[Path] = typer.Option(
+        None,
+        "--project",
+        "-p",
+        help="Ren'Py project to deploy into after generating (omit for generate-only)",
+    ),
+    lora: Optional[str] = typer.Option(
+        None,
+        "--lora",
+        help="Override YAML LoRA ('none' = base checkpoint only — trusted first-success path)",
+    ),
+    layered: Optional[bool] = typer.Option(
+        None, "--layered/--no-layered",
+        help="Emit a Ren'Py layeredimage grouping poses as attributes",
+    ),
+    side_image: Optional[bool] = typer.Option(
+        None, "--side-image/--no-side-image",
+        help="Crop head/shoulders portraits, emit image side defs, and wire Character(image=...)",
+    ),
+    comfyui: str = typer.Option("127.0.0.1:8188", "--comfyui", help="ComfyUI server address"),
+):
+    """One-command path: health-check -> preflight -> generate -> deploy.
+
+    Thin wrapper over `matcha character`: --project present means deploy
+    after a successful generate; absent means generate only.
+    """
+    from matcha.setup import is_server_reachable
+
+    if not is_server_reachable(comfyui):
+        typer.echo(f"ComfyUI is not reachable at {comfyui}.", err=True)
+        typer.echo(
+            "Run `matcha setup` for the first-run checklist "
+            "(start command, model placement).",
+            err=True,
+        )
+        raise typer.Exit(1)
+
+    character(
+        config=config,
+        project=project,
+        deploy=project is not None,
+        copy_only=False,
+        filename_template=None,
+        images_subdir=None,
+        poses=None,
+        force=False,
+        retries=None,
+        knockout_black=False,
+        canvas=None,
+        dry_run=False,
+        comfyui=comfyui,
+        checkpoint=None,
+        lora=lora,
+        layered=layered,
+        side_image=side_image,
+        backend="txt2img",
+        reference=None,
+        vnccs_ref=None,
+        vnccs_allow_mps=False,
+    )
+    typer.echo(
+        "Tip: `matcha licenses` and `matcha disclose` cover per-model "
+        "commercial-use status and AI-disclosure drafts."
+    )
+
+
 if __name__ == "__main__":
     app()
